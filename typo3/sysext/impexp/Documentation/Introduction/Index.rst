@@ -39,46 +39,47 @@ Export
 
    if "Is configuration done?" then
       -->[yes] "Click 'Next'" as clickNextOnPageTree
-      --> "Tab 'Files'"
-      --> "Configure files export"
-      --> "Apply" as applyFiles
-
-      if "Is configuration done?" then
-         -->[yes] "Click 'Next'" as clickNextOnFiles
-         --> "Tab 'Meta Data'"
-
-         if "Is preset loaded?" then
-            -->[yes] "Update meta data"
-            --> "Click 'Next'" as clickNextOnMetaData
-            --> "Tab 'Export'"
-
-            if "Save configuration as preset?" then
-               -->[yes] if "Is preset loaded?" then
-                  -->[yes] "Update preset title"
-                  --> "Click 'Save preset'" as savePreset
-                  --> "Configure export file" as configureExport
-
-                  configureExport --> "Save export to server"
-                  --> (*)
-
-                  configureExport --> "Download export"
-                  --> (*)
-               else
-                  -->[no] "Insert preset title"
-                  --> savePreset
-               endif
-            else
-               -->[no] configureExport
-            endif
-         else
-            -->[no] "Insert meta data"
-            --> clickNextOnMetaData
-         endif
-      else
-         -->[no] "Configure files export"
-      endif
    else
       -->[no] "Configure database export"
    endif
 
+   clickNextOnPageTree --> "Tab 'Files'"
+   --> "Configure files export"
+   --> "Apply" as applyFiles
 
+   if "Is configuration done?" then
+      -->[yes] "Click 'Next'" as clickNextOnFiles
+   else
+      -->[no] "Configure files export"
+   endif
+
+   clickNextOnFiles --> "Tab 'Meta Data'"
+
+   if "Is preset loaded?" then
+      -->[yes] "Update meta data"
+      --> "Click 'Next'" as clickNextOnMetaData
+   else
+      -->[no] "Insert meta data"
+      --> clickNextOnMetaData
+   endif
+
+   clickNextOnMetaData --> "Tab 'Export'"
+
+   if "Save configuration as preset?" then
+      -->[yes] if "Is preset loaded?" then
+         -->[yes] "Update preset title"
+         --> "Click 'Save preset'" as savePreset
+         --> "Configure export file" as configureExport
+      else
+         -->[no] "Insert preset title"
+         --> savePreset
+      endif
+   else
+      -->[no] configureExport
+   endif
+
+   configureExport --> "Save export to server"
+   --> (*)
+
+   configureExport --> "Download export"
+   --> (*)
