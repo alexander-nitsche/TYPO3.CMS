@@ -19,67 +19,80 @@ Export
 .. uml::
 
    (*) --> "Export module"
-   --> "Tab 'Preset'"
 
-   if "Load preset?" then
-      -->[yes] "Load preset"
+   partition "Tab <i>Preset</i>" {
 
-      if "Loading successful?" then
-         -->[yes] "Click 'Next'" as clickNextOnPreset
+      if "Load preset?" as loadPreset then
+         -->[yes] "Load preset"
+
+         if "Loading successful?" then
+            -->[yes] "Click 'Next'" as clickNextOnPreset
+         else
+            -->[no] loadPreset
+         endif
       else
-         -->[no] "Tab 'Preset'"
+         -->[no] clickNextOnPreset
       endif
-   else
-      -->[no] clickNextOnPreset
-   endif
 
-   --> "Tab 'Page Tree'"
-   --> "Configure database export"
-   --> "Apply" as applyPageTree
+   }
 
-   if "Is configuration done?" then
-      -->[yes] "Click 'Next'" as clickNextOnPageTree
-   else
-      -->[no] "Configure database export"
-   endif
+   partition "Tab <i>Page Tree</i>" {
 
-   clickNextOnPageTree --> "Tab 'Files'"
-   --> "Configure files export"
-   --> "Apply" as applyFiles
+      --> "Configure database export"
+      --> "Apply" as applyPageTree
 
-   if "Is configuration done?" then
-      -->[yes] "Click 'Next'" as clickNextOnFiles
-   else
-      -->[no] "Configure files export"
-   endif
-
-   clickNextOnFiles --> "Tab 'Meta Data'"
-
-   if "Is preset loaded?" then
-      -->[yes] "Update meta data"
-      --> "Click 'Next'" as clickNextOnMetaData
-   else
-      -->[no] "Insert meta data"
-      --> clickNextOnMetaData
-   endif
-
-   clickNextOnMetaData --> "Tab 'Export'"
-
-   if "Save configuration as preset?" then
-      -->[yes] if "Is preset loaded?" then
-         -->[yes] "Update preset title"
-         --> "Click 'Save preset'" as savePreset
-         --> "Configure export file" as configureExport
+      if "Is configuration done?" then
+         -->[yes] "Click 'Next'" as clickNextOnPageTree
       else
-         -->[no] "Insert preset title"
-         --> savePreset
+         -->[no] "Configure database export"
       endif
-   else
-      -->[no] configureExport
-   endif
 
-   configureExport --> "Save export to server"
-   --> (*)
+   }
 
-   configureExport --> "Download export"
-   --> (*)
+   partition "Tab <i>Files</i>" {
+
+      clickNextOnPageTree --> "Configure files export"
+      --> "Apply" as applyFiles
+
+      if "Is configuration done?" then
+         -->[yes] "Click 'Next'" as clickNextOnFiles
+      else
+         -->[no] "Configure files export"
+      endif
+
+   }
+
+   partition "Tab <i>Meta Data</i>" {
+
+      clickNextOnFiles --> if "Is preset loaded?" then
+         -->[yes] "Update meta data"
+         --> "Click 'Next'" as clickNextOnMetaData
+      else
+         -->[no] "Insert meta data"
+         --> clickNextOnMetaData
+      endif
+
+   }
+
+   partition "Tab <i>Export</i>" {
+
+      clickNextOnMetaData --> if "Save configuration as preset?" then
+         -->[yes] if "Is preset loaded?" then
+            -->[yes] "Update preset title"
+            --> "Click 'Save preset'" as savePreset
+            --> "Configure export file" as configureExport
+         else
+            -->[no] "Insert preset title"
+            --> savePreset
+         endif
+      else
+         -->[no] configureExport
+      endif
+
+      configureExport --> "Save export to server"
+      --> (*)
+
+      configureExport --> "Download export"
+      --> (*)
+
+   }
