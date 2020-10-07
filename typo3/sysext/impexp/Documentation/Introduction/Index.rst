@@ -39,6 +39,26 @@ Export module - Sequence Diagram
    tabExport -> tabExport: Save export to server
    tabExport -> tabExport: Download export
 
+Import module - Sequence Diagram
+================================
+
+.. uml::
+
+   "Tab <i>Load</i>" as tabLoad -> tabLoad: Upload file from\nlocal computer\n(optional)
+   tabLoad -> tabLoad: Select file\nto import\n& click Load
+   tabLoad -> "Tab <i>Page Tree</i>" as tabPageTree: Click Next
+   tabPageTree --> tabLoad: Click Prev
+
+   tabPageTree -> tabPageTree: Configure\ndatabase import\n& apply
+   tabPageTree -> "Tab <i>Files</i>" as tabFiles: Click Next
+   tabFiles --> tabPageTree: Click Prev
+
+   tabFiles -> tabFiles: Configure\nfiles import\n& apply
+   tabFiles -> "Tab <i>Import</i>" as tabImport: Click Next
+   tabImport --> tabFiles: Click Prev
+
+   tabImport -> tabImport: Import
+
 Export module - Activity Diagram
 ================================
 
