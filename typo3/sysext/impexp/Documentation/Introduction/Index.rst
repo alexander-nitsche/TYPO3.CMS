@@ -50,11 +50,7 @@ Import module
    tabPageTree --> tabLoad: Click Prev
 
    tabPageTree -> tabPageTree: Configure\ndatabase import\n& apply
-   tabPageTree -> "Tab <i>Files</i>" as tabFiles: Click Next
-   tabFiles --> tabPageTree: Click Prev
-
-   tabFiles -> tabFiles: Configure\nfiles import\n& apply
-   tabFiles -> "Tab <i>Import</i>" as tabImport: Click Next
-   tabImport --> tabFiles: Click Prev
+   tabPageTree -> "Tab <i>Import</i>" as tabImport: Click Next
+   tabImport --> tabPageTree: Click Prev
 
    tabImport -> tabImport: Import
