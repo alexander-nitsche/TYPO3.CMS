@@ -44,8 +44,8 @@ Import module
 
 .. uml::
 
-   "Tab <i>Load</i>" as tabLoad -> tabLoad: Upload file from\nlocal computer\n(optional)
-   tabLoad -> tabLoad: Select file\nto import\n& click Load
+   "Tab <i>Load</i>" as tabLoad -> tabLoad: Upload import\nto server\n(optional)
+   tabLoad -> tabLoad: Select import\non server\n& load
    tabLoad -> "Tab <i>Page Tree</i>" as tabPageTree: Click Next
    tabPageTree --> tabLoad: Click Prev
 
