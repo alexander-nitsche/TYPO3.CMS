@@ -275,6 +275,73 @@ TODOS
 =====
 
 - Alex: What is the difference between pages and records export (always item_uid=0)?
+
+.. code-block:: json
+   :caption: Export pages
+
+   {
+      "pagetree": {
+         "id": "",
+         "tables": ""
+      },
+      "record": [
+         "fe_users:1"
+      ],
+      "external_ref": {
+         "tables": [
+            "_ALL"
+         ]
+      },
+      "external_static": {
+         "tables": [
+            "fe_groups"
+         ]
+      },
+      "showStaticRelations": "1",
+      "excludeDisabled": "1",
+      "download_export_name": "fe_users_1",
+      "preset": {
+         "title": "Record Export",
+         "public": 0
+      },
+      "meta": {
+         "title": "",
+         "description": "",
+         "notes": ""
+      },
+      "filetype": "xml",
+      "filename": "",
+      "excludeHTMLfileResources": "",
+      "saveFilesOutsideExportFile": "",
+      "extension_dep": "",
+      "exclude": []
+   }
+
+.. code-block:: json
+   :caption: Export records
+
+   {
+      "pagetree": {
+         "id": "0",
+         "levels": "0",
+         "tables": [
+            "_ALL"
+         ]
+      },
+      "external_ref": {
+         "tables": ""
+      },
+      "external_static": {
+         "tables": [
+            "fe_groups"
+         ]
+      },
+      "showStaticRelations": "",
+      "excludeDisabled": "1",
+      "download_export_name": "tree_PID0_L0",
+      "..": ".."
+   }
+
 - Alex: check https://forge.typo3.org/issues/85430 for any missing issue
 - Alex: check and use official wording of "page tree" and "files" in backend user access tabs
 - Alex: find existing GUI elements and suggest / make scribble
