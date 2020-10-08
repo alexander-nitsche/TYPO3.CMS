@@ -27,16 +27,12 @@ Export module
    tabFiles --> tabPageTree: Click Prev
 
    tabFiles -> tabFiles: Configure\nfiles export\n& apply
-   tabFiles -> "Tab <i>Meta Data</i>" as tabMetaData: Click Next
-   tabMetaData --> tabFiles: Click Prev
+   tabFiles -> "Tab <i>Export</i>" as tabExport: Click Next
+   tabExport --> tabFiles: Click Prev
 
-   tabMetaData -> tabMetaData: Insert / update\nmeta data
-   tabMetaData -> "Tab <i>Export</i>" as tabExport: Click Next
-   tabExport --> tabMetaData: Click Prev
-
-   tabExport -> tabExport: Insert / update\npreset title\n& save preset\n(optional)
+   tabExport -> tabExport: Configure preset\n& save preset\n(optional)
    tabExport -> tabExport: Configure export file
-   tabExport -> tabExport: Save export to server
+   tabExport -> tabExport: Save export on server
    tabExport -> tabExport: Download export
 
 Import module
@@ -54,14 +50,10 @@ Import module
    tabPageTree --> tabLoad: Click Prev
 
    tabPageTree -> tabPageTree: Configure\ndatabase import\n& apply
-   tabPageTree -> "Tab <i>Meta Data</i>" as tabMetaData: Click Next
-   tabMetaData --> tabPageTree: Click Prev
+   tabPageTree -> "Tab <i>Import</i>" as tabImport: Click Next
+   tabImport --> tabPageTree: Click Prev
 
-   tabMetaData -> tabMetaData: Insert / update\nmeta data
-   tabMetaData -> "Tab <i>Import</i>" as tabImport: Click Next
-   tabImport --> tabMetaData: Click Prev
-
-   tabImport -> tabImport: Insert / update\npreset title\n& save preset\n(optional)
+   tabImport -> tabImport: Configure preset\n& save preset\n(optional)
    tabImport -> tabImport: Import
 
 Concept
@@ -79,15 +71,17 @@ Entity "Export Preset"
       - uid
       - pid
       - title
-      - description => add
-      - user_uid => rename to cruser_id
-      - public => remove
-      - item_uid => remove
-      - preset_data => rename to configuration
+      - identifier (new)
+      - description (new)
+      - configuration (former: preset_data)
+      - cruser_id (former: user_uid)
       - tstamp
       - crdate
-      - hidden => add
-      - deleted => add
+      - hidden (new)
+      - deleted (new)
+   - remove fields:
+      - public
+      - item_uid
 - CRUD
    - perform database actions by DataHandler
    - sync handling of TCEforms and export module: Soft / hard deletion, record history, access management
@@ -98,6 +92,7 @@ Entity "Export Preset"
          - record creation allowed to backend user on this pid
       - pid = root page of exported page subtree
       - title + description = form fields in export module tab "Meta Data"
+      - identifier = auto-generated from backend user + pid + title (unique, used for CLI commands)
       - cruser_id = backend user using export module
       - configuration = serialized export configuration
       - tstamp + crdate = creation timestamp
@@ -144,132 +139,133 @@ UI
    - tab "Preset"
       - list all existing presets of page with
          - normal TCA list item
-         - action: load (jump to tab "Page Tree" with preset loaded + message)
+         - action: load (jump to tab "Page Tree" with preset loaded + success message)
       - list all existing presets of subtree with
          - grouped by page ID (page title)
             - normal TCA list item
-            - action: load (jump to page in page tree + tab "Page Tree" with preset loaded + message)
+            - action: load (jump to page in page tree + tab "Page Tree" with preset loaded + success message + info about page tree jump)
       - Button "Next"
    - tab "Page Tree"
-      - Page (Name+ID) (readonly, change by clicking in pagetree submodule)
-      - Tree
-      - Levels
+      - Page ID
+      - Page Tree (former: Tree)
+      - Depth (former: Levels)
       - Include tables
-      - Include relations to tables => Include related data of foreign tables
-      - Use static relations for tables => Include keys only of foreign tables
-      - Show static relations => Show foreign keys in export preview
+      - Include relations to tables (find better wording)
+      - Use static relations for tables (find better wording)
+      - Show static relations (find better wording)
       - Exclude elements: Add same row as for "Preview export": Include [check] [symbol] [title/table+id if no title]
       - Exclude disabled elements (is it really required or does it add complexity?)
-      - Button "Apply" (former "Update", maybe with loading overlay, maybe with enabled and disabled state)
-      - Button "Prev" + Button "Next" (maybe with titles of prev + next tabs)
+      - Button "Apply" (former: "Update")
+      - Button "Prev" + Button "Next"
       - Preview export (single records removable)
    - tab "Files"
       - Exclude media which is linked in HTML / CSS files
-      - Button "Apply" (maybe with loading overlay, maybe with enabled and disabled state)
-      - Button "Prev" + Button "Next" (maybe with titles of prev + next tabs)
+      - Button "Apply"
+      - Button "Prev" + Button "Next"
       - Preview export (single records removable?)
-   - tab "Meta Data"
-      - info: this form used for preset and exported file
-      - title
-      - description
-      - access: public (maybe remove from here completely and add hint somewhere that access can be changed in view "Presets")
-      - Button "Prev" + Button "Next" (maybe with titles of prev + next tabs)
-      - Preview export
    - tab "Export"
-      - File format
       - Section "Save configuration as preset"
-         - input field for preset title (if empty, suggest converted title)
+         - title
+         - description
          - button "Save preset"
             => on save: "Configuration saved to path/file successfully."
-      - Section "Save export to server"
-         - Readonly server path + input field for filename (if empty, suggest converted title)
-         - Checkbox "Override existing file" (empty by default)
-         - Button "Save export to server"
-            => on save: "Configuration saved to path/file successfully."
-      - Section "Download export"
-         - Button "Download export"
-      - Button "Prev" (maybe with titles of prev + next tabs)
+      - Section "Save export"
+         - File format
+         - Subsection "Save export on server"
+            - Readonly server path + input field for filename (if empty, suggest something)
+            - Button "Save export on server"
+               => on save: "Export saved to path/file successfully."
+         - Subsection "Download export"
+            - Button "Download export"
+      - Button "Prev"
       - Preview export
 
 - Import module
    - tab "Preset"
       - list all existing presets of page with
          - normal TCA list item
-         - action: load (jump to tab "Load" with preset loaded + message)
+         - action: load (jump to tab "Load" with preset loaded + success message)
       - list all existing presets of subtree with
          - grouped by page ID (page title)
             - normal TCA list item
-            - action: load (jump to page in page tree + tab "Page Tree" with preset loaded + message)
+            - action: load (jump to page in page tree + tab "Page Tree" with preset loaded + success message)
       - Button "Next"
    - tab "Load"
       - Select file to import
       - Upload file from local computer
          - Overwrite existing files
-      - Button "Load" (former "Update", maybe with loading overlay, maybe with enabled and disabled state)
-      - Button "Next" (maybe with title of next tab)
+      - Button "Load" (former: "Update")
+      - Button "Next"
    - tab "Page Tree"
-      - Levels
-      - Update records => Insert [ ] Update [x] (with info)
-      - Do not show differences in records => Why, for performance reasons?
-      - Force ALL UIDs values => Force UIDs of import file
-      - Write individual DB actions during import to the log => Log all database actions => Log Level: [ ] normal [ ] high
+      - Page ID
+      - Page Tree (former: Tree)
+      - Depth (former: Levels)
       - Include tables (as in view "Export")
+      - Method: Insert records / Update records / Update records but ignore the pid (former: Update records)
+      - Do not show differences in records => Why, for performance reasons?
+      - Force uids of import file (former: Force ALL UIDs values)
+      - Log all database actions (former: Write individual DB actions during import to the log)
       - Exclude elements: Add same row as for "Preview import": Include [check] [symbol] [title/table+id if no title]
-      - Button "Apply" (maybe with loading overlay, maybe with enabled and disabled state)
-      - Button "Prev" + Button "Next" (maybe with titles of prev + next tabs)
+      - Button "Apply"
+      - Button "Prev" + Button "Next"
       - Preview import (single records removable)
-   - tab "Meta Data"
-      - info: this form used for preset
-      - title
-      - description
-      - access: public (maybe remove from here completely and add hint somewhere that access can be changed in view "Presets")
-      - Button "Prev" + Button "Next" (maybe with titles of prev + next tabs)
-      - Preview import
    - tab "Import"
       - Section "Save configuration as preset"
-         - input field for preset title (if empty, suggest converted title)
+         - title
+         - description
          - button "Save preset"
             => on save: "Configuration saved to path/file successfully."
       - Section "Import"
          - Button "Import"
-      - Button "Prev" (maybe with title of prev tab)
+      - Button "Prev"
       - Preview import
 
 - General: Sort lists alphabetically, if no other sorting is more appropriate.
 - General: Add info overlays with detailed explanations for all fields that are not super obvious.
 - General: Always return to the current tab when submitting a form.
 - General: Are there UI elements available for progress / proceeding with a multistep form?
+- General: Add more apply buttons to UI, maybe after each configuration section
+- General: Apply button maybe with loading overlay, maybe with enabled and disabled state (depending on change in formular?)
+- General: Prev and next buttons maybe contain titles of prev + next tabs
 
 CLI
 ---
 
-- Add CLI export command (https://forge.typo3.org/issues/84718)
+- Export command (https://forge.typo3.org/issues/84718)
    - params
-      - file (required) (The path and filename to export to (.t3d or .xml))
-      - preset (optional) (The preset to load for export)
+      - filepath (required) (The path and filename to export to)
+      - filetype (required) (t3d/t3dz/xml)
+      - preset (optional) (The preset identifier to use for export)
       - pid (optional) (The pid indicates root page of export)
-      - depth (optional) (Traversal depth, same as levels in export module) (see typo3/sysext/lowlevel/Classes/Command/DeletedRecordsCommand.php)
-      - includeTable (optional) (multiple) (if added, only records of these tables will be exported, same as in export module)
-      - includeRelated (optional) (if added, records of these tables will be exported only if linked by another record, same as in export module)
-      - keepForeignKey (optional) (if added, foreign keys will be kept in records of these tables, same as in export module)
-      - enableLog (optional)
-      - excludeUid (optional) (if added, this particular record (table:uid) will be exluded from export, same as in export module)
-   - constraint: preset _xor_ pageId && includeTable && includeRelated && keepForeignKey
-- Update CLI import command
+      - depth (optional) (Traversal depth, same as levels in export module)
+      - includeTable (optional, multiple) (if added, only records of these tables will be exported, same as in export module)
+      - includeRelated (optional, multiple) (if added, records of these tables will be exported only if linked by another record, same as in export module)
+      - includeStatic (optional, multiple) (if added, foreign keys will be kept in records of these tables, same as in export module)
+      - excludeRecord (optional, multiple) (if added, this particular record (table:uid) will be exluded from export, same as in export module)
+      - includeRecord (optional, multiple) (if added, this particular record (table:uid) will be included into export, same as in export module)
+   - preset and other params can be used together: they get merged in a sensible and well documented way
+- Import command
    - params
-      - preset (optional) (The preset to load for export)
-      - pageId -> pid (optional) (see typo3/sysext/lowlevel/Classes/Command/DeletedRecordsCommand.php)
-      - depth (optional) (Traversal depth, same as levels in import module) (see typo3/sysext/lowlevel/Classes/Command/DeletedRecordsCommand.php)
-      - includeTable (optional) (multiple) (if added, only records of these tables will be imported, same as in import module)
-      - excludeUid (optional) (if added, this particular record (table:uid) will be exluded from import, same as in import module)
-   - constraint: preset _xor_ pageId && includeTable
+      - file -> filepath (filetype gets auto-detected)
+      - preset (optional) (The preset identifier to use for import)
+      - pid (optional)
+      - depth (optional) (Traversal depth, same as levels in import module)
+      - includeTable (optional, multiple) (if added, only records of these tables will be imported, same as in import module)
+      - excludeRecord (optional, multiple) (if added, this particular record (table:uid) will be exluded from import, same as in import module)
+      - method [insert(default)/update/updateButIgnorePid] (optional) (former: updateRecords, ignorePid)
+      - forceUid (optional) (if added, uids of imported records will be forced)
+      - enableLog (optional) (if added, database queries get logged)
+   - preset and other params can be used together: they get merged in a sensible and well documented way
 - General: Add shortcuts for each param
-- General: Add summary log with statistics of import/export
+- General: Add summary log with configuration and statistics of import/export
+- General: Make all module configuration fields available as CLI command params (such that an integrator can fully switch from TYPO3 backend to CLI for large TYPO3 instances which exceed PHP maximum execution time)
 
 Misc
 ----
 
 - Check and maybe adjust indentation of entries in section "Preview import" / "Preview export"
+- General: Use as many core functionality as possible
+- General: Refactor to smaller yet better testable portions of code (e.g. small controllers)
 
 TODOS
 =====
@@ -342,12 +338,14 @@ TODOS
       "..": ".."
    }
 
-- Alex: check https://forge.typo3.org/issues/85430 for any missing issue
-- Alex: check and use official wording of "page tree" and "files" in backend user access tabs
+- Link: https://forge.typo3.org/issues/85430
 - Alex: find existing GUI elements and suggest / make scribble
-- Alex: Make all module configuration fields available as CLI command params
-- Alex: Make creation of presets available to CLI: Sync structure (serialized <-> YAML/XML/JSON) and storage (database <-> file)?
+- Discussion: Merge tabs "Page Tree" and "Files" into "Configuration" to reduce tabbing?
 - Discussion: Export Preset: how to best visualize field "configuration"
   (if visualization for XML or JSON or YAML available, maybe switching from serialized object to that format is recommended?)
 - Discussion: Export Preset: how to best replace access field "public" by official TYPO3 Core access management
 - Discussion: Add CLI param "dry-run" for collecting stats on imports and exports?
+- Discussion: Wordings:
+   - levels -> depth (see e.g. DeletedRecordsCommand)
+   - pageId -> pid (see e.g. DeletedRecordsCommand)
+   - No tree exported - only tables on the page. -> No pages exported - only records on this page.
