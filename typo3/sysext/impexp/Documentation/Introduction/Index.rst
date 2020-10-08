@@ -44,13 +44,22 @@ Import module
 
 .. uml::
 
-   "Tab <i>Load</i>" as tabLoad -> tabLoad: Upload import\nto server\n(optional)
+   "Tab <i>Preset</i>" as tabPreset -> tabPreset: Load preset\n(optional)
+   tabPreset -> "Tab <i>Load</i>" as tabLoad: Click Next
+   tabLoad --> tabPreset: Click Prev
+
+   tabLoad -> tabLoad: Upload import\nto server\n(optional)
    tabLoad -> tabLoad: Select import\non server\n& load
    tabLoad -> "Tab <i>Page Tree</i>" as tabPageTree: Click Next
    tabPageTree --> tabLoad: Click Prev
 
    tabPageTree -> tabPageTree: Configure\ndatabase import\n& apply
-   tabPageTree -> "Tab <i>Import</i>" as tabImport: Click Next
-   tabImport --> tabPageTree: Click Prev
+   tabPageTree -> "Tab <i>Meta Data</i>" as tabMetaData: Click Next
+   tabMetaData --> tabPageTree: Click Prev
 
+   tabMetaData -> tabMetaData: Insert / update\nmeta data
+   tabMetaData -> "Tab <i>Import</i>" as tabImport: Click Next
+   tabImport --> tabMetaData: Click Prev
+
+   tabImport -> tabImport: Insert / update\npreset title\n& save preset\n(optional)
    tabImport -> tabImport: Import
