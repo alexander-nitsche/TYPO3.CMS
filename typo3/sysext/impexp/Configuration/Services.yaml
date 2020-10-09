@@ -14,3 +14,8 @@ services:
     tags:
       - name: 'console.command'
         command: 'impexp:import'
+
+  TYPO3\CMS\Impexp\Command\ExportCommand:
+    tags:
+      - name: 'console.command'
+        command: 'impexp:export'
