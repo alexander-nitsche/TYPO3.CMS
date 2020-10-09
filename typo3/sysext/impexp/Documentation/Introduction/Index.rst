@@ -80,11 +80,10 @@ Entity "Export Preset"
       - hidden (new)
       - deleted (new)
    - remove fields:
-      - public
-      - item_uid
+      - public (replace by native TYPO3 access management)
+      - item_uid (replace by pid)
+
 - CRUD
-   - perform database actions by DataHandler
-   - sync handling of TCEforms and export module: Soft / hard deletion, record history, access management
    - Creation:
       - create export preset if
          - export preset by this backend user + pid + title does not exist
@@ -116,6 +115,11 @@ Entity "Export Preset"
          - export module accessible by backend user
          - record deletion allowed to backend user on this pid
       - deleted = true
+
+- General: Sync handling of TCEforms and import/export module:
+   - soft / hard deletion
+   - record history
+   - access management
 
 Entity "Import Preset"
 ----------------------
@@ -220,6 +224,7 @@ UI
       - Button "Prev"
       - Preview import
 
+- General: perform database actions by DataHandler
 - General: Sort lists alphabetically, if no other sorting is more appropriate.
 - General: Add info overlays with detailed explanations for all fields that are not super obvious.
 - General: Always return to the current tab when submitting a form.
@@ -243,7 +248,9 @@ CLI
       - includeStatic (optional, multiple) (if added, foreign keys will be kept in records of these tables, same as in export module)
       - excludeRecord (optional, multiple) (if added, this particular record (table:uid) will be exluded from export, same as in export module)
       - includeRecord (optional, multiple) (if added, this particular record (table:uid) will be included into export, same as in export module)
+      - dry-run (optional) (if added, the command returns all queries instead of executing them, same as "Export Preview" in export module)
    - preset and other params can be used together: they get merged in a sensible and well documented way
+
 - Import command
    - params
       - file -> filepath (filetype gets auto-detected)
@@ -255,7 +262,9 @@ CLI
       - method [insert(default)/update/updateButIgnorePid] (optional) (former: updateRecords, ignorePid)
       - forceUid (optional) (if added, uids of imported records will be forced)
       - enableLog (optional) (if added, database queries get logged)
+      - dry-run (optional) (if added, the command returns all queries instead of executing them, same as "Import Preview" in import module)
    - preset and other params can be used together: they get merged in a sensible and well documented way
+
 - General: Add shortcuts for each param
 - General: Add summary log with configuration and statistics of import/export
 - General: Make all module configuration fields available as CLI command params (such that an integrator can fully switch from TYPO3 backend to CLI for large TYPO3 instances which exceed PHP maximum execution time)
@@ -341,10 +350,12 @@ TODOS
 - Link: https://forge.typo3.org/issues/85430
 - Alex: find existing GUI elements and suggest / make scribble
 - Discussion: Merge tabs "Page Tree" and "Files" into "Configuration" to reduce tabbing?
-- Discussion: Export Preset: how to best visualize field "configuration"
-  (if visualization for XML or JSON or YAML available, maybe switching from serialized object to that format is recommended?)
-- Discussion: Export Preset: how to best replace access field "public" by official TYPO3 Core access management
-- Discussion: Add CLI param "dry-run" for collecting stats on imports and exports?
+- Discussion: Import / Export: File formats of preset and dump files still state of the art?
+   - How to best visualize TCA field "configuration"? If visualization for XML or JSON or YAML or FlexForm available, maybe switching from serialized object to that format is preferred?
+   - Is there any advantage of T3D over XML? If not, could we skip support?
+   - Is there any advantage of XML over JSON? Maybe having a scheme? If not, should we switch to the slim JSON format?
+- Discussion: Import / Export Preset: How to best support a user-friendly copy & paste / instant preset, e.g. User A -> User B: "Please export your TYPO3 instance with this preset snippet and paste in here the export .."
+- Discussion: Export Preset: How to best replace access field "public" by official TYPO3 Core access management
 - Discussion: Wordings:
    - levels -> depth (see e.g. DeletedRecordsCommand)
    - pageId -> pid (see e.g. DeletedRecordsCommand)
