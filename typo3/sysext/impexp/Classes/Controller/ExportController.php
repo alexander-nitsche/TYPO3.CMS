@@ -173,10 +173,8 @@ class ExportController extends ImportExportController
         if (is_array($inData['external_ref']['tables'])) {
             $this->export->relOnlyTables = $inData['external_ref']['tables'];
         }
-        $saveFilesOutsideExportFile = false;
         if (isset($inData['save_export'], $inData['saveFilesOutsideExportFile']) && $inData['saveFilesOutsideExportFile'] === '1') {
             $this->export->setSaveFilesOutsideExportFile(true);
-            $saveFilesOutsideExportFile = true;
         }
         $this->export->setHeaderBasics();
         // Meta data setting:
@@ -318,30 +316,19 @@ class ExportController extends ImportExportController
 
             // Export by saving:
             if ($inData['save_export']) {
-                $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
                 $lang = $this->getLanguageService();
-                if ($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write')) {
-                    $temporaryFileName = GeneralUtility::tempnam('export');
-                    GeneralUtility::writeFile($temporaryFileName, $out);
-                    $file = $saveFolder->addFile($temporaryFileName, $dlFile, 'replace');
-                    if ($saveFilesOutsideExportFile) {
-                        $filesFolderName = $dlFile . '.files';
-                        $filesFolder = $saveFolder->createFolder($filesFolderName);
-                        $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->export->getOrCreateTemporaryFolderName(), '', true);
-                        foreach ($temporaryFilesForExport as $temporaryFileForExport) {
-                            $filesFolder->addFile($temporaryFileForExport);
-                        }
-                        $this->export->removeTemporaryFolderName();
-                    }
 
+                try {
+                    $saveFile = $this->export->saveToFile($dlFile, $out);
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
                         FlashMessage::class,
-                        sprintf($lang->getLL('exportdata_savedInSBytes'), $file->getPublicUrl(), GeneralUtility::formatSize(strlen($out))),
+                        sprintf($lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize(strlen($out))),
                         $lang->getLL('exportdata_savedFile'),
                         FlashMessage::OK
                     );
-                } else {
+                } catch (\Exception $e) {
+                    $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
                         FlashMessage::class,
@@ -350,6 +337,7 @@ class ExportController extends ImportExportController
                         FlashMessage::ERROR
                     );
                 }
+
                 $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
                 $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
                 $defaultFlashMessageQueue->enqueue($flashMessage);

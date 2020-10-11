@@ -60,4 +60,32 @@ class ExportTest extends AbstractImportExportTestCase
         self::assertFalse(is_dir(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl()));
         self::assertFalse(is_file(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl() . $exportFileName));
     }
+
+    /**
+     * @test
+     */
+    public function compileMemoryToFileContentSucceedsWithoutArguments(): void
+    {
+        $export = new Export();
+        $export->init(0);
+        $actual = $export->compileMemoryToFileContent('xml');
+
+        self::assertXmlStringEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $actual);
+    }
+
+    /**
+     * @test
+     */
+    public function saveToFileSucceeds(): void
+    {
+        $export = new Export();
+        $export->init(0);
+
+        $fileName = 'export.xml';
+        $fileContent = $export->compileMemoryToFileContent('xml');
+        $file = $export->saveToFile($fileName, $fileContent);
+        $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
+
+        self::assertXmlFileEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $filePath);
+    }
 }

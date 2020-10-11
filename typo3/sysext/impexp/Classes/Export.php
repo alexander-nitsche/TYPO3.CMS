@@ -21,7 +21,9 @@ use TYPO3\CMS\Core\Database\ReferenceIndex;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Html\HtmlParser;
 use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderWritePermissionsException;
 use TYPO3\CMS\Core\Resource\File;
+use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
@@ -1018,5 +1020,39 @@ class Export extends ImportExport
             $data = (string)gzcompress($data);
         }
         return md5($data) . ':' . ($compress ? '1' : '0') . ':' . str_pad((string)strlen($data), 10, '0', STR_PAD_LEFT) . ':' . $data . ':';
+    }
+
+    /**
+     * @param string $fileName
+     * @param string $fileContent
+     * @return File
+     * @throws InsufficientFolderWritePermissionsException
+     */
+    public function saveToFile(string $fileName, string &$fileContent): File
+    {
+        $saveFolder = $this->getOrCreateDefaultImportExportFolder();
+
+        if (!($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write'))) {
+            throw new InsufficientFolderWritePermissionsException(
+                'You are not allowed to write to the target folder "' . $saveFolder->getPublicUrl() .'"',
+                1602432207
+            );
+        }
+
+        $temporaryFileName = GeneralUtility::tempnam('export');
+        GeneralUtility::writeFile($temporaryFileName, $fileContent);
+        $file = $saveFolder->addFile($temporaryFileName, $fileName, 'replace');
+
+        if ($this->saveFilesOutsideExportFile) {
+            $filesFolderName = $fileName . '.files';
+            $filesFolder = $saveFolder->createFolder($filesFolderName);
+            $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->getOrCreateTemporaryFolderName(), '', true);
+            foreach ($temporaryFilesForExport as $temporaryFileForExport) {
+                $filesFolder->addFile($temporaryFileForExport);
+            }
+            $this->removeTemporaryFolderName();
+        }
+
+        return $file;
     }
 }
