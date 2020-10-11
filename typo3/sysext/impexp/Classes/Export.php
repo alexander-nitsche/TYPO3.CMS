@@ -103,11 +103,6 @@ class Export extends ImportExport
      */
     protected $saveFilesOutsideExportFile = false;
 
-    /**
-     * @var string|null
-     */
-    protected $temporaryFilesPathForExport;
-
     /**************************
      * Initialize
      *************************/
@@ -196,7 +191,7 @@ class Export extends ImportExport
      * The files are saved to a temporary folder instead.
      *
      * @param bool $saveFilesOutsideExportFile
-     * @see getTemporaryFilesPathForExport()
+     * @see ImportExport::getTemporaryFolderName()
      */
     public function setSaveFilesOutsideExportFile($saveFilesOutsideExportFile)
     {
@@ -675,7 +670,7 @@ class Export extends ImportExport
             // ... and finally add the heavy stuff:
             $fileRec['content'] = $fileContent;
         } else {
-            GeneralUtility::upload_copy_move($file->getForLocalProcessing(false), $this->getTemporaryFilesPathForExport() . $file->getProperty('sha1'));
+            GeneralUtility::upload_copy_move($file->getForLocalProcessing(false), $this->getTemporaryFolderName() . '/' . $file->getProperty('sha1'));
         }
         $fileRec['content_sha1'] = $fileSha1;
 
@@ -722,7 +717,7 @@ class Export extends ImportExport
             // ... and finally add the heavy stuff:
             $fileRec['content'] = (string)file_get_contents($fI['ID_absFile']);
         } else {
-            GeneralUtility::upload_copy_move($fI['ID_absFile'], $this->getTemporaryFilesPathForExport() . $fileMd5);
+            GeneralUtility::upload_copy_move($fI['ID_absFile'], $this->getTemporaryFolderName() . '/' . $fileMd5);
         }
         $fileRec['content_md5'] = $fileMd5;
         $this->dat['files'][$fI['ID']] = $fileRec;
@@ -774,26 +769,6 @@ class Export extends ImportExport
                 }
             }
         }
-    }
-
-    /**
-     * If saveFilesOutsideExportFile is enabled, this function returns the path
-     * where the files referenced in the export are copied to.
-     *
-     * @return string
-     * @throws \RuntimeException
-     * @see setSaveFilesOutsideExportFile()
-     */
-    public function getTemporaryFilesPathForExport()
-    {
-        if (!$this->saveFilesOutsideExportFile) {
-            throw new \RuntimeException('You need to set saveFilesOutsideExportFile to TRUE before you want to get the temporary files path for export.', 1401205213);
-        }
-        if ($this->temporaryFilesPathForExport === null) {
-            $temporaryFolderName = $this->getTemporaryFolderName();
-            $this->temporaryFilesPathForExport = $temporaryFolderName . '/';
-        }
-        return $this->temporaryFilesPathForExport;
     }
 
     /**

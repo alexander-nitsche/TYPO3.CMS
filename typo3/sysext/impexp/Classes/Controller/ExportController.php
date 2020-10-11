@@ -327,12 +327,12 @@ class ExportController extends ImportExportController
                     if ($saveFilesOutsideExportFile) {
                         $filesFolderName = $dlFile . '.files';
                         $filesFolder = $saveFolder->createFolder($filesFolderName);
-                        $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->export->getTemporaryFilesPathForExport(), '', true);
+                        $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->export->getTemporaryFolderName(), '', true);
                         foreach ($temporaryFilesForExport as $temporaryFileForExport) {
                             $filesFolder->addFile($temporaryFileForExport);
                             GeneralUtility::unlink_tempfile($temporaryFileForExport);
                         }
-                        GeneralUtility::rmdir($this->export->getTemporaryFilesPathForExport());
+                        GeneralUtility::rmdir($this->export->getTemporaryFolderName());
                     }
 
                     /** @var FlashMessage $flashMessage */

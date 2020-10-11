@@ -252,6 +252,11 @@ abstract class ImportExport
     protected $iconFactory;
 
     /**
+     * @var string
+     */
+    protected $temporaryFolderName;
+
+    /**
      * Flag to control whether all disabled records and their children are excluded (true) or included (false). Defaults
      * to the old behaviour of including everything.
      *
@@ -949,14 +954,25 @@ abstract class ImportExport
     /**
      * @return string
      */
-    protected function getTemporaryFolderName()
+    public function getTemporaryFolderName(): string
+    {
+        if (empty($this->temporaryFolderName)) {
+            $this->createTemporaryFolderName();
+        }
+        return $this->temporaryFolderName;
+    }
+
+    /**
+     * @return void
+     */
+    protected function createTemporaryFolderName(): void
     {
         $temporaryPath = Environment::getVarPath() . '/transient/';
         do {
             $temporaryFolderName = $temporaryPath . 'export_temp_files_' . random_int(1, PHP_INT_MAX);
         } while (is_dir($temporaryFolderName));
         GeneralUtility::mkdir($temporaryFolderName);
-        return $temporaryFolderName;
+        $this->temporaryFolderName = $temporaryFolderName;
     }
 
     /**
