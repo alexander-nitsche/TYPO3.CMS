@@ -27,12 +27,19 @@ class ExportCommandTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function exportCommandSucceeds(): void
+    public function exportCommandSavesExportWithGivenFileName(): void
     {
+        $fileName = 'fileadmin/empty_export.xml';
+
         /** @var ExportCommand */
         $command = new ExportCommand();
         $tester = new CommandTester($command);
+        $tester->execute(['file' => $fileName], []);
 
-        self::assertEquals($tester->execute(['file' => 'filepath'], []), 0);
+        preg_match('/([^\s]*importexport[^\s]*)/', $tester->getDisplay(), $display);
+        $filePath = $display[1];
+
+        self::assertEquals(0, $tester->getStatusCode());
+        self::assertXmlFileEqualsXmlFile(__DIR__ . '/../Fixtures/XmlExports/empty.xml', $filePath);
     }
 }

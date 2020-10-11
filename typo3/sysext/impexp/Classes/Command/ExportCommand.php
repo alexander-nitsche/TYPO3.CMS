@@ -22,7 +22,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Impexp\Command\Exception\InvalidFileException;
+use TYPO3\CMS\Impexp\Export;
 
 /**
  * Command for exporting T3D/XML data files
@@ -56,7 +58,7 @@ class ExportCommand extends Command
         Bootstrap::initializeBackendAuthentication();
 
         $fileName = (string)$input->getArgument('file');
-        $fileName = GeneralUtility::getFileAbsFileName($fileName);
+        $fileName = PathUtility::basename($fileName);
         if ($fileName === '') {
             throw new InvalidFileException('The given filename "' . $fileName . '" is not valid', 1602257683);
         } elseif (file_exists($fileName)) {
@@ -64,7 +66,21 @@ class ExportCommand extends Command
         }
 
         $io = new SymfonyStyle($input, $output);
-        $io->success('Exported ' . $input->getArgument('file') . ' successfully');
-        return 0;
+
+        $export = GeneralUtility::makeInstance(Export::class);
+        $export->init(0);
+        $fileContent = $export->compileMemoryToFileContent('xml');
+        try {
+            $saveFile = $export->saveToFile($fileName, $fileContent);
+            $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
+            return 0;
+        } catch (\Exception $e) {
+            $saveFolder = $export->getOrCreateDefaultImportExportFolder();
+            $io->error('Exporting to ' . $saveFolder->getPublicUrl() . ' failed.');
+            if ($io->isVerbose()) {
+                $io->writeln($e->getMessage());
+            }
+            return 1;
+        }
     }
 }
