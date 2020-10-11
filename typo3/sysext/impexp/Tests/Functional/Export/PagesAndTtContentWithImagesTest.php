@@ -114,7 +114,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
             $out
         );
 
-        $temporaryFilesDirectory = $subject->getTemporaryFolderName();
+        $temporaryFilesDirectory = $subject->getOrCreateTemporaryFolderName();
         self::assertFileEquals(__DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg', $temporaryFilesDirectory . '/' . 'da9acdf1e105784a57bbffec9520969578287797');
     }
 

@@ -344,10 +344,11 @@ class Import extends ImportExport
             $fileRecord = $this->dat['records']['sys_file:' . $sysFileUid]['data'];
 
             $temporaryFile = null;
+            $temporaryFolder = $this->getTemporaryFolderName();
             // check if there is the right file already in the local folder
-            if ($this->filesPathForImport !== null) {
-                if (is_file($this->filesPathForImport . '/' . $fileRecord['sha1']) && sha1_file($this->filesPathForImport . '/' . $fileRecord['sha1']) === $fileRecord['sha1']) {
-                    $temporaryFile = $this->filesPathForImport . '/' . $fileRecord['sha1'];
+            if ($temporaryFolder !== null) {
+                if (is_file($temporaryFolder . '/' . $fileRecord['sha1']) && sha1_file($temporaryFolder . '/' . $fileRecord['sha1']) === $fileRecord['sha1']) {
+                    $temporaryFile = $temporaryFolder . '/' . $fileRecord['sha1'];
                 }
             }
 
@@ -1091,11 +1092,12 @@ class Import extends ImportExport
     {
         if (is_array($this->dat['files'][$fI['ID']])) {
             $tmpFile = null;
+            $tmpFolder = $this->getTemporaryFolderName();
             // check if there is the right file already in the local folder
-            if ($this->filesPathForImport !== null) {
-                if (is_file($this->filesPathForImport . '/' . $this->dat['files'][$fI['ID']]['content_md5']) &&
-                    md5_file($this->filesPathForImport . '/' . $this->dat['files'][$fI['ID']]['content_md5']) === $this->dat['files'][$fI['ID']]['content_md5']) {
-                    $tmpFile = $this->filesPathForImport . '/' . $this->dat['files'][$fI['ID']]['content_md5'];
+            if ($tmpFolder !== null) {
+                if (is_file($tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5']) &&
+                    md5_file($tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5']) === $this->dat['files'][$fI['ID']]['content_md5']) {
+                    $tmpFile = $tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5'];
                 }
             }
             if ($tmpFile === null) {
@@ -1621,9 +1623,7 @@ class Import extends ImportExport
         if (@is_dir($filename . '.files')) {
             if (GeneralUtility::isAllowedAbsPath($filename . '.files')) {
                 // copy the folder lowlevel to typo3temp, because the files would be deleted after import
-                $temporaryFolderName = $this->getTemporaryFolderName();
-                GeneralUtility::copyDirectory($filename . '.files', $temporaryFolderName);
-                $this->filesPathForImport = $temporaryFolderName;
+                GeneralUtility::copyDirectory($filename . '.files', $this->getOrCreateTemporaryFolderName());
             } else {
                 $this->error('External import files for the given import source is currently not supported.');
             }

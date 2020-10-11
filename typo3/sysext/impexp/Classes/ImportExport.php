@@ -952,9 +952,17 @@ abstract class ImportExport
      *****************************/
 
     /**
+     * @return string|null
+     */
+    public function getTemporaryFolderName(): ?string
+    {
+        return $this->temporaryFolderName;
+    }
+
+    /**
      * @return string
      */
-    public function getTemporaryFolderName(): string
+    public function getOrCreateTemporaryFolderName(): string
     {
         if (empty($this->temporaryFolderName)) {
             $this->createTemporaryFolderName();
