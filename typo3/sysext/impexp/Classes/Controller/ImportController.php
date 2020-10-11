@@ -174,7 +174,7 @@ class ImportController extends ImportExportController
 
             // Make input selector:
             // must have trailing slash.
-            $path = $this->getDefaultImportExportFolder();
+            $path = $import->getOrCreateDefaultImportExportFolder();
             $exportFiles = $this->getExportFiles();
 
             $this->shortcutName .= ' (' . htmlspecialchars($this->pageinfo['title']) . ')';
@@ -197,7 +197,7 @@ class ImportController extends ImportExportController
             $this->standaloneView->assign('isAdmin', $beUser->isAdmin());
 
             // Upload file:
-            $tempFolder = $this->getDefaultImportExportFolder();
+            $tempFolder = $import->getOrCreateDefaultImportExportFolder();
             if ($tempFolder) {
                 $this->standaloneView->assign('tempFolder', $tempFolder->getCombinedIdentifier());
                 $this->standaloneView->assign('hasTempUploadFolder', true);
@@ -294,14 +294,15 @@ class ImportController extends ImportExportController
     /**
      * Gets all export files.
      *
+     * @param Import $import
      * @return File[]
      * @throws \InvalidArgumentException
      */
-    protected function getExportFiles(): array
+    protected function getExportFiles(Import $import): array
     {
         $exportFiles = [];
 
-        $folder = $this->getDefaultImportExportFolder();
+        $folder = $import->getOrCreateDefaultImportExportFolder();
         if ($folder !== null) {
 
             /** @var FileExtensionFilter $filter */

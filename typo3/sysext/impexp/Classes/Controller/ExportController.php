@@ -318,7 +318,7 @@ class ExportController extends ImportExportController
 
             // Export by saving:
             if ($inData['save_export']) {
-                $saveFolder = $this->getDefaultImportExportFolder();
+                $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
                 $lang = $this->getLanguageService();
                 if ($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write')) {
                     $temporaryFileName = GeneralUtility::tempnam('export');
@@ -533,7 +533,7 @@ class ExportController extends ImportExportController
 
         $this->standaloneView->assign('presetSelectOptions', $opt);
 
-        $saveFolder = $this->getDefaultImportExportFolder();
+        $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
         if ($saveFolder) {
             $this->standaloneView->assign('saveFolder', $saveFolder->getCombinedIdentifier());
         }

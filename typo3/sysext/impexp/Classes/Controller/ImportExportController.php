@@ -177,34 +177,6 @@ abstract class ImportExportController
     }
 
     /**
-     * Returns a \TYPO3\CMS\Core\Resource\Folder object for saving export files
-     * to the server and is also used for uploading import files.
-     *
-     * @throws \InvalidArgumentException
-     * @return Folder|null
-     */
-    protected function getDefaultImportExportFolder(): ?Folder
-    {
-        $defaultImportExportFolder = null;
-
-        $defaultTemporaryFolder = $this->getBackendUser()->getDefaultUploadTemporaryFolder();
-        if ($defaultTemporaryFolder !== null) {
-            $importExportFolderName = 'importexport';
-            $createFolder = !$defaultTemporaryFolder->hasFolder($importExportFolderName);
-            if ($createFolder === true) {
-                try {
-                    $defaultImportExportFolder = $defaultTemporaryFolder->createFolder($importExportFolderName);
-                } catch (Exception $folderAccessException) {
-                }
-            } else {
-                $defaultImportExportFolder = $defaultTemporaryFolder->getSubfolder($importExportFolderName);
-            }
-        }
-
-        return $defaultImportExportFolder;
-    }
-
-    /**
      * @return BackendUserAuthentication
      */
     protected function getBackendUser(): BackendUserAuthentication

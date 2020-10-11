@@ -22,6 +22,7 @@ use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderAccessPermissionsException;
+use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\Security\FileNameValidator;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
@@ -255,6 +256,11 @@ abstract class ImportExport
      * @var string
      */
     protected $temporaryFolderName;
+
+    /**
+     * @var Folder
+     */
+    protected $defaultImportExportFolder;
 
     /**
      * Flag to control whether all disabled records and their children are excluded (true) or included (false). Defaults
@@ -990,6 +996,53 @@ abstract class ImportExport
     {
         if (!empty($this->temporaryFolderName)) {
             GeneralUtility::rmdir($this->temporaryFolderName, true);
+        }
+    }
+
+    /**
+     * Returns a \TYPO3\CMS\Core\Resource\Folder object for saving export files
+     * to the server and is also used for uploading import files.
+     *
+     * @return Folder|null
+     */
+    public function getOrCreateDefaultImportExportFolder(): ?Folder
+    {
+        if (empty($this->defaultImportExportFolder)) {
+            $this->createDefaultImportExportFolder();
+        }
+        return $this->defaultImportExportFolder;
+    }
+
+    /**
+     * Creates a \TYPO3\CMS\Core\Resource\Folder object for saving export files
+     * to the server and is also used for uploading import files.
+     *
+     * @return void
+     */
+    protected function createDefaultImportExportFolder(): void
+    {
+        $defaultTemporaryFolder = $this->getBackendUser()->getDefaultUploadTemporaryFolder();
+        $defaultImportExportFolder = null;
+        $importExportFolderName = 'importexport';
+
+        if ($defaultTemporaryFolder !== null) {
+            if ($defaultTemporaryFolder->hasFolder($importExportFolderName) === false) {
+                $defaultImportExportFolder = $defaultTemporaryFolder->createFolder($importExportFolderName);
+            } else {
+                $defaultImportExportFolder = $defaultTemporaryFolder->getSubfolder($importExportFolderName);
+            }
+        }
+
+        $this->defaultImportExportFolder = $defaultImportExportFolder;
+    }
+
+    /**
+     * @return void
+     */
+    public function removeDefaultImportExportFolder(): void
+    {
+        if (!empty($this->defaultImportExportFolder)) {
+            $this->defaultImportExportFolder->delete(true);
         }
     }
 
