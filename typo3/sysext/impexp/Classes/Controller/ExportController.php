@@ -330,9 +330,8 @@ class ExportController extends ImportExportController
                         $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->export->getOrCreateTemporaryFolderName(), '', true);
                         foreach ($temporaryFilesForExport as $temporaryFileForExport) {
                             $filesFolder->addFile($temporaryFileForExport);
-                            GeneralUtility::unlink_tempfile($temporaryFileForExport);
                         }
-                        GeneralUtility::rmdir($this->export->getOrCreateTemporaryFolderName());
+                        $this->export->removeTemporaryFolderName();
                     }
 
                     /** @var FlashMessage $flashMessage */

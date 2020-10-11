@@ -984,6 +984,16 @@ abstract class ImportExport
     }
 
     /**
+     * @return void
+     */
+    public function removeTemporaryFolderName(): void
+    {
+        if (!empty($this->temporaryFolderName)) {
+            GeneralUtility::rmdir($this->temporaryFolderName, true);
+        }
+    }
+
+    /**
      * Recursively flattening the idH array
      *
      * @param array $idH Page uid hierarchy
