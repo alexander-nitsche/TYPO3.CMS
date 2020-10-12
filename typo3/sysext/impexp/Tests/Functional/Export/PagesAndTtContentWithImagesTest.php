@@ -56,7 +56,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
 
-        $out = $subject->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $out = $subject->compileMemoryToFileContent();
 
         $errors = $subject->printErrorLog();
         self::assertSame('', $errors);
@@ -79,7 +79,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
 
-        $out = $subject->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $out = $subject->compileMemoryToFileContent();
 
         $expectedErrors = [
             'File sha1 hash of 1:/user_upload/typo3_image2.jpg is not up-to-date in index! File added on current sha1.'
@@ -107,7 +107,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
 
-        $out = $subject->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $out = $subject->compileMemoryToFileContent();
 
         self::assertXmlStringEqualsXmlFile(
             __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent-with-image-but-not-included.xml',

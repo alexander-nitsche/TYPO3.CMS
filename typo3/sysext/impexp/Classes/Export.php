@@ -69,13 +69,6 @@ class Export extends ImportExport
     const FILETYPE_T3DZ = 't3d_compressed';
 
     /**
-     * Set  by user: If set, compression in t3d files is disabled
-     *
-     * @var bool
-     */
-    public $dontCompress = false;
-
-    /**
      * If set, HTML file resources are included.
      *
      * @var bool
@@ -117,7 +110,12 @@ class Export extends ImportExport
     /**
      * @var string
      */
-    protected $exportFileType = '';
+    protected $exportFileType = self::FILETYPE_XML;
+
+    /**
+     * @var array
+     */
+    protected $supportedFileTypes = [];
 
     /**************************
      * Initialize
@@ -125,13 +123,10 @@ class Export extends ImportExport
 
     /**
      * Init the object
-     *
-     * @param bool $dontCompress If set, compression of t3d files is disabled
      */
-    public function init($dontCompress = false)
+    public function init()
     {
         parent::init();
-        $this->dontCompress = $dontCompress;
         $this->mode = 'export';
     }
 
@@ -893,25 +888,25 @@ class Export extends ImportExport
 
     /**
      * This compiles and returns the data content for an exported file
+     * - "xml" gives xml
+     * - "t3d" and "t3d_compressed" gives serialized array, possibly compressed
      *
-     * @param string $type Type of output; "xml" gives xml, otherwise serialized array, possibly compressed.
      * @return string The output file stream
      */
-    public function compileMemoryToFileContent($type = '')
+    public function compileMemoryToFileContent()
     {
-        if ($type === self::FILETYPE_XML) {
+        if ($this->exportFileType === self::FILETYPE_XML) {
             $out = $this->createXML();
         } else {
-            $compress = $this->doOutputCompress();
             $out = '';
             // adding header:
-            $out .= $this->addFilePart(serialize($this->dat['header']), $compress);
+            $out .= $this->addFilePart(serialize($this->dat['header']));
             // adding records:
-            $out .= $this->addFilePart(serialize($this->dat['records']), $compress);
+            $out .= $this->addFilePart(serialize($this->dat['records']));
             // adding files:
-            $out .= $this->addFilePart(serialize($this->dat['files']), $compress);
+            $out .= $this->addFilePart(serialize($this->dat['files']));
             // adding files_fal:
-            $out .= $this->addFilePart(serialize($this->dat['files_fal']), $compress);
+            $out .= $this->addFilePart(serialize($this->dat['files_fal']));
         }
         return $out;
     }
@@ -1012,24 +1007,14 @@ class Export extends ImportExport
     }
 
     /**
-     * Returns TRUE if the output should be compressed.
-     *
-     * @return bool TRUE if compression is possible AND requested.
-     */
-    public function doOutputCompress()
-    {
-        return $this->compress && !$this->dontCompress;
-    }
-
-    /**
      * Returns a content part for a filename being build.
      *
      * @param string $data Data to store in part
-     * @param bool $compress Compress file?
      * @return string Content stream.
      */
-    public function addFilePart($data, $compress = false)
+    public function addFilePart($data)
     {
+        $compress = $this->exportFileType === self::FILETYPE_T3DZ;
         if ($compress) {
             $data = (string)gzcompress($data);
         }
@@ -1110,7 +1095,45 @@ class Export extends ImportExport
      */
     public function setExportFileType(string $exportFileType): void
     {
+        $supportedFileTypes = $this->getSupportedFileTypes();
+        if (!in_array($exportFileType, $supportedFileTypes)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'File type "%s" is not valid. Supported file types are %s.',
+                    $exportFileType,
+                    implode(', ', array_map(function($fileType){
+                        return '"' . $fileType . '"';
+                    }, $supportedFileTypes))
+                ),
+                1602505264
+            );
+        }
         $this->exportFileType = $exportFileType;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSupportedFileTypes(): array
+    {
+        if (empty($this->supportedFileTypes)) {
+            $supportedFileTypes = [];
+            $supportedFileTypes[] = self::FILETYPE_XML;
+            $supportedFileTypes[] = self::FILETYPE_T3D;
+            if ($this->isCompressionAvailable()) {
+                $supportedFileTypes[] = self::FILETYPE_T3DZ;
+            }
+            $this->supportedFileTypes = $supportedFileTypes;
+        }
+        return $this->supportedFileTypes;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isCompressionAvailable(): bool
+    {
+        return function_exists('gzcompress');
     }
 
     /**

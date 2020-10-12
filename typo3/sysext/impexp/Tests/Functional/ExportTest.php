@@ -29,7 +29,7 @@ class ExportTest extends AbstractImportExportTestCase
     public function creationAndDeletionOfTemporaryFolderSucceeds(): void
     {
         $export = new Export();
-        $export->init(0);
+        $export->init();
 
         $temporaryFolderName = $export->getOrCreateTemporaryFolderName();
         $temporaryFileName = $temporaryFolderName . '/export_file.txt';
@@ -48,7 +48,7 @@ class ExportTest extends AbstractImportExportTestCase
     public function creationAndDeletionOfDefaultImportExportFolderSucceeds(): void
     {
         $export = new Export();
-        $export->init(0);
+        $export->init();
 
         $exportFolder = $export->getOrCreateDefaultImportExportFolder();
         $exportFileName = 'export_file.txt';
@@ -67,8 +67,8 @@ class ExportTest extends AbstractImportExportTestCase
     public function compileMemoryToFileContentSucceedsWithoutArguments(): void
     {
         $export = new Export();
-        $export->init(0);
-        $actual = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $export->init();
+        $actual = $export->compileMemoryToFileContent();
 
         self::assertXmlStringEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $actual);
     }
@@ -76,16 +76,65 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function saveToFileSucceeds(): void
+    public function saveXmlToFileIsDefaultAndSucceeds(): void
     {
         $export = new Export();
-        $export->init(0);
+        $export->init();
 
         $fileName = 'export.xml';
-        $fileContent = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $fileContent = $export->compileMemoryToFileContent();
         $file = $export->saveToFile($fileName, $fileContent);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
+        self::assertStringEndsWith('export.xml', $filePath);
         self::assertXmlFileEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $filePath);
+    }
+
+    /**
+     * @test
+     */
+    public function saveT3dToFileSucceeds(): void
+    {
+        $export = new Export();
+        $export->init();
+        $export->setExportFileType(Export::FILETYPE_T3D);
+
+        $fileName = 'export.t3d';
+        $fileContent = $export->compileMemoryToFileContent();
+        $file = $export->saveToFile($fileName, $fileContent);
+        $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
+
+        // remove final newlines
+        $expected = trim(file_get_contents(__DIR__ . '/Fixtures/T3dExports/empty.t3d'));
+        $actual = trim(file_get_contents($filePath));
+
+        self::assertStringEndsWith('export.t3d', $filePath);
+        self::assertEquals($expected, $actual);
+    }
+
+    /**
+     * @test
+     */
+    public function saveT3dCompressedToFileSucceeds(): void
+    {
+        if (!function_exists('gzcompress')) {
+            self::markTestSkipped('The function gzcompress() is not available for compression.');
+        }
+
+        $export = new Export();
+        $export->init();
+        $export->setExportFileType(Export::FILETYPE_T3DZ);
+
+        $fileName = 'export-z.t3d';
+        $fileContent = $export->compileMemoryToFileContent();
+        $file = $export->saveToFile($fileName, $fileContent);
+        $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
+
+        // remove final newlines
+        $expected = trim(file_get_contents(__DIR__ . '/Fixtures/T3dExports/empty-z.t3d'));
+        $actual = trim(file_get_contents($filePath));
+
+        self::assertStringEndsWith('export-z.t3d', $filePath);
+        self::assertEquals($expected, $actual);
     }
 }

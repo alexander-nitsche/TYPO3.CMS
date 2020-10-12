@@ -41,7 +41,12 @@ class ExportCommand extends Command
             ->addArgument(
                 'file',
                 InputArgument::REQUIRED,
-                'The path and filename to export to (.t3d or .xml)'
+                'The filename to export to (.t3d or .xml)'
+            )
+            ->addArgument(
+                'fileType',
+                InputArgument::OPTIONAL,
+                'The file type (xml, t3d, t3d_compressed). Default type is "xml".'
             );
     }
 
@@ -64,13 +69,17 @@ class ExportCommand extends Command
         } elseif (file_exists($fileName)) {
             throw new InvalidFileException('The given filename "' . $fileName . '" already exists', 1602257702);
         }
+        $fileType = (string)$input->getArgument('fileType');
 
         $io = new SymfonyStyle($input, $output);
 
         $export = GeneralUtility::makeInstance(Export::class);
-        $export->init(0);
-        $fileContent = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
+        $export->init();
         try {
+            if (!empty($fileType)) {
+                $export->setExportFileType($fileType);
+            }
+            $fileContent = $export->compileMemoryToFileContent();
             $saveFile = $export->saveToFile($fileName, $fileContent);
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
             return 0;

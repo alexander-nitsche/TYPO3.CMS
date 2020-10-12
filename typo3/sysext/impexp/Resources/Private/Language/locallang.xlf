@@ -183,10 +183,10 @@
 			<trans-unit id="makesavefo_notes" resname="makesavefo_notes">
 				<source>Notes</source>
 			</trans-unit>
-			<trans-unit id="makesavefo_t3dFileCompressed" resname="makesavefo_t3dFileCompressed">
+			<trans-unit id="makesavefo_t3d_compressed" resname="makesavefo_t3d_compressed">
 				<source>T3D file / compressed</source>
 			</trans-unit>
-			<trans-unit id="makesavefo_t3dFile" resname="makesavefo_t3dFile">
+			<trans-unit id="makesavefo_t3d" resname="makesavefo_t3d">
 				<source>T3D file</source>
 			</trans-unit>
 			<trans-unit id="makesavefo_xml" resname="makesavefo_xml">

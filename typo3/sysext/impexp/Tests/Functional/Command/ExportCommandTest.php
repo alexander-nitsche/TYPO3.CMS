@@ -29,7 +29,7 @@ class ExportCommandTest extends AbstractImportExportTestCase
      */
     public function exportCommandSavesExportWithGivenFileName(): void
     {
-        $fileName = 'fileadmin/empty_export.xml';
+        $fileName = 'empty_export.xml';
 
         /** @var ExportCommand */
         $command = new ExportCommand();
@@ -40,6 +40,7 @@ class ExportCommandTest extends AbstractImportExportTestCase
         $filePath = $display[1];
 
         self::assertEquals(0, $tester->getStatusCode());
+        self::assertStringEndsWith('empty_export.xml', $filePath);
         self::assertXmlFileEqualsXmlFile(__DIR__ . '/../Fixtures/XmlExports/empty.xml', $filePath);
     }
 }
