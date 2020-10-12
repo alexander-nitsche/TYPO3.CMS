@@ -31,7 +31,8 @@ class ExportTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->exportMock = $this->getAccessibleMock(Export::class, ['dummy'], [], '', false);
+        $this->exportMock = $this->getAccessibleMock(Export::class, ['isCompressionAvailable'], [], '', false);
+        $this->exportMock->expects(self::any())->method('isCompressionAvailable')->willReturn(true);
     }
 
     /**
@@ -42,7 +43,7 @@ class ExportTest extends UnitTestCase
      */
     public function setExportFileNameSanitizesFileName(string $fileName, string $expected): void
     {
-        $this->exportMock->init(0);
+        $this->exportMock->init();
         $this->exportMock->setExportFileName($fileName);
         $actual = $this->exportMock->getExportFileName();
 
@@ -67,7 +68,7 @@ class ExportTest extends UnitTestCase
      */
     public function generateExportFileNameSanitizesSuggestion(string $suggestion, string $expected): void
     {
-        $this->exportMock->init(0);
+        $this->exportMock->init();
         $actual = $this->exportMock->generateExportFileName($suggestion);
 
         self::assertEquals($expected, $actual);
@@ -85,5 +86,34 @@ class ExportTest extends UnitTestCase
                 'expected' => 'T3D_superlong-suggestion_' . date('Y-m-d_H-i')
             ],
         ];
+    }
+
+    /**
+     * @test
+     * @dataProvider setExportFileTypeSucceedsWithSupportedFileTypeProvider
+     * @param string $fileType
+     */
+    public function setExportFileTypeSucceedsWithSupportedFileType(string $fileType): void
+    {
+        $this->exportMock->setExportFileType($fileType);
+        self::assertEquals($fileType, $this->exportMock->getExportFileType());
+    }
+
+    public function setExportFileTypeSucceedsWithSupportedFileTypeProvider(): array
+    {
+        return [
+            ['fileType' => Export::FILETYPE_XML],
+            ['fileType' => Export::FILETYPE_T3D],
+            ['fileType' => Export::FILETYPE_T3DZ],
+        ];
+    }
+
+    /**
+     * @test
+     */
+    public function setExportFileTypeFailsWithUnsupportedFileType(): void
+    {
+        $this->expectException(\Exception::class);
+        $this->exportMock->setExportFileType('json');
     }
 }

@@ -155,7 +155,7 @@ class ExportController extends ImportExportController
         $this->presetRepository->processPresets($inData);
         // Create export object and configure it:
         $this->export = GeneralUtility::makeInstance(Export::class);
-        $this->export->init(0);
+        $this->export->init();
         $this->export->excludeMap = (array)($inData['exclude'] ?? []);
         $this->export->softrefCfg = (array)($inData['softrefCfg'] ?? []);
         $this->export->extensionDependencies = (($inData['extension_dep'] ?? '') === '') ? [] : (array)$inData['extension_dep'];
@@ -163,7 +163,9 @@ class ExportController extends ImportExportController
         $this->export->includeExtFileResources = !($inData['excludeHTMLfileResources'] ?? false);
         $this->excludeDisabledRecords = (bool)($inData['excludeDisabled'] ?? false);
         $this->export->setExcludeDisabledRecords($this->excludeDisabledRecords);
-        $this->export->setExportFileType((string)$inData['filetype']);
+        if (!empty($inData['filetype'])) {
+            $this->export->setExportFileType((string)$inData['filetype']);
+        }
         $this->export->setExportFileName((string)$inData['filename']);
         $inData['filename'] = $this->export->getExportFileName();
 
@@ -286,17 +288,8 @@ class ExportController extends ImportExportController
 
         // If the download button is clicked, return file
         if (($inData['download_export'] ?? null) || ($inData['save_export'] ?? null)) {
-            switch ($this->export->getExportFileType()) {
-                case Export::FILETYPE_XML:
-                    $out = $this->export->compileMemoryToFileContent(Export::FILETYPE_XML);
-                    break;
-                case Export::FILETYPE_T3D:
-                    $this->export->dontCompress = 1;
-                    // intentional fall-through
-                    // no break
-                default:
-                    $out = $this->export->compileMemoryToFileContent();
-            }
+            // File content:
+            $out = $this->export->compileMemoryToFileContent();
             // Filename:
             if ($this->export->getExportFileName() !== '') {
                 $dlFile = $this->export->getExportFileName()
@@ -530,12 +523,9 @@ class ExportController extends ImportExportController
 
         // Add file options:
         $opt = [];
-        $opt[Export::FILETYPE_XML] = $this->lang->getLL('makesavefo_xml');
-        if ($this->export->compress) {
-            $opt[Export::FILETYPE_T3DZ] = $this->lang->getLL('makesavefo_t3dFileCompressed');
+        foreach ($this->export->getSupportedFileTypes() as $supportedFileType) {
+            $opt[$supportedFileType] = $this->lang->getLL('makesavefo_' . $supportedFileType);
         }
-        $opt[Export::FILETYPE_T3D] = $this->lang->getLL('makesavefo_t3dFile');
-
         $this->standaloneView->assign('filetypeSelectOptions', $opt);
 
         $fileName = '';
