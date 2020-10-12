@@ -38,7 +38,6 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\Exception\ExistingTargetFileNameException;
-use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
@@ -150,10 +149,6 @@ class ExportController extends ImportExportController
     {
         // BUILDING EXPORT DATA:
         // Processing of InData array values:
-        $inData['filename'] = trim((string)preg_replace('/[^[:alnum:]._-]*/', '', preg_replace('/\\.(t3d|xml)$/', '', $inData['filename'] ?? '')));
-        if ($inData['filename'] !== '') {
-            $inData['filename'] .= $inData['filetype'] === 'xml' ? '.xml' : '.t3d';
-        }
         // Set exclude fields in export object:
         $inData['exclude'] ??= [];
         // Saving/Loading/Deleting presets:
@@ -168,6 +163,9 @@ class ExportController extends ImportExportController
         $this->export->includeExtFileResources = !($inData['excludeHTMLfileResources'] ?? false);
         $this->excludeDisabledRecords = (bool)($inData['excludeDisabled'] ?? false);
         $this->export->setExcludeDisabledRecords($this->excludeDisabledRecords);
+        $this->export->setExportFileType((string)$inData['filetype']);
+        $this->export->setExportFileName((string)$inData['filename']);
+        $inData['filename'] = $this->export->getExportFileName();
 
         // Static tables:
         if (is_array($inData['external_static']['tables'] ?? null)) {
@@ -288,28 +286,28 @@ class ExportController extends ImportExportController
 
         // If the download button is clicked, return file
         if (($inData['download_export'] ?? null) || ($inData['save_export'] ?? null)) {
-            switch ($inData['filetype'] ?? '') {
-                case 'xml':
-                    $out = $this->export->compileMemoryToFileContent('xml');
-                    $fExt = '.xml';
+            switch ($this->export->getExportFileType()) {
+                case Export::FILETYPE_XML:
+                    $out = $this->export->compileMemoryToFileContent(Export::FILETYPE_XML);
                     break;
-                case 't3d':
-                    $this->export->dontCompress = true;
+                case Export::FILETYPE_T3D:
+                    $this->export->dontCompress = 1;
                     // intentional fall-through
                     // no break
                 default:
                     $out = $this->export->compileMemoryToFileContent();
-                    $fExt = ($this->export->doOutputCompress() ? '-z' : '') . '.t3d';
             }
             // Filename:
-            $dlFile = $inData['filename'];
-            if (!$dlFile) {
-                $exportName = substr(preg_replace('/[^[:alnum:]_]/', '-', $inData['download_export_name']), 0, 20);
-                $dlFile = 'T3D_' . $exportName . '_' . date('Y-m-d_H-i') . $fExt;
+            if ($this->export->getExportFileName() !== '') {
+                $dlFile = $this->export->getExportFileName()
+                            . $this->export->getFileExtensionByFileType();
+            } else {
+                $dlFile = $this->export->generateExportFileName($inData['download_export_name'])
+                            . $this->export->getFileExtensionByFileType();
             }
 
             // Export for download:
-            if ($inData['download_export']) {
+            if ($inData['download_export'] ?? null) {
                 $mimeType = 'application/octet-stream';
                 header('Content-Type: ' . $mimeType);
                 header('Content-Length: ' . strlen($out));
@@ -319,7 +317,7 @@ class ExportController extends ImportExportController
             }
 
             // Export by saving:
-            if ($inData['save_export']) {
+            if ($inData['save_export'] ?? null) {
                 $lang = $this->getLanguageService();
 
                 try {
@@ -532,11 +530,11 @@ class ExportController extends ImportExportController
 
         // Add file options:
         $opt = [];
-        $opt['xml'] = $this->lang->getLL('makesavefo_xml');
+        $opt[Export::FILETYPE_XML] = $this->lang->getLL('makesavefo_xml');
         if ($this->export->compress) {
-            $opt['t3d_compressed'] = $this->lang->getLL('makesavefo_t3dFileCompressed');
+            $opt[Export::FILETYPE_T3DZ] = $this->lang->getLL('makesavefo_t3dFileCompressed');
         }
-        $opt['t3d'] = $this->lang->getLL('makesavefo_t3dFile');
+        $opt[Export::FILETYPE_T3D] = $this->lang->getLL('makesavefo_t3dFile');
 
         $this->standaloneView->assign('filetypeSelectOptions', $opt);
 
