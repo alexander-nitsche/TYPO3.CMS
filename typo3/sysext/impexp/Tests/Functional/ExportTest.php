@@ -68,7 +68,7 @@ class ExportTest extends AbstractImportExportTestCase
     {
         $export = new Export();
         $export->init(0);
-        $actual = $export->compileMemoryToFileContent('xml');
+        $actual = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
 
         self::assertXmlStringEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $actual);
     }
@@ -82,7 +82,7 @@ class ExportTest extends AbstractImportExportTestCase
         $export->init(0);
 
         $fileName = 'export.xml';
-        $fileContent = $export->compileMemoryToFileContent('xml');
+        $fileContent = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
         $file = $export->saveToFile($fileName, $fileContent);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 

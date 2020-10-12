@@ -69,7 +69,7 @@ class ExportCommand extends Command
 
         $export = GeneralUtility::makeInstance(Export::class);
         $export->init(0);
-        $fileContent = $export->compileMemoryToFileContent('xml');
+        $fileContent = $export->compileMemoryToFileContent(Export::FILETYPE_XML);
         try {
             $saveFile = $export->saveToFile($fileName, $fileContent);
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');

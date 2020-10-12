@@ -64,6 +64,10 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  */
 class Export extends ImportExport
 {
+    const FILETYPE_XML = 'xml';
+    const FILETYPE_T3D = 't3d';
+    const FILETYPE_T3DZ = 't3d_compressed';
+
     /**
      * Set  by user: If set, compression in t3d files is disabled
      *
@@ -104,6 +108,16 @@ class Export extends ImportExport
      * @var bool
      */
     protected $saveFilesOutsideExportFile = false;
+
+    /**
+     * @var string
+     */
+    protected $exportFileName = '';
+
+    /**
+     * @var string
+     */
+    protected $exportFileType = '';
 
     /**************************
      * Initialize
@@ -885,7 +899,7 @@ class Export extends ImportExport
      */
     public function compileMemoryToFileContent($type = '')
     {
-        if ($type === 'xml') {
+        if ($type === self::FILETYPE_XML) {
             $out = $this->createXML();
         } else {
             $compress = $this->doOutputCompress();
@@ -1054,5 +1068,64 @@ class Export extends ImportExport
         }
 
         return $file;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExportFileName(): string
+    {
+        return $this->exportFileName;
+    }
+
+    /**
+     * @param string $exportFileName
+     */
+    public function setExportFileName(string $exportFileName): void
+    {
+        $exportFileName = trim(preg_replace('/[^[:alnum:]._-]*/', '', $exportFileName));
+        $this->exportFileName = $exportFileName;
+    }
+
+    /**
+     * @param string $suggestion
+     * @return string
+     */
+    public function generateExportFileName(string $suggestion): string
+    {
+        $suggestion = substr(trim(preg_replace('/[^[:alnum:]_]/', '-', $suggestion)), 0, 20);
+        return 'T3D_' . $suggestion . '_' . date('Y-m-d_H-i');
+    }
+
+    /**
+     * @return string
+     */
+    public function getExportFileType(): string
+    {
+        return $this->exportFileType;
+    }
+
+    /**
+     * @param string $exportFileType
+     */
+    public function setExportFileType(string $exportFileType): void
+    {
+        $this->exportFileType = $exportFileType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFileExtensionByFileType(): string
+    {
+        switch ($this->exportFileType) {
+            case self::FILETYPE_XML:
+                return '.xml';
+            case self::FILETYPE_T3D:
+                return '.t3d';
+            case self::FILETYPE_T3DZ:
+            default:
+                return '-z.t3d';
+        }
     }
 }
