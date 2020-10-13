@@ -15,10 +15,10 @@
 
 namespace TYPO3\CMS\Impexp\Tests\Functional\Export;
 
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
+use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 
 /**
  * Test case
@@ -273,27 +273,12 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
 
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/irre_tutorial.xml');
 
-        $subject = GeneralUtility::makeInstance(Export::class);
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
         $subject->init();
-
+        $subject->setPid(1);
         $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
-
-        // @todo: Do not rely on BackendUtility::getRecord() in the test case itself
-        $subject->export_addRecord('pages', $this->forceStringsOnRowValues(BackendUtility::getRecord('pages', 1)));
-        $this->addRecordsForPid($subject, 1, array_keys($recordTypesIncludeFields));
-
-        $this->setPageTree($subject, 1);
-
-        // After adding ALL records we set relations:
-        for ($a = 0; $a < 10; $a++) {
-            $addR = $subject->export_addDBRelations($a);
-            if (empty($addR)) {
-                break;
-            }
-        }
-
-        $subject->export_addFilesFromRelations();
-        $subject->export_addFilesFromSysFilesRecords();
+        $subject->process();
 
         $out = $subject->compileMemoryToFileContent();
 
