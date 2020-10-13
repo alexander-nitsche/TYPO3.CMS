@@ -130,6 +130,16 @@ class ExportController extends ImportExportController
         // Call export interface
         $this->processPresets($inData);
         $this->exportData($inData);
+
+        // Prepare view
+        $this->makeConfigurationForm($inData);
+        $this->makeSaveForm($inData);
+        $this->makeAdvancedOptionsForm($inData);
+        $this->standaloneView->assign('errors', $this->export->errorLog);
+        $this->standaloneView->assign(
+            'contentOverview',
+            $this->export->displayContentOverview()
+        );
         $this->standaloneView->setTemplate('Export.html');
 
         // Setting up the buttons and markers for docheader
@@ -159,7 +169,7 @@ class ExportController extends ImportExportController
      * @throws ExistingTargetFileNameException
      * @throws Exception
      */
-    protected function exportData(array $inData)
+    protected function exportData(array &$inData): void
     {
         // Create export object and configure it:
         $this->export = GeneralUtility::makeInstance(Export::class);
@@ -346,20 +356,6 @@ class ExportController extends ImportExportController
                 $defaultFlashMessageQueue->enqueue($flashMessage);
             }
         }
-
-        $this->makeConfigurationForm($inData);
-
-        $this->makeSaveForm($inData);
-
-        $this->makeAdvancedOptionsForm($inData);
-
-        $this->standaloneView->assign('errors', $this->export->errorLog);
-
-        // Generate overview:
-        $this->standaloneView->assign(
-            'contentOverview',
-            $this->export->displayContentOverview()
-        );
     }
 
     /**
