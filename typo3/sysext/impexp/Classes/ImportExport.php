@@ -74,21 +74,21 @@ abstract class ImportExport
      *
      * @var bool
      */
-    public $showStaticRelations = false;
+    protected $showStaticRelations = false;
 
     /**
      * Name of the "fileadmin" folder where files for export/import should be located
      *
      * @var string
      */
-    public $fileadminFolderName = '';
+    protected $fileadminFolderName = '';
 
     /**
      * Whether "import" or "export" mode of object. Set through init() function
      *
      * @var string
      */
-    public $mode = '';
+    protected $mode = '';
 
     /**
      * Updates all records that has same UID instead of creating new!
@@ -102,7 +102,7 @@ abstract class ImportExport
      *
      * @var bool
      */
-    public $doesImport = false;
+    protected $doesImport = false;
 
     /**
      * If set to a page-record, then the preview display of the content will expect this page-record to be the target
@@ -161,7 +161,7 @@ abstract class ImportExport
      *
      * @var array
      */
-    public $relOnlyTables = [];
+    protected $relOnlyTables = [];
 
     /**
      * Add tables names here which should not be exported with the file.
@@ -169,28 +169,28 @@ abstract class ImportExport
      *
      * @var array
      */
-    public $relStaticTables = [];
+    protected $relStaticTables = [];
 
     /**
      * Exclude map. Keys are table:uid  pairs and if set, records are not added to the export.
      *
      * @var array
      */
-    public $excludeMap = [];
+    protected $excludeMap = [];
 
     /**
      * Soft Reference Token ID modes.
      *
      * @var array
      */
-    public $softrefCfg = [];
+    protected $softrefCfg = [];
 
     /**
      * Listing extension dependencies.
      *
      * @var array
      */
-    public $extensionDependencies = [];
+    protected $extensionDependencies = [];
 
     /**
      * After records are written this array is filled with [table][original_uid] = [new_uid]
@@ -211,14 +211,14 @@ abstract class ImportExport
      *
      * @var array
      */
-    public $cache_getRecordPath = [];
+    protected $cache_getRecordPath = [];
 
     /**
      * Cache of checkPID values.
      *
      * @var array
      */
-    public $checkPID_cache = [];
+    protected $checkPID_cache = [];
 
     /**
      * Set internally if the gzcompress function exists
@@ -226,14 +226,14 @@ abstract class ImportExport
      *
      * @var bool
      */
-    public $compress = false;
+    protected $compress = false;
 
     /**
      * Internal import/export memory
      *
      * @var array
      */
-    public $dat = [];
+    protected $dat = [];
 
     /**
      * File processing object
@@ -1339,5 +1339,121 @@ abstract class ImportExport
     protected function getLanguageService()
     {
         return $GLOBALS['LANG'];
+    }
+
+    /**************************
+     * Getters and Setters
+     *************************/
+
+    /**
+     * @return array
+     */
+    public function getExcludeMap(): array
+    {
+        return $this->excludeMap;
+    }
+
+    /**
+     * @param array $excludeMap
+     */
+    public function setExcludeMap(array $excludeMap): void
+    {
+        $this->excludeMap = $excludeMap;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSoftrefCfg(): array
+    {
+        return $this->softrefCfg;
+    }
+
+    /**
+     * @param array $softrefCfg
+     */
+    public function setSoftrefCfg(array $softrefCfg): void
+    {
+        $this->softrefCfg = $softrefCfg;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExtensionDependencies(): array
+    {
+        return $this->extensionDependencies;
+    }
+
+    /**
+     * @param array $extensionDependencies
+     */
+    public function setExtensionDependencies(array $extensionDependencies): void
+    {
+        $this->extensionDependencies = $extensionDependencies;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowStaticRelations(): bool
+    {
+        return $this->showStaticRelations;
+    }
+
+    /**
+     * @param bool $showStaticRelations
+     */
+    public function setShowStaticRelations(bool $showStaticRelations): void
+    {
+        $this->showStaticRelations = $showStaticRelations;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelStaticTables(): array
+    {
+        return $this->relStaticTables;
+    }
+
+    /**
+     * @param array $relStaticTables
+     */
+    public function setRelStaticTables(array $relStaticTables): void
+    {
+        $this->relStaticTables = $relStaticTables;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelOnlyTables(): array
+    {
+        return $this->relOnlyTables;
+    }
+
+    /**
+     * @param array $relOnlyTables
+     */
+    public function setRelOnlyTables(array $relOnlyTables): void
+    {
+        $this->relOnlyTables = $relOnlyTables;
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrorLog(): array
+    {
+        return $this->errorLog;
+    }
+
+    /**
+     * @param array $errorLog
+     */
+    public function setErrorLog(array $errorLog): void
+    {
+        $this->errorLog = $errorLog;
     }
 }

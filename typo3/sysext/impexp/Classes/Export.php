@@ -116,14 +116,14 @@ class Export extends ImportExport
      *
      * @var bool
      */
-    public $includeExtFileResources = false;
+    protected $includeExtFileResources = false;
 
     /**
      * Files with external media (HTML/css style references inside)
      *
      * @var string
      */
-    public $extFileResourceExtensions = 'html,htm,css';
+    protected $extFileResourceExtensions = 'html,htm,css';
 
     /**
      * Keys are [recordname], values are an array of fields to be included
@@ -1498,5 +1498,21 @@ class Export extends ImportExport
     public function getTreeHTML(): string
     {
         return $this->treeHTML;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIncludeExtFileResources(): bool
+    {
+        return $this->includeExtFileResources;
+    }
+
+    /**
+     * @param bool $includeExtFileResources
+     */
+    public function setIncludeExtFileResources(bool $includeExtFileResources): void
+    {
+        $this->includeExtFileResources = $includeExtFileResources;
     }
 }
