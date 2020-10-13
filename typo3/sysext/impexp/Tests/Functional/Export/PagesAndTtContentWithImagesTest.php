@@ -15,10 +15,10 @@
 
 namespace TYPO3\CMS\Impexp\Tests\Functional\Export;
 
-use TYPO3\CMS\Backend\Utility\BackendUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
+use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 
 /**
  * Test case
@@ -49,13 +49,12 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
      */
     public function exportPagesAndRelatedTtContentWithImages()
     {
-        $subject = GeneralUtility::makeInstance(Export::class);
-        $subject->init();
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
 
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->init();
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
-
         $out = $subject->compileMemoryToFileContent();
 
         $errors = $subject->printErrorLog();
@@ -72,13 +71,12 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
      */
     public function exportPagesAndRelatedTtContentWithImagesFromCorruptSysFileRecord()
     {
-        $subject = GeneralUtility::makeInstance(Export::class);
-        $subject->init();
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_corrupt.xml');
 
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->init();
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
-
         $out = $subject->compileMemoryToFileContent();
 
         $expectedErrors = [
@@ -98,15 +96,13 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
      */
     public function exportPagesAndRelatedTtContentWithImagesButNotIncluded()
     {
-        $subject = GeneralUtility::makeInstance(Export::class);
-        $subject->init();
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
 
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->init();
         $subject->setSaveFilesOutsideExportFile(true);
-
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
-
         $out = $subject->compileMemoryToFileContent();
 
         self::assertXmlStringEqualsXmlFile(
@@ -125,7 +121,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
      */
     protected function compileExportPagesAndRelatedTtContentWithImages(Export $subject)
     {
-        $subject->setRecordTypesIncludeFields(
+        $recordTypesIncludeFields =
             [
                 'pages' => [
                     'title',
@@ -198,33 +194,17 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
                     'l10n_parent'
                 ]
             ]
-        );
+        ;
 
+        $subject->setPid(1);
+        $subject->setLevels(1);
+        $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
         $subject->relOnlyTables = [
             'sys_file',
             'sys_file_metadata',
             'sys_file_storage',
             'sys_language'
         ];
-
-        // @todo: Do not rely on BackendUtility::getRecord() in the test case itself
-        $subject->export_addRecord('pages', $this->forceStringsOnRowValues(BackendUtility::getRecord('pages', 1)));
-        $subject->export_addRecord('pages', $this->forceStringsOnRowValues(BackendUtility::getRecord('pages', 2)));
-        $subject->export_addRecord('tt_content', $this->forceStringsOnRowValues(BackendUtility::getRecord('tt_content', 1)));
-        $subject->export_addRecord('sys_language', $this->forceStringsOnRowValues(BackendUtility::getRecord('sys_language', 1)));
-        $subject->export_addRecord('sys_file_reference', $this->forceStringsOnRowValues(BackendUtility::getRecord('sys_file_reference', 1)));
-
-        $this->setPageTree($subject, 1, 1);
-
-        // After adding ALL records we set relations:
-        for ($a = 0; $a < 10; $a++) {
-            $addR = $subject->export_addDBRelations($a);
-            if (empty($addR)) {
-                break;
-            }
-        }
-
-        $subject->export_addFilesFromRelations();
-        $subject->export_addFilesFromSysFilesRecords();
+        $subject->process();
     }
 }
