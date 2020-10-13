@@ -122,6 +122,7 @@ class ExportController extends ImportExportController
 
         $this->shortcutName = $this->lang->getLL('title_export');
         // Call export interface
+        $this->processPresets($inData);
         $this->exportData($inData);
         $this->standaloneView->setTemplate('Export.html');
 
@@ -133,6 +134,21 @@ class ExportController extends ImportExportController
     }
 
     /**
+     * Process export preset
+     *
+     * @param array $inData
+     */
+    protected function processPresets(array &$inData): void
+    {
+        // Set exclude fields in export object:
+        if (!is_array($inData['exclude'])) {
+            $inData['exclude'] = [];
+        }
+        // Saving/Loading/Deleting presets:
+        $this->presetRepository->processPresets($inData);
+    }
+
+    /**
      * Export part of module
      *
      * @param array $inData
@@ -141,14 +157,6 @@ class ExportController extends ImportExportController
      */
     protected function exportData(array $inData)
     {
-        // BUILDING EXPORT DATA:
-        // Processing of InData array values:
-        // Set exclude fields in export object:
-        if (!is_array($inData['exclude'])) {
-            $inData['exclude'] = [];
-        }
-        // Saving/Loading/Deleting presets:
-        $this->presetRepository->processPresets($inData);
         // Create export object and configure it:
         $this->export = GeneralUtility::makeInstance(Export::class);
         $this->export->init();
