@@ -82,7 +82,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
         $expectedErrors = [
             'File sha1 hash of 1:/user_upload/typo3_image2.jpg is not up-to-date in index! File added on current sha1.'
         ];
-        $errors = $subject->errorLog;
+        $errors = $subject->getErrorLog();
         self::assertSame($expectedErrors, $errors);
 
         self::assertXmlStringEqualsXmlFile(
@@ -199,12 +199,12 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
         $subject->setPid(1);
         $subject->setLevels(1);
         $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
-        $subject->relOnlyTables = [
+        $subject->setRelOnlyTables([
             'sys_file',
             'sys_file_metadata',
             'sys_file_storage',
             'sys_language'
-        ];
+        ]);
         $subject->process();
     }
 }

@@ -118,7 +118,7 @@ class ExportController extends ImportExportController
         $this->makeConfigurationForm($inData);
         $this->makeSaveForm($inData);
         $this->makeAdvancedOptionsForm($inData);
-        $this->standaloneView->assign('errors', $this->export->errorLog);
+        $this->standaloneView->assign('errors', $this->export->getErrorLog());
         $this->standaloneView->assign(
             'contentOverview',
             $this->export->displayContentOverview()
@@ -157,11 +157,11 @@ class ExportController extends ImportExportController
         // Create export object and configure it:
         $this->export = GeneralUtility::makeInstance(Export::class);
         $this->export->init();
-        $this->export->excludeMap = (array)($inData['exclude'] ?? []);
-        $this->export->softrefCfg = (array)($inData['softrefCfg'] ?? []);
-        $this->export->extensionDependencies = (($inData['extension_dep'] ?? '') === '') ? [] : (array)$inData['extension_dep'];
-        $this->export->showStaticRelations = $inData['showStaticRelations'] ?? false;
-        $this->export->includeExtFileResources = !($inData['excludeHTMLfileResources'] ?? false);
+        $this->export->setExcludeMap((array)($inData['exclude'] ?? []));
+        $this->export->setSoftrefCfg((array)($inData['softrefCfg'] ?? []));
+        $this->export->setExtensionDependencies((($inData['extension_dep'] ?? '') === '') ? [] : (array)$inData['extension_dep']);
+        $this->export->setShowStaticRelations($inData['showStaticRelations'] ?? false);
+        $this->export->setIncludeExtFileResources(!($inData['excludeHTMLfileResources'] ?? false));
         $this->export->setExcludeDisabledRecords((bool)($inData['excludeDisabled'] ?? false));
         if (!empty($inData['filetype'])) {
             $this->export->setExportFileType((string)$inData['filetype']);
@@ -170,11 +170,11 @@ class ExportController extends ImportExportController
 
         // Static tables:
         if (is_array($inData['external_static']['tables'] ?? null)) {
-            $this->export->relStaticTables = $inData['external_static']['tables'];
+            $this->export->setRelStaticTables($inData['external_static']['tables']);
         }
         // Configure which tables external relations are included for:
         if (is_array($inData['external_ref']['tables'] ?? null)) {
-            $this->export->relOnlyTables = $inData['external_ref']['tables'];
+            $this->export->setRelOnlyTables($inData['external_ref']['tables']);
         }
         if (isset($inData['save_export'], $inData['saveFilesOutsideExportFile']) && $inData['saveFilesOutsideExportFile'] === '1') {
             $this->export->setSaveFilesOutsideExportFile(true);
