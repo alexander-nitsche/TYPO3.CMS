@@ -271,10 +271,18 @@ abstract class ImportExport
     protected $excludeDisabledRecords = false;
 
     /**
+     * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
+     *
+     * @var string
+     */
+    protected $perms_clause;
+
+    /**
      * The constructor
      */
     public function __construct()
     {
+        $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
     }
 

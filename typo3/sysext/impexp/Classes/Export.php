@@ -15,11 +15,18 @@
 
 namespace TYPO3\CMS\Impexp;
 
+use Doctrine\DBAL\Driver\Statement;
+use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryHelper;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
+use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Database\ReferenceIndex;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Html\HtmlParser;
+use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderWritePermissionsException;
 use TYPO3\CMS\Core\Resource\File;
@@ -27,6 +34,7 @@ use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Impexp\View\ExportPageTreeView;
 
 /**
  * EXAMPLE for using the impexp-class for exporting stuff:
@@ -67,6 +75,41 @@ class Export extends ImportExport
     const FILETYPE_XML = 'xml';
     const FILETYPE_T3D = 't3d';
     const FILETYPE_T3DZ = 't3d_compressed';
+
+    /**
+     * @var array
+     */
+    protected $meta = [];
+
+    /**
+     * @var array
+     */
+    protected $record = [];
+
+    /**
+     * @var array
+     */
+    protected $list = [];
+
+    /**
+     * @var int
+     */
+    protected $pid = -1;
+
+    /**
+     * @var int
+     */
+    protected $levels = 0;
+
+    /**
+     * @var array
+     */
+    protected $tables = ['_ALL'];
+
+    /**
+     * @var string
+     */
+    protected $treeHTML = '';
 
     /**
      * If set, HTML file resources are included.
@@ -133,6 +176,117 @@ class Export extends ImportExport
     /**************************
      * Export / Init + Meta Data
      *************************/
+
+    /**
+     * Process configuration
+     */
+    public function process(): void
+    {
+        $this->setHeaderBasics();
+        // Meta data setting:
+
+        $beUser = $this->getBackendUser();
+        $this->setMetaData(
+            $this->meta['title'],
+            $this->meta['description'],
+            $this->meta['notes'],
+            $beUser->user['username'],
+            $beUser->user['realName'],
+            $beUser->user['email']
+        );
+        // Configure which records to export
+        if (is_array($this->record)) {
+            foreach ($this->record as $ref) {
+                $rParts = explode(':', $ref);
+                $this->export_addRecord($rParts[0], BackendUtility::getRecord($rParts[0], (int)$rParts[1]));
+            }
+        }
+        // Configure which tables to export
+        if (is_array($this->list)) {
+            foreach ($this->list as $ref) {
+                $rParts = explode(':', $ref);
+                if ($beUser->check('tables_select', $rParts[0])) {
+                    $statement = $this->exec_listQueryPid($rParts[0], (int)$rParts[1]);
+                    while ($subTrow = $statement->fetch()) {
+                        $this->export_addRecord($rParts[0], $subTrow);
+                    }
+                }
+            }
+        }
+        // Pagetree
+        if ($this->pid !== -1) {
+            // Based on click-expandable tree
+            $idH = null;
+            $pid = $this->pid;
+            $levels = $this->levels;
+            if ($levels === -1) {
+                $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                if ($this->excludeDisabledRecords) {
+                    $pagetree->init(BackendUtility::BEenableFields('pages'));
+                }
+                $tree = $pagetree->ext_tree($pid, $this->filterPageIds($this->excludeMap));
+                $this->treeHTML = $pagetree->printTree($tree);
+                $idH = $pagetree->buffer_idH;
+            } elseif ($levels === -2) {
+                $this->addRecordsForPid($pid, $this->tables);
+            } else {
+                // Based on depth
+                // Drawing tree:
+                // If the ID is zero, export root
+                if (!$this->pid && $beUser->isAdmin()) {
+                    $sPage = [
+                        'uid' => 0,
+                        'title' => 'ROOT'
+                    ];
+                } else {
+                    $sPage = BackendUtility::getRecordWSOL('pages', $pid, '*', ' AND ' . $this->perms_clause);
+                }
+                if (is_array($sPage)) {
+                    $tree = GeneralUtility::makeInstance(PageTreeView::class);
+                    $initClause = 'AND ' . $this->perms_clause . $this->filterPageIds($this->excludeMap);
+                    if ($this->excludeDisabledRecords) {
+                        $initClause .= BackendUtility::BEenableFields('pages');
+                    }
+                    $tree->init($initClause);
+                    $HTML = $this->iconFactory->getIconForRecord('pages', $sPage, Icon::SIZE_SMALL)->render();
+                    $tree->tree[] = ['row' => $sPage, 'HTML' => $HTML];
+                    $tree->buffer_idH = [];
+                    if ($levels > 0) {
+                        $tree->getTree($pid, $levels);
+                    }
+                    $idH = [];
+                    $idH[$pid]['uid'] = $pid;
+                    if (!empty($tree->buffer_idH)) {
+                        $idH[$pid]['subrow'] = $tree->buffer_idH;
+                    }
+                    $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                    $this->treeHTML = $pagetree->printTree($tree->tree);
+                }
+            }
+            // In any case we should have a multi-level array, $idH, with the page structure
+            // here (and the HTML-code loaded into memory for nice display...)
+            if (is_array($idH)) {
+                // Sets the pagetree and gets a 1-dim array in return with the pages (in correct submission order BTW...)
+                $flatList = $this->setPageTree($idH);
+                foreach ($flatList as $k => $value) {
+                    $this->export_addRecord('pages', BackendUtility::getRecord('pages', $k));
+                    $this->addRecordsForPid((int)$k, $this->tables);
+                }
+            }
+        }
+        // After adding ALL records we set relations:
+        for ($a = 0; $a < 10; $a++) {
+            $addR = $this->export_addDBRelations($a);
+            if (empty($addR)) {
+                break;
+            }
+        }
+        // Finally files are added:
+        // MUST be after the DBrelations are set so that files from ALL added records are included!
+        $this->export_addFilesFromRelations();
+
+        $this->export_addFilesFromSysFilesRecords();
+    }
 
     /**
      * Set header basics
@@ -276,6 +430,92 @@ class Export extends ImportExport
     public function setRecordTypeIncludeFields($table, array $fields)
     {
         $this->recordTypesIncludeFields[$table] = $fields;
+    }
+
+    /**
+     * Filter page IDs by traversing exclude array, finding all
+     * excluded pages (if any) and making an AND NOT IN statement for the select clause.
+     *
+     * @param array $exclude Exclude array from import/export object.
+     * @return string AND where clause part to filter out page uids.
+     */
+    protected function filterPageIds(array $exclude): string
+    {
+        // Get keys:
+        $exclude = array_keys($exclude);
+        // Traverse
+        $pageIds = [];
+        foreach ($exclude as $element) {
+            [$table, $uid] = explode(':', $element);
+            if ($table === 'pages') {
+                $pageIds[] = (int)$uid;
+            }
+        }
+        // Add to clause:
+        if (!empty($pageIds)) {
+            return ' AND uid NOT IN (' . implode(',', $pageIds) . ')';
+        }
+        return '';
+    }
+
+    /**
+     * Adds records to the export object for a specific page id.
+     *
+     * @param int $k Page id for which to select records to add
+     * @param array $tables Array of table names to select from
+     */
+    protected function addRecordsForPid(int $k, array $tables): void
+    {
+        foreach ($GLOBALS['TCA'] as $table => $value) {
+            if ($table !== 'pages'
+                && (in_array($table, $tables, true) || in_array('_ALL', $tables, true))
+                && $this->getBackendUser()->check('tables_select', $table)
+                && !$GLOBALS['TCA'][$table]['ctrl']['is_static']
+            ) {
+                $statement = $this->exec_listQueryPid($table, $k);
+                while ($subTrow = $statement->fetch()) {
+                    $this->export_addRecord($table, $subTrow);
+                }
+            }
+        }
+    }
+
+    /**
+     * Selects records from table / pid
+     *
+     * @param string $table Table to select from
+     * @param int $pid Page ID to select from
+     * @return Statement Query statement
+     */
+    protected function exec_listQueryPid(string $table, int $pid): Statement
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
+
+        $orderBy = $GLOBALS['TCA'][$table]['ctrl']['sortby'] ?: $GLOBALS['TCA'][$table]['ctrl']['default_sortby'];
+        $queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, 0));
+
+        if ($this->excludeDisabledRecords === false) {
+            $queryBuilder->getRestrictions()
+                ->removeAll()
+                ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+                ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, 0));
+        }
+
+        $queryBuilder->select('*')
+            ->from($table)
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pid, \PDO::PARAM_INT)
+                )
+            );
+
+        foreach (QueryHelper::parseOrderBy((string)$orderBy) as $orderPair) {
+            [$fieldName, $order] = $orderPair;
+            $queryBuilder->addOrderBy($fieldName, $order);
+        }
+
+        return $queryBuilder->execute();
     }
 
     /**
@@ -1150,5 +1390,113 @@ class Export extends ImportExport
             default:
                 return '-z.t3d';
         }
+    }
+
+    /**************************
+     * Getters and Setters
+     *************************/
+
+    /**
+     * @return array
+     */
+    public function getMeta(): array
+    {
+        return $this->meta;
+    }
+
+    /**
+     * @param array $meta
+     */
+    public function setMeta(array $meta): void
+    {
+        $this->meta = $meta;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRecord(): array
+    {
+        return $this->record;
+    }
+
+    /**
+     * @param array $record
+     */
+    public function setRecord(array $record): void
+    {
+        $this->record = $record;
+    }
+
+    /**
+     * @return array
+     */
+    public function getList(): array
+    {
+        return $this->list;
+    }
+
+    /**
+     * @param array $list
+     */
+    public function setList(array $list): void
+    {
+        $this->list = $list;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPid(): int
+    {
+        return $this->pid;
+    }
+
+    /**
+     * @param int $pid
+     */
+    public function setPid(int $pid): void
+    {
+        $this->pid = $pid;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLevels(): int
+    {
+        return $this->levels;
+    }
+
+    /**
+     * @param int $levels
+     */
+    public function setLevels(int $levels): void
+    {
+        $this->levels = $levels;
+    }
+
+    /**
+     * @return array
+     */
+    public function getTables(): array
+    {
+        return $this->tables;
+    }
+
+    /**
+     * @param array $tables
+     */
+    public function setTables(array $tables): void
+    {
+        $this->tables = $tables;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTreeHTML(): string
+    {
+        return $this->treeHTML;
     }
 }
