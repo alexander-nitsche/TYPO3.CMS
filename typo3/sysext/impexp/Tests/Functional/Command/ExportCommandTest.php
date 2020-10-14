@@ -49,9 +49,20 @@ class ExportCommandTest extends AbstractImportExportTestCase
     /**
      * @test
      */
+    public function exportCommandRequiresNoArguments(): void
+    {
+        $tester = new CommandTester($this->commandMock);
+        $tester->execute([], []);
+
+        self::assertEquals(0, $tester->getStatusCode());
+    }
+
+    /**
+     * @test
+     */
     public function exportCommandSavesExportWithGivenFileName(): void
     {
-        $fileName = 'empty_export.xml';
+        $fileName = 'empty_export';
 
         $tester = new CommandTester($this->commandMock);
         $tester->execute(['file' => $fileName], []);
