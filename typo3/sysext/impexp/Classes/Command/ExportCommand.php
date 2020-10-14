@@ -73,12 +73,13 @@ class ExportCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
-        $export = GeneralUtility::makeInstance(Export::class);
+        $export = $this->getExport();
         $export->init();
         try {
             if (!empty($fileType)) {
                 $export->setExportFileType($fileType);
             }
+            $export->process();
             $fileContent = $export->compileMemoryToFileContent();
             $saveFile = $export->saveToFile($fileName, $fileContent);
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
@@ -91,5 +92,13 @@ class ExportCommand extends Command
             }
             return 1;
         }
+    }
+
+    /**
+     * @return Export
+     */
+    protected function getExport(): Export
+    {
+        return GeneralUtility::makeInstance(Export::class);
     }
 }

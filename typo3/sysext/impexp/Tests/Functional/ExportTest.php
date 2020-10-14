@@ -24,20 +24,30 @@ use TYPO3\CMS\Impexp\Export;
 class ExportTest extends AbstractImportExportTestCase
 {
     /**
+     * @var Export|MockObject|AccessibleObjectInterface
+     */
+    protected $exportMock;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
+    }
+
+    /**
      * @test
      */
     public function creationAndDeletionOfTemporaryFolderSucceeds(): void
     {
-        $export = new Export();
-        $export->init();
+        $this->exportMock->init();
 
-        $temporaryFolderName = $export->getOrCreateTemporaryFolderName();
+        $temporaryFolderName = $this->exportMock->getOrCreateTemporaryFolderName();
         $temporaryFileName = $temporaryFolderName . '/export_file.txt';
         file_put_contents($temporaryFileName, 'Hello TYPO3 World.');
         self::assertTrue(is_dir($temporaryFolderName));
         self::assertTrue(is_file($temporaryFileName));
 
-        $export->removeTemporaryFolderName();
+        $this->exportMock->removeTemporaryFolderName();
         self::assertFalse(is_dir($temporaryFolderName));
         self::assertFalse(is_file($temporaryFileName));
     }
@@ -47,16 +57,15 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function creationAndDeletionOfDefaultImportExportFolderSucceeds(): void
     {
-        $export = new Export();
-        $export->init();
+        $this->exportMock->init();
 
-        $exportFolder = $export->getOrCreateDefaultImportExportFolder();
+        $exportFolder = $this->exportMock->getOrCreateDefaultImportExportFolder();
         $exportFileName = 'export_file.txt';
         $exportFolder->createFile($exportFileName);
         self::assertTrue(is_dir(Environment::getPublicPath() . '/' . $exportFolder->getPublicUrl()));
         self::assertTrue(is_file(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl() . $exportFileName));
 
-        $export->removeDefaultImportExportFolder();
+        $this->exportMock->removeDefaultImportExportFolder();
         self::assertFalse(is_dir(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl()));
         self::assertFalse(is_file(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl() . $exportFileName));
     }
@@ -66,9 +75,9 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function compileMemoryToFileContentSucceedsWithoutArguments(): void
     {
-        $export = new Export();
-        $export->init();
-        $actual = $export->compileMemoryToFileContent();
+        $this->exportMock->init();
+        $this->exportMock->process();
+        $actual = $this->exportMock->compileMemoryToFileContent();
 
         self::assertXmlStringEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $actual);
     }
@@ -78,12 +87,12 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function saveXmlToFileIsDefaultAndSucceeds(): void
     {
-        $export = new Export();
-        $export->init();
+        $this->exportMock->init();
+        $this->exportMock->process();
 
         $fileName = 'export.xml';
-        $fileContent = $export->compileMemoryToFileContent();
-        $file = $export->saveToFile($fileName, $fileContent);
+        $fileContent = $this->exportMock->compileMemoryToFileContent();
+        $file = $this->exportMock->saveToFile($fileName, $fileContent);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         self::assertStringEndsWith('export.xml', $filePath);
@@ -95,13 +104,13 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function saveT3dToFileSucceeds(): void
     {
-        $export = new Export();
-        $export->init();
-        $export->setExportFileType(Export::FILETYPE_T3D);
+        $this->exportMock->init();
+        $this->exportMock->setExportFileType(Export::FILETYPE_T3D);
+        $this->exportMock->process();
 
         $fileName = 'export.t3d';
-        $fileContent = $export->compileMemoryToFileContent();
-        $file = $export->saveToFile($fileName, $fileContent);
+        $fileContent = $this->exportMock->compileMemoryToFileContent();
+        $file = $this->exportMock->saveToFile($fileName, $fileContent);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines
@@ -121,13 +130,13 @@ class ExportTest extends AbstractImportExportTestCase
             self::markTestSkipped('The function gzcompress() is not available for compression.');
         }
 
-        $export = new Export();
-        $export->init();
-        $export->setExportFileType(Export::FILETYPE_T3DZ);
+        $this->exportMock->init();
+        $this->exportMock->setExportFileType(Export::FILETYPE_T3DZ);
+        $this->exportMock->process();
 
         $fileName = 'export-z.t3d';
-        $fileContent = $export->compileMemoryToFileContent();
-        $file = $export->saveToFile($fileName, $fileContent);
+        $fileContent = $this->exportMock->compileMemoryToFileContent();
+        $file = $this->exportMock->saveToFile($fileName, $fileContent);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines
