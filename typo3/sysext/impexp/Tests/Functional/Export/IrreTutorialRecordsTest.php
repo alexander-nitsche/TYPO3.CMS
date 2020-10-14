@@ -277,6 +277,7 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
         $subject->init();
         $subject->setPid(1);
+        $subject->setTables(['_ALL']);
         $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
         $subject->process();
 

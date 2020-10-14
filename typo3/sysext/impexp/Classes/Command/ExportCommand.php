@@ -61,8 +61,7 @@ class ExportCommand extends Command
                 'table',
                 't',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
-                'Include all records of this table. Examples: "_ALL", "tt_content", "sys_file_reference", etc.',
-                ["_ALL"]
+                'Include all records of this table. Examples: "_ALL", "tt_content", "sys_file_reference", etc.'
             )
             ->addOption(
                 'record',
