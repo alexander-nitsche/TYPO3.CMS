@@ -69,6 +69,12 @@ class ExportCommand extends Command
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include this specific record. Pattern is "{table}:{record}". Examples: "tt_content:12", etc.'
             )
+            ->addOption(
+                'list',
+                'l',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Include the records of this table and this page. Pattern is "{table}:{pid}". Examples: "sys_language:0", etc.'
+            )
         ;
     }
 
@@ -109,6 +115,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('record') != $export->getRecord()) {
                 $export->setRecord($input->getOption('record'));
+            }
+            if ($input->getOption('list') != $export->getList()) {
+                $export->setList($input->getOption('list'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
