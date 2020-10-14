@@ -57,6 +57,13 @@ class ExportCommand extends Command
                 'The root page of the exported page tree.',
                 -1
             )
+            ->addOption(
+                'table',
+                't',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Include all records of this table. Examples: "_ALL", "tt_content", "sys_file_reference", etc.',
+                ["_ALL"]
+            )
         ;
     }
 
@@ -91,6 +98,9 @@ class ExportCommand extends Command
             $export->setExportFileName($fileName);
             if ($input->getOption('pid') != $export->getPid()) {
                 $export->setPid((int)$input->getOption('pid'));
+            }
+            if ($input->getOption('table') != $export->getTables()) {
+                $export->setTables($input->getOption('table'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
