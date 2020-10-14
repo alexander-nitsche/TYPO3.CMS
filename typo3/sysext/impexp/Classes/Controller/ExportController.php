@@ -176,7 +176,15 @@ class ExportController extends ImportExportController
         }
 
         if (is_array($inData['meta'])) {
-            $this->export->setMeta($inData['meta']);
+            if (isset($inData['meta']['title'])) {
+                $this->export->setTitle($inData['meta']['title']);
+            }
+            if (isset($inData['meta']['description'])) {
+                $this->export->setDescription($inData['meta']['description']);
+            }
+            if (isset($inData['meta']['notes'])) {
+                $this->export->setNotes($inData['meta']['notes']);
+            }
         }
         if (is_array($inData['record'])) {
             $this->export->setRecord($inData['record']);

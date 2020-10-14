@@ -75,6 +75,24 @@ class ExportCommand extends Command
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include the records of this table and this page. Pattern is "{table}:{pid}". Examples: "sys_language:0", etc.'
             )
+            ->addOption(
+                'title',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The meta title of the export.'
+            )
+            ->addOption(
+                'description',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The meta description of the export.'
+            )
+            ->addOption(
+                'notes',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'The meta notes of the export.'
+            )
         ;
     }
 
@@ -118,6 +136,15 @@ class ExportCommand extends Command
             }
             if ($input->getOption('list') != $export->getList()) {
                 $export->setList($input->getOption('list'));
+            }
+            if ($input->getOption('title') != $export->getTitle()) {
+                $export->setTitle($input->getOption('title'));
+            }
+            if ($input->getOption('description') != $export->getDescription()) {
+                $export->setDescription($input->getOption('description'));
+            }
+            if ($input->getOption('notes') != $export->getNotes()) {
+                $export->setNotes($input->getOption('notes'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();

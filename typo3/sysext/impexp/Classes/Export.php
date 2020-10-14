@@ -77,9 +77,19 @@ class Export extends ImportExport
     const FILETYPE_T3DZ = 't3d_compressed';
 
     /**
-     * @var array
+     * @var string
      */
-    protected $meta = [];
+    protected $title = '';
+
+    /**
+     * @var string
+     */
+    protected $description = '';
+
+    /**
+     * @var string
+     */
+    protected $notes = '';
 
     /**
      * @var array
@@ -183,17 +193,11 @@ class Export extends ImportExport
     public function process(): void
     {
         $this->setHeaderBasics();
-        // Meta data setting:
 
+        // Meta data setting:
         $beUser = $this->getBackendUser();
-        $this->setMetaData(
-            $this->meta['title'],
-            $this->meta['description'],
-            $this->meta['notes'],
-            $beUser->user['username'],
-            $beUser->user['realName'],
-            $beUser->user['email']
-        );
+        $this->setMetaData();
+
         // Configure which records to export
         if (is_array($this->record)) {
             foreach ($this->record as $ref) {
@@ -329,23 +333,16 @@ class Export extends ImportExport
 
     /**
      * Sets meta data
-     *
-     * @param string $title Title of the export
-     * @param string $description Description of the export
-     * @param string $notes Notes about the contents
-     * @param string $packager_username Backend Username of the packager (the guy making the export)
-     * @param string $packager_name Real name of the packager
-     * @param string $packager_email Email of the packager
      */
-    public function setMetaData($title, $description, $notes, $packager_username, $packager_name, $packager_email)
+    protected function setMetaData()
     {
         $this->dat['header']['meta'] = [
-            'title' => $title,
-            'description' => $description,
-            'notes' => $notes,
-            'packager_username' => $packager_username,
-            'packager_name' => $packager_name,
-            'packager_email' => $packager_email,
+            'title' => $this->title,
+            'description' => $this->description,
+            'notes' => $this->notes,
+            'packager_username' => $this->getBackendUser()->user['username'],
+            'packager_name' => $this->getBackendUser()->user['realName'],
+            'packager_email' => $this->getBackendUser()->user['email'],
             'TYPO3_version' => (string)GeneralUtility::makeInstance(Typo3Version::class),
             'created' => strftime('%A %e. %B %Y', $GLOBALS['EXEC_TIME'])
         ];
@@ -1397,19 +1394,51 @@ class Export extends ImportExport
      *************************/
 
     /**
-     * @return array
+     * @return string
      */
-    public function getMeta(): array
+    public function getTitle(): string
     {
-        return $this->meta;
+        return $this->title;
     }
 
     /**
-     * @param array $meta
+     * @param string $title
      */
-    public function setMeta(array $meta): void
+    public function setTitle(string $title): void
     {
-        $this->meta = $meta;
+        $this->title = $title;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription(): string
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     */
+    public function setDescription(string $description): void
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNotes(): string
+    {
+        return $this->notes;
+    }
+
+    /**
+     * @param string $notes
+     */
+    public function setNotes(string $notes): void
+    {
+        $this->notes = $notes;
     }
 
     /**
