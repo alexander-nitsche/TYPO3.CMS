@@ -198,6 +198,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         $subject->setPid(1);
         $subject->setLevels(1);
+        $subject->setTables(['_ALL']);
         $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
         $subject->setRelOnlyTables([
             'sys_file',

@@ -104,7 +104,7 @@ class Export extends ImportExport
     /**
      * @var array
      */
-    protected $tables = ['_ALL'];
+    protected $tables = [];
 
     /**
      * @var string
