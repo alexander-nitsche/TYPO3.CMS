@@ -49,6 +49,13 @@ class ExportCommand extends Command
                 'The file type (xml, t3d, t3d_compressed).',
                 Export::FILETYPE_XML
             )
+            ->addOption(
+                'pid',
+                'p',
+                InputOption::VALUE_OPTIONAL,
+                'The root page of the exported page tree.',
+                -1
+            )
         ;
     }
 
@@ -81,6 +88,9 @@ class ExportCommand extends Command
                 }
             }
             $export->setExportFileName($fileName);
+            if ($input->getOption('pid') != $export->getPid()) {
+                $export->setPid((int)$input->getOption('pid'));
+            }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
             $saveFile = $export->saveToFile($fileName, $fileContent);
