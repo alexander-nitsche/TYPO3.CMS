@@ -1316,7 +1316,7 @@ class Export extends ImportExport
      * @param string $suggestion
      * @return string
      */
-    public function generateExportFileName(string $suggestion): string
+    public function generateExportFileName(string $suggestion = 'export'): string
     {
         $suggestion = substr(trim(preg_replace('/[^[:alnum:]_]/', '-', $suggestion)), 0, 20);
         return 'T3D_' . $suggestion . '_' . date('Y-m-d_H-i');

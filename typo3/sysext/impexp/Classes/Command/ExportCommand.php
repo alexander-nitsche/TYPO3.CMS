@@ -18,12 +18,12 @@ namespace TYPO3\CMS\Impexp\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
-use TYPO3\CMS\Impexp\Command\Exception\InvalidFileException;
 use TYPO3\CMS\Impexp\Export;
 
 /**
@@ -40,14 +40,17 @@ class ExportCommand extends Command
             ->setDescription('Exports a T3D / XML file with content of a page tree')
             ->addArgument(
                 'file',
-                InputArgument::REQUIRED,
-                'The filename to export to (.t3d or .xml)'
-            )
-            ->addArgument(
-                'fileType',
                 InputArgument::OPTIONAL,
-                'The file type (xml, t3d, t3d_compressed). Default type is "xml".'
-            );
+                'The filename to export to (without file extension)'
+            )
+            ->addOption(
+                'fileType',
+                'ft',
+                InputOption::VALUE_OPTIONAL,
+                'The file type (xml, t3d, t3d_compressed).',
+                Export::FILETYPE_XML
+            )
+        ;
     }
 
     /**
@@ -62,23 +65,23 @@ class ExportCommand extends Command
         // Make sure the _cli_ user is loaded
         Bootstrap::initializeBackendAuthentication();
 
-        $fileName = (string)$input->getArgument('file');
-        $fileName = PathUtility::basename($fileName);
-        if ($fileName === '') {
-            throw new InvalidFileException('The given filename "' . $fileName . '" is not valid', 1602257683);
-        } elseif (file_exists($fileName)) {
-            throw new InvalidFileException('The given filename "' . $fileName . '" already exists', 1602257702);
-        }
-        $fileType = (string)$input->getArgument('fileType');
-
         $io = new SymfonyStyle($input, $output);
 
-        $export = $this->getExport();
-        $export->init();
         try {
-            if (!empty($fileType)) {
-                $export->setExportFileType($fileType);
+            $export = $this->getExport();
+            $export->init();
+            if ($input->getOption('fileType') != $export->getExportFileType()) {
+                $export->setExportFileType((string)$input->getOption('fileType'));
             }
+            $fileName = $export->generateExportFileName() . $export->getFileExtensionByFileType();
+            if ($input->getArgument('file')) {
+                $fileName = (string)$input->getArgument('file');
+                $fileName = PathUtility::basename($fileName);
+                if ($fileName !== '') {
+                    $fileName = $fileName . $export->getFileExtensionByFileType();
+                }
+            }
+            $export->setExportFileName($fileName);
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
             $saveFile = $export->saveToFile($fileName, $fileContent);
