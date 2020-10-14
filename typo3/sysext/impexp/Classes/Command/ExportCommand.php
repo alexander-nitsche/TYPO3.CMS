@@ -45,7 +45,7 @@ class ExportCommand extends Command
             )
             ->addOption(
                 'fileType',
-                'ft',
+                'f',
                 InputOption::VALUE_OPTIONAL,
                 'The file type (xml, t3d, t3d_compressed).',
                 Export::FILETYPE_XML
