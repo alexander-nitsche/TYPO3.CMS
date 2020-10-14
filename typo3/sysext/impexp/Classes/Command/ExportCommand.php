@@ -64,6 +64,12 @@ class ExportCommand extends Command
                 'Include all records of this table. Examples: "_ALL", "tt_content", "sys_file_reference", etc.',
                 ["_ALL"]
             )
+            ->addOption(
+                'record',
+                'r',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Include this specific record. Pattern is "{table}:{record}". Examples: "tt_content:12", etc.'
+            )
         ;
     }
 
@@ -101,6 +107,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('table') != $export->getTables()) {
                 $export->setTables($input->getOption('table'));
+            }
+            if ($input->getOption('record') != $export->getRecord()) {
+                $export->setRecord($input->getOption('record'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
