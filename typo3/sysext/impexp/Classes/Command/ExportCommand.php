@@ -58,6 +58,19 @@ class ExportCommand extends Command
                 -1
             )
             ->addOption(
+                'levels',
+                'l',
+                InputOption::VALUE_OPTIONAL,
+                'The depth of the exported page tree. ' .
+                    '"-2": "Records on this page", ' .
+                    '"-1": "Expanded tree", ' .
+                    '"0": "This page", ' .
+                    '"1": "1 level down", ' .
+                    '.. ' .
+                    '"999": "Infinite levels".',
+                0
+            )
+            ->addOption(
                 'table',
                 't',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
@@ -65,13 +78,13 @@ class ExportCommand extends Command
             )
             ->addOption(
                 'record',
-                'c',
+                null,
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include this specific record. Pattern is "{table}:{record}". Examples: "tt_content:12", etc.'
             )
             ->addOption(
                 'list',
-                'l',
+                null,
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include the records of this table and this page. Pattern is "{table}:{pid}". Examples: "sys_language:0", etc.'
             )
@@ -169,6 +182,9 @@ class ExportCommand extends Command
             $export->setExportFileName($fileName);
             if ($input->getOption('pid') != $export->getPid()) {
                 $export->setPid((int)$input->getOption('pid'));
+            }
+            if ($input->getOption('levels') != $export->getLevels()) {
+                $export->setLevels((int)$input->getOption('levels'));
             }
             if ($input->getOption('table') != $export->getTables()) {
                 $export->setTables($input->getOption('table'));
