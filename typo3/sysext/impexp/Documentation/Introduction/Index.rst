@@ -158,7 +158,7 @@ UI
       - Use static relations for tables (find better wording)
       - Show static relations (find better wording)
       - Exclude elements: Add same row as for "Preview export": Include [check] [symbol] [title/table+id if no title]
-      - Exclude disabled elements (is it really required or does it add complexity?)
+      - Exclude disabled elements (is it really required or does it add complexity? => yes, as it is about records which are disabled by TCA configuration, not about being disabled by this export form ..)
       - Button "Apply" (former: "Update")
       - Button "Prev" + Button "Next"
       - Preview export (single records removable)
