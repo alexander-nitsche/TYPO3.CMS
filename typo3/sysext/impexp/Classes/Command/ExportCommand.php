@@ -82,6 +82,12 @@ class ExportCommand extends Command
                 'Exclude this specific record. Pattern is "{table}:{record}". Examples: "fe_users:3", etc.'
             )
             ->addOption(
+                'excludeDisabledRecords',
+                null,
+                InputOption::VALUE_NONE,
+                'Exclude records which are handled as disabled by their TCA configuration, e.g. by fields "disabled", "starttime" or "endtime".'
+            )
+            ->addOption(
                 'excludeHtmlCss',
                 null,
                 InputOption::VALUE_NONE,
@@ -157,6 +163,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('exclude') != $export->getExcludeMap()) {
                 $export->setExcludeMap($input->getOption('exclude'));
+            }
+            if ($input->getOption('excludeDisabledRecords') != $export->isExcludeDisabledRecords()) {
+                $export->setExcludeDisabledRecords($input->getOption('excludeDisabledRecords'));
             }
             if (!$input->getOption('excludeHtmlCss') != $export->isIncludeExtFileResources()) {
                 $export->setIncludeExtFileResources(!$input->getOption('excludeHtmlCss'));

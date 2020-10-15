@@ -1288,19 +1288,6 @@ abstract class ImportExport
         }
     }
 
-    /**
-     * Set flag to control whether disabled records and their children are excluded (true) or included (false). Defaults
-     * to the old behaviour of including everything.
-     *
-     * @param bool $excludeDisabledRecords Set to true if if all disabled records should be excluded, false otherwise
-     * @return \TYPO3\CMS\Impexp\ImportExport $this for fluent calls
-     */
-    public function setExcludeDisabledRecords($excludeDisabledRecords = false)
-    {
-        $this->excludeDisabledRecords = $excludeDisabledRecords;
-        return $this;
-    }
-
     /*****************************
      * Error handling
      *****************************/
@@ -1344,6 +1331,25 @@ abstract class ImportExport
     /**************************
      * Getters and Setters
      *************************/
+
+    /**
+     * Set flag to control whether disabled records and their children are excluded (true) or included (false). Defaults
+     * to the old behaviour of including everything.
+     *
+     * @param bool $excludeDisabledRecords Set to true if if all disabled records should be excluded, false otherwise
+     */
+    public function setExcludeDisabledRecords(bool $excludeDisabledRecords): void
+    {
+        $this->excludeDisabledRecords = $excludeDisabledRecords;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExcludeDisabledRecords(): bool
+    {
+        return $this->excludeDisabledRecords;
+    }
 
     /**
      * @return array
