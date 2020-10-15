@@ -65,7 +65,7 @@ class ExportCommand extends Command
             )
             ->addOption(
                 'record',
-                'r',
+                'c',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include this specific record. Pattern is "{table}:{record}". Examples: "tt_content:12", etc.'
             )
@@ -74,6 +74,12 @@ class ExportCommand extends Command
                 'l',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'Include the records of this table and this page. Pattern is "{table}:{pid}". Examples: "sys_language:0", etc.'
+            )
+            ->addOption(
+                'relative',
+                'r',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Include the records of this table which are referenced by other records. Examples: "_ALL", "sys_language", "sys_category", etc.'
             )
             ->addOption(
                 'exclude',
@@ -160,6 +166,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('list') != $export->getList()) {
                 $export->setList($input->getOption('list'));
+            }
+            if ($input->getOption('relative') != $export->getRelOnlyTables()) {
+                $export->setRelOnlyTables($input->getOption('relative'));
             }
             if ($input->getOption('exclude') != $export->getExcludeMap()) {
                 $export->setExcludeMap($input->getOption('exclude'));
