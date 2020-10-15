@@ -217,7 +217,7 @@ class ExportController extends ImportExportController
                 $dlFile = $this->export->getExportFileName()
                             . $this->export->getFileExtensionByFileType();
             } else {
-                $dlFile = $this->export->generateExportFileName($inData['download_export_name'])
+                $dlFile = $this->export->generateExportFileName()
                             . $this->export->getFileExtensionByFileType();
             }
 
@@ -272,7 +272,6 @@ class ExportController extends ImportExportController
      */
     protected function makeConfigurationForm(array $inData): void
     {
-        $nameSuggestion = '';
         // Page tree export options:
         if (MathUtility::canBeInterpretedAsInteger($inData['pagetree']['id'] ?? '')) {
             $this->standaloneView->assign('treeHTML', $this->export->getTreeHTML());
@@ -289,7 +288,6 @@ class ExportController extends ImportExportController
             ];
             $this->standaloneView->assign('levelSelectOptions', $opt);
             $this->standaloneView->assign('tableSelectOptions', $this->getTableSelectOptions('pages'));
-            $nameSuggestion .= 'tree_PID' . ($inData['pagetree']['id'] ?? 0) . '_L' . ($inData['pagetree']['levels'] ?? 0);
         }
         // Single record export:
         if (is_array($inData['record'] ?? null)) {
@@ -297,7 +295,6 @@ class ExportController extends ImportExportController
             foreach ($inData['record'] as $ref) {
                 $rParts = explode(':', $ref);
                 [$tName, $rUid] = $rParts;
-                $nameSuggestion .= $tName . '_' . $rUid;
                 $rec = BackendUtility::getRecordWSOL((string)$tName, (int)$rUid);
                 if (!empty($rec)) {
                     $records[] = [
@@ -340,7 +337,6 @@ class ExportController extends ImportExportController
 
         $this->standaloneView->assign('externalReferenceTableSelectOptions', $this->getTableSelectOptions());
         $this->standaloneView->assign('externalStaticTableSelectOptions', $this->getTableSelectOptions());
-        $this->standaloneView->assign('nameSuggestion', $nameSuggestion);
     }
 
     /**
