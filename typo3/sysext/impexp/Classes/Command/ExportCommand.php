@@ -98,6 +98,12 @@ class ExportCommand extends Command
                 InputOption::VALUE_OPTIONAL,
                 'The meta notes of the export.'
             )
+            ->addOption(
+                'dependency',
+                'd',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'This TYPO3 extension is required for the exported records. Examples: "news", "powermail", etc.'
+            )
         ;
     }
 
@@ -153,6 +159,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('notes') != $export->getNotes()) {
                 $export->setNotes($input->getOption('notes'));
+            }
+            if ($input->getOption('dependency') != $export->getExtensionDependencies()) {
+                $export->setExtensionDependencies($input->getOption('dependency'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
