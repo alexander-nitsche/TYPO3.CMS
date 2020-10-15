@@ -226,8 +226,7 @@ class ExportCommand extends Command
                 $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
             }
             $export->process();
-            $fileContent = $export->compileMemoryToFileContent();
-            $saveFile = $export->saveToFile($fileName, $fileContent);
+            $saveFile = $export->saveToFile($fileName);
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
             return 0;
         } catch (\Exception $e) {

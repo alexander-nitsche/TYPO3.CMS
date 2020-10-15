@@ -60,7 +60,7 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  * $this->export->export_addFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
  *
  * Write export
- * $out = $this->export->compileMemoryToFileContent();
+ * $out = $this->export->render();
  * @internal this is not part of TYPO3's Core API.
  */
 

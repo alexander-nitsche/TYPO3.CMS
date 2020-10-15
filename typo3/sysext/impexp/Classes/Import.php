@@ -1711,7 +1711,7 @@ class Import extends ImportExport
 
     /**
      * Loads T3D file content into the $this->dat array
-     * (This function can be used to test the output strings from ->compileMemoryToFileContent())
+     * (This function can be used to test the output strings from ->render())
      *
      * @param string $filecontent File content
      */

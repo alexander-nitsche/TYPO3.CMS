@@ -208,9 +208,6 @@ class ExportController extends ImportExportController
 
         // If the download button is clicked, return file
         if ($inData['download_export'] || $inData['save_export']) {
-            // File content:
-            $out = $this->export->compileMemoryToFileContent();
-
             // Filename:
             if ($this->export->getExportFileName() !== '') {
                 $dlFile = $this->export->getExportFileName()
@@ -222,6 +219,8 @@ class ExportController extends ImportExportController
 
             // Export for download:
             if ($inData['download_export']) {
+                // File content:
+                $out = $this->export->render();
                 $mimeType = 'application/octet-stream';
                 header('Content-Type: ' . $mimeType);
                 header('Content-Length: ' . strlen($out));
@@ -235,11 +234,12 @@ class ExportController extends ImportExportController
                 $lang = $this->getLanguageService();
 
                 try {
-                    $saveFile = $this->export->saveToFile($dlFile, $out);
+                    $saveFile = $this->export->saveToFile($dlFile);
+                    $saveFileSize = $saveFile->getProperty('size');
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
                         FlashMessage::class,
-                        sprintf($lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize(strlen($out))),
+                        sprintf($lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize($saveFileSize)),
                         $lang->getLL('exportdata_savedFile'),
                         FlashMessage::OK
                     );

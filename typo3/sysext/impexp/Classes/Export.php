@@ -63,7 +63,7 @@ use TYPO3\CMS\Impexp\View\ExportPageTreeView;
  * $this->export->export_addFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
  *
  * Write export
- * $out = $this->export->compileMemoryToFileContent();
+ * $out = $this->export->render();
  * @internal this is not part of TYPO3's Core API.
  */
 
@@ -1118,7 +1118,7 @@ class Export extends ImportExport
      *
      * @return string The output file stream
      */
-    public function compileMemoryToFileContent()
+    public function render()
     {
         if ($this->exportFileType === self::FILETYPE_XML) {
             $out = $this->createXML();
@@ -1248,13 +1248,13 @@ class Export extends ImportExport
 
     /**
      * @param string $fileName
-     * @param string $fileContent
      * @return File
      * @throws InsufficientFolderWritePermissionsException
      */
-    public function saveToFile(string $fileName, string &$fileContent): File
+    public function saveToFile(string $fileName): File
     {
         $saveFolder = $this->getOrCreateDefaultImportExportFolder();
+        $fileContent = $this->render();
 
         if (!($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write'))) {
             throw new InsufficientFolderWritePermissionsException(

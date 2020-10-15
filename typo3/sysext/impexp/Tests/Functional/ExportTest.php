@@ -73,11 +73,11 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function compileMemoryToFileContentSucceedsWithoutArguments(): void
+    public function renderSucceedsWithoutArguments(): void
     {
         $this->exportMock->init();
         $this->exportMock->process();
-        $actual = $this->exportMock->compileMemoryToFileContent();
+        $actual = $this->exportMock->render();
 
         self::assertXmlStringEqualsXmlFile(__DIR__ . '/Fixtures/XmlExports/empty.xml', $actual);
     }
@@ -91,8 +91,7 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->process();
 
         $fileName = 'export.xml';
-        $fileContent = $this->exportMock->compileMemoryToFileContent();
-        $file = $this->exportMock->saveToFile($fileName, $fileContent);
+        $file = $this->exportMock->saveToFile($fileName);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         self::assertStringEndsWith('export.xml', $filePath);
@@ -109,8 +108,7 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->process();
 
         $fileName = 'export.t3d';
-        $fileContent = $this->exportMock->compileMemoryToFileContent();
-        $file = $this->exportMock->saveToFile($fileName, $fileContent);
+        $file = $this->exportMock->saveToFile($fileName);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines
@@ -135,8 +133,7 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->process();
 
         $fileName = 'export-z.t3d';
-        $fileContent = $this->exportMock->compileMemoryToFileContent();
-        $file = $this->exportMock->saveToFile($fileName, $fileContent);
+        $file = $this->exportMock->saveToFile($fileName);
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines
