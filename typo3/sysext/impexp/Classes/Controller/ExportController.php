@@ -212,24 +212,16 @@ class ExportController extends ImportExportController
 
         // If the download button is clicked, return file
         if (($inData['download_export'] ?? null) || ($inData['save_export'] ?? null)) {
-            // Filename:
-            if ($this->export->getExportFileName() !== '') {
-                $dlFile = $this->export->getExportFileName()
-                            . $this->export->getFileExtensionByFileType();
-            } else {
-                $dlFile = $this->export->generateExportFileName()
-                            . $this->export->getFileExtensionByFileType();
-            }
 
             // Export for download:
             if ($inData['download_export'] ?? null) {
-                // File content:
-                $out = $this->export->render();
+                $fileName = $this->export->getOrGenerateExportFileNameWithFileExtension();
+                $fileContent = $this->export->render();
                 $mimeType = 'application/octet-stream';
                 header('Content-Type: ' . $mimeType);
-                header('Content-Length: ' . strlen($out));
-                header('Content-Disposition: attachment; filename=' . PathUtility::basename($dlFile));
-                echo $out;
+                header('Content-Length: ' . strlen($fileContent));
+                header('Content-Disposition: attachment; filename=' . PathUtility::basename($fileName));
+                echo $fileContent;
                 die;
             }
 
@@ -238,7 +230,7 @@ class ExportController extends ImportExportController
                 $lang = $this->getLanguageService();
 
                 try {
-                    $saveFile = $this->export->saveToFile($dlFile);
+                    $saveFile = $this->export->saveToFile();
                     $saveFileSize = $saveFile->getProperty('size');
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
