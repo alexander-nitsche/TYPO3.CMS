@@ -76,6 +76,12 @@ class ExportCommand extends Command
                 'Include the records of this table and this page. Pattern is "{table}:{pid}". Examples: "sys_language:0", etc.'
             )
             ->addOption(
+                'exclude',
+                'e',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Exclude this specific record. Pattern is "{table}:{record}". Examples: "fe_users:3", etc.'
+            )
+            ->addOption(
                 'title',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -136,6 +142,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('list') != $export->getList()) {
                 $export->setList($input->getOption('list'));
+            }
+            if ($input->getOption('exclude') != $export->getExcludeMap()) {
+                $export->setExcludeMap($input->getOption('exclude'));
             }
             if ($input->getOption('title') != $export->getTitle()) {
                 $export->setTitle($input->getOption('title'));
