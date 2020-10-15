@@ -348,18 +348,6 @@ class Export extends ImportExport
         ];
     }
 
-    /**
-     * Option to enable having the files not included in the export file.
-     * The files are saved to a temporary folder instead.
-     *
-     * @param bool $saveFilesOutsideExportFile
-     * @see ImportExport::getOrCreateTemporaryFolderName()
-     */
-    public function setSaveFilesOutsideExportFile($saveFilesOutsideExportFile)
-    {
-        $this->saveFilesOutsideExportFile = $saveFilesOutsideExportFile;
-    }
-
     /**************************
      * Export / Init Page tree
      *************************/
@@ -1543,5 +1531,25 @@ class Export extends ImportExport
     public function setIncludeExtFileResources(bool $includeExtFileResources): void
     {
         $this->includeExtFileResources = $includeExtFileResources;
+    }
+
+    /**
+     * Option to enable having the files not included in the export file.
+     * The files are saved to a temporary folder instead.
+     *
+     * @param bool $saveFilesOutsideExportFile
+     * @see ImportExport::getOrCreateTemporaryFolderName()
+     */
+    public function setSaveFilesOutsideExportFile(bool $saveFilesOutsideExportFile)
+    {
+        $this->saveFilesOutsideExportFile = $saveFilesOutsideExportFile;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSaveFilesOutsideExportFile(): bool
+    {
+        return $this->saveFilesOutsideExportFile;
     }
 }

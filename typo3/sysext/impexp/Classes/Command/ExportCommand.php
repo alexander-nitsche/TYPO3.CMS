@@ -129,6 +129,12 @@ class ExportCommand extends Command
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
                 'This TYPO3 extension is required for the exported records. Examples: "news", "powermail", etc.'
             )
+            ->addOption(
+                'saveFilesOutsideExportFile',
+                null,
+                InputOption::VALUE_NONE,
+                'Save files into separate folder instead of including them into the common export file. Folder name pattern is "{file}.files".'
+            )
         ;
     }
 
@@ -199,6 +205,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('dependency') != $export->getExtensionDependencies()) {
                 $export->setExtensionDependencies($input->getOption('dependency'));
+            }
+            if ($input->getOption('saveFilesOutsideExportFile') != $export->isSaveFilesOutsideExportFile()) {
+                $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
             }
             $export->process();
             $fileContent = $export->compileMemoryToFileContent();
