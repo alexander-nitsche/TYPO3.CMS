@@ -98,7 +98,7 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
         $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
         $subject->process();
 
-        $out = $subject->compileMemoryToFileContent();
+        $out = $subject->render();
 
         self::assertXmlStringEqualsXmlFile(
             __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent.xml',
