@@ -88,10 +88,10 @@ class ExportTest extends AbstractImportExportTestCase
     public function saveXmlToFileIsDefaultAndSucceeds(): void
     {
         $this->exportMock->init();
+        $this->exportMock->setExportFileName('export');
         $this->exportMock->process();
 
-        $fileName = 'export.xml';
-        $file = $this->exportMock->saveToFile($fileName);
+        $file = $this->exportMock->saveToFile();
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         self::assertStringEndsWith('export.xml', $filePath);
@@ -104,11 +104,11 @@ class ExportTest extends AbstractImportExportTestCase
     public function saveT3dToFileSucceeds(): void
     {
         $this->exportMock->init();
+        $this->exportMock->setExportFileName('export');
         $this->exportMock->setExportFileType(Export::FILETYPE_T3D);
         $this->exportMock->process();
 
-        $fileName = 'export.t3d';
-        $file = $this->exportMock->saveToFile($fileName);
+        $file = $this->exportMock->saveToFile();
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines
@@ -129,11 +129,11 @@ class ExportTest extends AbstractImportExportTestCase
         }
 
         $this->exportMock->init();
+        $this->exportMock->setExportFileName('export');
         $this->exportMock->setExportFileType(Export::FILETYPE_T3DZ);
         $this->exportMock->process();
 
-        $fileName = 'export-z.t3d';
-        $file = $this->exportMock->saveToFile($fileName);
+        $file = $this->exportMock->saveToFile();
         $filePath = Environment::getPublicPath() . '/' . $file->getPublicUrl();
 
         // remove final newlines

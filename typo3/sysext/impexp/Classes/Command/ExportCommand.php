@@ -171,16 +171,9 @@ class ExportCommand extends Command
             if ($input->getOption('fileType') != $export->getExportFileType()) {
                 $export->setExportFileType((string)$input->getOption('fileType'));
             }
-            if ($input->getArgument('file')) {
-                $fileName = (string)$input->getArgument('file');
-                $fileName = PathUtility::basename($fileName);
-                if ($fileName !== '') {
-                    $fileName = $fileName . $export->getFileExtensionByFileType();
-                }
-            } else {
-                $fileName = $export->generateExportFileName() . $export->getFileExtensionByFileType();
+            if ($input->getArgument('file') != $export->getExportFileName()) {
+                $export->setExportFileName(PathUtility::basename($input->getArgument('file')));
             }
-            $export->setExportFileName($fileName);
             if ($input->getOption('pid') != $export->getPid()) {
                 $export->setPid((int)$input->getOption('pid'));
             }
@@ -227,7 +220,7 @@ class ExportCommand extends Command
                 $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
             }
             $export->process();
-            $saveFile = $export->saveToFile($fileName);
+            $saveFile = $export->saveToFile();
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
             return 0;
         } catch (\Exception $e) {

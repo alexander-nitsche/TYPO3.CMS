@@ -63,32 +63,35 @@ class ExportTest extends UnitTestCase
     /**
      * @test
      */
-    public function generateExportFileNameConsidersPidAndLevels(): void
+    public function getOrGenerateExportFileNameWithFileExtensionConsidersPidAndLevels(): void
     {
         $this->exportMock->init();
         $this->exportMock->setPid(1);
         $this->exportMock->setLevels(2);
-        self::assertEquals('T3D_tree_PID1_L2_', substr($this->exportMock->generateExportFileName(), 0, -16));
+        $patternDateTime = '[0-9-_]{16}';
+        self::assertRegExp("/T3D_tree_PID1_L2_$patternDateTime.xml/", $this->exportMock->getOrGenerateExportFileNameWithFileExtension());
     }
 
     /**
      * @test
      */
-    public function generateExportFileNameConsidersRecords(): void
+    public function getOrGenerateExportFileNameWithFileExtensionConsidersRecords(): void
     {
         $this->exportMock->init();
         $this->exportMock->setRecord(['page:1', 'tt_content:1']);
-        self::assertEquals('T3D_recs_page_1-tt_conte_', substr($this->exportMock->generateExportFileName(), 0, -16));
+        $patternDateTime = '[0-9-_]{16}';
+        self::assertRegExp("/T3D_recs_page_1-tt_conte_$patternDateTime.xml/", $this->exportMock->getOrGenerateExportFileNameWithFileExtension());
     }
 
     /**
      * @test
      */
-    public function generateExportFileNameConsidersLists(): void
+    public function getOrGenerateExportFileNameWithFileExtensionConsidersLists(): void
     {
         $this->exportMock->init();
         $this->exportMock->setList(['sys_language:0', 'news:12']);
-        self::assertEquals('T3D_list_sys_language_0-_', substr($this->exportMock->generateExportFileName(), 0, -16));
+        $patternDateTime = '[0-9-_]{16}';
+        self::assertRegExp("/T3D_list_sys_language_0-_$patternDateTime.xml/", $this->exportMock->getOrGenerateExportFileNameWithFileExtension());
     }
 
     /**

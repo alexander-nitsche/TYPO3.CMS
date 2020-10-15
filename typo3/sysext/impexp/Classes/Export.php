@@ -1247,13 +1247,13 @@ class Export extends ImportExport
     }
 
     /**
-     * @param string $fileName
      * @return File
      * @throws InsufficientFolderWritePermissionsException
      */
-    public function saveToFile(string $fileName): File
+    public function saveToFile(): File
     {
         $saveFolder = $this->getOrCreateDefaultImportExportFolder();
+        $fileName = $this->getOrGenerateExportFileNameWithFileExtension();
         $fileContent = $this->render();
 
         if (!($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write'))) {
@@ -1300,7 +1300,22 @@ class Export extends ImportExport
     /**
      * @return string
      */
-    public function generateExportFileName(): string
+    public function getOrGenerateExportFileNameWithFileExtension(): string
+    {
+        if (!empty($this->exportFileName)) {
+            $exportFileName = $this->exportFileName;
+        } else {
+            $exportFileName = $this->generateExportFileName();
+        }
+        $exportFileName .= $this->getFileExtensionByFileType();
+
+        return $exportFileName;
+    }
+
+    /**
+     * @return string
+     */
+    protected function generateExportFileName(): string
     {
         if ($this->pid !== -1) {
             $exportFileName = 'tree_PID' . $this->pid . '_L' . $this->levels;
