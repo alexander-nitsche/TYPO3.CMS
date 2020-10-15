@@ -304,7 +304,6 @@ TODOS
       },
       "showStaticRelations": "1",
       "excludeDisabled": "1",
-      "download_export_name": "fe_users_1",
       "preset": {
          "title": "Record Export",
          "public": 0
@@ -343,7 +342,6 @@ TODOS
       },
       "showStaticRelations": "",
       "excludeDisabled": "1",
-      "download_export_name": "tree_PID0_L0",
       "..": ".."
    }
 
