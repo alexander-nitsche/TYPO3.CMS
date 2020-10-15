@@ -126,7 +126,7 @@ class Export extends ImportExport
      *
      * @var bool
      */
-    protected $includeExtFileResources = false;
+    protected $includeExtFileResources = true;
 
     /**
      * Files with external media (HTML/css style references inside)
