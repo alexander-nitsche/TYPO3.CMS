@@ -79,7 +79,13 @@ class ExportCommand extends Command
                 'relative',
                 'r',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
-                'Include the records of this table which are referenced by other records. Examples: "_ALL", "sys_language", "sys_category", etc.'
+                'Include the records of this table which are referenced by other records. Examples: "_ALL", "sys_category", etc.'
+            )
+            ->addOption(
+                'static',
+                's',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Do not include records of this table, but keep the foreign key in references of other records to this table. Examples: "_ALL", "sys_language", etc.'
             )
             ->addOption(
                 'exclude',
@@ -169,6 +175,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('relative') != $export->getRelOnlyTables()) {
                 $export->setRelOnlyTables($input->getOption('relative'));
+            }
+            if ($input->getOption('static') != $export->getRelStaticTables()) {
+                $export->setRelStaticTables($input->getOption('static'));
             }
             if ($input->getOption('exclude') != $export->getExcludeMap()) {
                 $export->setExcludeMap($input->getOption('exclude'));
