@@ -171,13 +171,14 @@ class ExportCommand extends Command
             if ($input->getOption('fileType') != $export->getExportFileType()) {
                 $export->setExportFileType((string)$input->getOption('fileType'));
             }
-            $fileName = $export->generateExportFileName() . $export->getFileExtensionByFileType();
             if ($input->getArgument('file')) {
                 $fileName = (string)$input->getArgument('file');
                 $fileName = PathUtility::basename($fileName);
                 if ($fileName !== '') {
                     $fileName = $fileName . $export->getFileExtensionByFileType();
                 }
+            } else {
+                $fileName = $export->generateExportFileName() . $export->getFileExtensionByFileType();
             }
             $export->setExportFileName($fileName);
             if ($input->getOption('pid') != $export->getPid()) {

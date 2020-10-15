@@ -1298,13 +1298,25 @@ class Export extends ImportExport
     }
 
     /**
-     * @param string $suggestion
      * @return string
      */
-    public function generateExportFileName(string $suggestion = 'export'): string
+    public function generateExportFileName(): string
     {
-        $suggestion = substr(trim(preg_replace('/[^[:alnum:]_]/', '-', $suggestion)), 0, 20);
-        return 'T3D_' . $suggestion . '_' . date('Y-m-d_H-i');
+        if ($this->pid !== -1) {
+            $exportFileName = 'tree_PID' . $this->pid . '_L' . $this->levels;
+        } elseif (!empty($this->getRecord())) {
+            $exportFileName = 'recs_' . implode('-', $this->getRecord());
+            $exportFileName = str_replace(':', '_', $exportFileName);
+        } elseif (!empty($this->getList())) {
+            $exportFileName = 'list_' . implode('-', $this->getList());
+            $exportFileName = str_replace(':', '_', $exportFileName);
+        } else {
+            $exportFileName = 'export';
+        }
+
+        $exportFileName = substr(trim(preg_replace('/[^[:alnum:]_-]/', '-', $exportFileName)), 0, 20);
+
+        return 'T3D_' . $exportFileName . '_' . date('Y-m-d_H-i');
     }
 
     /**

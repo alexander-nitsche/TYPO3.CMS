@@ -62,30 +62,33 @@ class ExportTest extends UnitTestCase
 
     /**
      * @test
-     * @dataProvider generateExportFileNameSanitizesSuggestionProvider
-     * @param string $suggestion
-     * @param string $expected
      */
-    public function generateExportFileNameSanitizesSuggestion(string $suggestion, string $expected): void
+    public function generateExportFileNameConsidersPidAndLevels(): void
     {
         $this->exportMock->init();
-        $actual = $this->exportMock->generateExportFileName($suggestion);
-
-        self::assertEquals($expected, $actual);
+        $this->exportMock->setPid(1);
+        $this->exportMock->setLevels(2);
+        self::assertEquals('T3D_tree_PID1_L2_', substr($this->exportMock->generateExportFileName(), 0, -16));
     }
 
-    public function generateExportFileNameSanitizesSuggestionProvider(): array
+    /**
+     * @test
+     */
+    public function generateExportFileNameConsidersRecords(): void
     {
-        return [
-            [
-                'suggestion' => 'my-pagetree-of-pid-1_20181012 äöüß!"§$%&/()²³¼½¬{[]};,:µ<>|.2',
-                'expected' => 'T3D_my-pagetree-of-pid-1_' . date('Y-m-d_H-i')
-            ],
-            [
-                'suggestion' => 'superlong-suggestion-for-my-pagetree-of-pid-1_20181012 äöüß!"§$%&/()²³¼½¬{[]};,:µ<>|.2',
-                'expected' => 'T3D_superlong-suggestion_' . date('Y-m-d_H-i')
-            ],
-        ];
+        $this->exportMock->init();
+        $this->exportMock->setRecord(['page:1', 'tt_content:1']);
+        self::assertEquals('T3D_recs_page_1-tt_conte_', substr($this->exportMock->generateExportFileName(), 0, -16));
+    }
+
+    /**
+     * @test
+     */
+    public function generateExportFileNameConsidersLists(): void
+    {
+        $this->exportMock->init();
+        $this->exportMock->setList(['sys_language:0', 'news:12']);
+        self::assertEquals('T3D_list_sys_language_0-_', substr($this->exportMock->generateExportFileName(), 0, -16));
     }
 
     /**
