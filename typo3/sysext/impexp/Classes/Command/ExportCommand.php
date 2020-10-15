@@ -82,6 +82,12 @@ class ExportCommand extends Command
                 'Exclude this specific record. Pattern is "{table}:{record}". Examples: "fe_users:3", etc.'
             )
             ->addOption(
+                'excludeHtmlCss',
+                null,
+                InputOption::VALUE_NONE,
+                'Exclude referenced HTML and CSS files.'
+            )
+            ->addOption(
                 'title',
                 null,
                 InputOption::VALUE_OPTIONAL,
@@ -151,6 +157,9 @@ class ExportCommand extends Command
             }
             if ($input->getOption('exclude') != $export->getExcludeMap()) {
                 $export->setExcludeMap($input->getOption('exclude'));
+            }
+            if (!$input->getOption('excludeHtmlCss') != $export->isIncludeExtFileResources()) {
+                $export->setIncludeExtFileResources(!$input->getOption('excludeHtmlCss'));
             }
             if ($input->getOption('title') != $export->getTitle()) {
                 $export->setTitle($input->getOption('title'));
