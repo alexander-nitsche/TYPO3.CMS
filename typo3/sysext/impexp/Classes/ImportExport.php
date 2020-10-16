@@ -88,7 +88,7 @@ abstract class ImportExport
      *
      * @var string
      */
-    protected $mode = '';
+    public $mode = '';
 
     /**
      * Updates all records that has same UID instead of creating new!
@@ -226,7 +226,7 @@ abstract class ImportExport
      *
      * @var bool
      */
-    protected $compress = false;
+    public $compress = false;
 
     /**
      * Internal import/export memory

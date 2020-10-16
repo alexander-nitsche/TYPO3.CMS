@@ -175,7 +175,7 @@ class ImportController extends ImportExportController
             // Make input selector:
             // must have trailing slash.
             $path = $import->getOrCreateDefaultImportExportFolder();
-            $exportFiles = $this->getExportFiles();
+            $exportFiles = $this->getExportFiles($import);
 
             $this->shortcutName .= ' (' . htmlspecialchars($this->pageinfo['title']) . ')';
 
