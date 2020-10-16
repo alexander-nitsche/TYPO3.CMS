@@ -61,13 +61,18 @@ class ExportCommand extends Command
                 'levels',
                 'l',
                 InputOption::VALUE_OPTIONAL,
-                'The depth of the exported page tree. ' .
-                    '"-2": "Records on this page", ' .
-                    '"-1": "Expanded tree", ' .
+                sprintf(
+                    'The depth of the exported page tree. ' .
+                    '"%d": "Records on this page", ' .
+                    '"%d": "Expanded tree", ' .
                     '"0": "This page", ' .
                     '"1": "1 level down", ' .
                     '.. ' .
-                    '"999": "Infinite levels".',
+                    '"%d": "Infinite levels".',
+                    Export::LEVELS_RECORDS_ON_THIS_PAGE,
+                    Export::LEVELS_EXPANDED_TREE,
+                    Export::LEVELS_INFINITE
+                ),
                 0
             )
             ->addOption(

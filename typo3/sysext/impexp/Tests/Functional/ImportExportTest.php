@@ -60,7 +60,7 @@ class ImportExportTest extends AbstractImportExportTestCase
 
         $this->exportMock->init();
         $this->exportMock->setPid(1);
-        $this->exportMock->setLevels(999);
+        $this->exportMock->setLevels(Export::LEVELS_INFINITE);
         $this->exportMock->setTables(['_ALL']);
         $this->exportMock->setRelOnlyTables(['_ALL']);
         $this->exportMock->setRecordTypesIncludeFields($recordTypesIncludeFields);

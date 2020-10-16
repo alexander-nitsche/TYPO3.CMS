@@ -72,6 +72,10 @@ use TYPO3\CMS\Impexp\View\ExportPageTreeView;
  */
 class Export extends ImportExport
 {
+    const LEVELS_RECORDS_ON_THIS_PAGE = -2;
+    const LEVELS_EXPANDED_TREE = -1;
+    const LEVELS_INFINITE = 999;
+
     const FILETYPE_XML = 'xml';
     const FILETYPE_T3D = 't3d';
     const FILETYPE_T3DZ = 't3d_compressed';
@@ -223,7 +227,7 @@ class Export extends ImportExport
             $idH = null;
             $pid = $this->pid;
             $levels = $this->levels;
-            if ($levels === -1) {
+            if ($levels === self::LEVELS_EXPANDED_TREE) {
                 $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
                 if ($this->excludeDisabledRecords) {
                     $pagetree->init(BackendUtility::BEenableFields('pages'));
@@ -231,7 +235,7 @@ class Export extends ImportExport
                 $tree = $pagetree->ext_tree($pid, $this->filterPageIds($this->excludeMap));
                 $this->treeHTML = $pagetree->printTree($tree);
                 $idH = $pagetree->buffer_idH;
-            } elseif ($levels === -2) {
+            } elseif ($levels === self::LEVELS_RECORDS_ON_THIS_PAGE) {
                 $this->addRecordsForPid($pid, $this->tables);
             } else {
                 // Based on depth

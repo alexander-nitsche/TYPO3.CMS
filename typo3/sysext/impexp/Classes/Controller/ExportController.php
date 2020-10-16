@@ -265,14 +265,14 @@ class ExportController extends ImportExportController
             $this->standaloneView->assign('treeHTML', $this->export->getTreeHTML());
 
             $opt = [
-                -2 => $this->lang->getLL('makeconfig_tablesOnThisPage'),
-                -1 => $this->lang->getLL('makeconfig_expandedTree'),
+                Export::LEVELS_RECORDS_ON_THIS_PAGE => $this->lang->getLL('makeconfig_tablesOnThisPage'),
+                Export::LEVELS_EXPANDED_TREE => $this->lang->getLL('makeconfig_expandedTree'),
                 0 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_0'),
                 1 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_1'),
                 2 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_2'),
                 3 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_3'),
                 4 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_4'),
-                999 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_infi'),
+                Export::LEVELS_INFINITE => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_infi'),
             ];
             $this->standaloneView->assign('levelSelectOptions', $opt);
             $this->standaloneView->assign('tableSelectOptions', $this->getTableSelectOptions('pages'));
