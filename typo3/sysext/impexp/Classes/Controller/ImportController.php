@@ -50,14 +50,14 @@ class ImportController extends ImportExportController
     protected $moduleName = 'tx_impexp_import';
 
     /**
-     * @var array|File[]
-     */
-    protected $uploadedFiles = [];
-
-    /**
      * @var Import
      */
     protected $import;
+
+    /**
+     * @var array|File[]
+     */
+    protected $uploadedFiles = [];
 
     /**
      * @var ExtendedFileUtility
@@ -158,23 +158,23 @@ class ImportController extends ImportExportController
             if ($inData['new_import']) {
                 unset($inData['import_mode']);
             }
-            /** @var Import $import */
-            $import = GeneralUtility::makeInstance(Import::class);
-            $import->init();
-            $import->setUpdate((bool)$inData['do_update']);
-            $import->setImportMode((array)$inData['import_mode']);
-            $import->setEnableLogging((bool)$inData['enableLogging']);
-            $import->setGlobalIgnorePid((bool)$inData['global_ignore_pid']);
-            $import->setForceAllUids((bool)$inData['force_all_UIDS']);
-            $import->setShowDiff(!(bool)$inData['notShowDiff']);
-            $import->setSoftrefInputValues((array)$inData['softrefInputValues']);
+
+            $this->import = GeneralUtility::makeInstance(Import::class);
+            $this->import->init();
+            $this->import->setUpdate((bool)$inData['do_update']);
+            $this->import->setImportMode((array)$inData['import_mode']);
+            $this->import->setEnableLogging((bool)$inData['enableLogging']);
+            $this->import->setGlobalIgnorePid((bool)$inData['global_ignore_pid']);
+            $this->import->setForceAllUids((bool)$inData['force_all_UIDS']);
+            $this->import->setShowDiff(!(bool)$inData['notShowDiff']);
+            $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
             // OUTPUT creation:
 
             // Make input selector:
             // must have trailing slash.
-            $path = $import->getOrCreateDefaultImportExportFolder();
-            $exportFiles = $this->getExportFiles($import);
+            $path = $this->import->getOrCreateDefaultImportExportFolder();
+            $exportFiles = $this->getExportFiles();
 
             $this->shortcutName .= ' (' . htmlspecialchars($this->pageinfo['title']) . ')';
 
@@ -184,7 +184,7 @@ class ImportController extends ImportExportController
                 $selectOptions[$file->getCombinedIdentifier()] = $file->getPublicUrl();
             }
 
-            $this->standaloneView->assign('import', $import);
+            $this->standaloneView->assign('import', $this->import);
             $this->standaloneView->assign('inData', $inData);
             $this->standaloneView->assign('fileSelectOptions', $selectOptions);
 
@@ -196,7 +196,7 @@ class ImportController extends ImportExportController
             $this->standaloneView->assign('isAdmin', $beUser->isAdmin());
 
             // Upload file:
-            $tempFolder = $import->getOrCreateDefaultImportExportFolder();
+            $tempFolder = $this->import->getOrCreateDefaultImportExportFolder();
             if ($tempFolder) {
                 $this->standaloneView->assign('tempFolder', $tempFolder->getCombinedIdentifier());
                 $this->standaloneView->assign('hasTempUploadFolder', true);
@@ -215,16 +215,16 @@ class ImportController extends ImportExportController
                 if ($inFile !== null && $inFile->exists()) {
                     $this->standaloneView->assign('metaDataInFileExists', true);
                     $importInhibitedMessages = [];
-                    if ($import->loadFile($inFile->getForLocalProcessing(false), 1)) {
-                        $importInhibitedMessages = $import->checkImportPrerequisites();
+                    if ($this->import->loadFile($inFile->getForLocalProcessing(false), 1)) {
+                        $importInhibitedMessages = $this->import->checkImportPrerequisites();
                         if ($inData['import_file']) {
                             if (empty($importInhibitedMessages)) {
-                                $import->importData($this->id);
+                                $this->import->importData($this->id);
                                 BackendUtility::setUpdateSignal('updatePageTree');
                             }
                         }
-                        $import->setDisplayImportPidRecord($this->pageinfo);
-                        $this->standaloneView->assign('contentOverview', $import->displayContentOverview());
+                        $this->import->setDisplayImportPidRecord($this->pageinfo);
+                        $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                     }
                     // Compile messages which are inhibiting a proper import and add them to output.
                     if (!empty($importInhibitedMessages)) {
@@ -241,7 +241,7 @@ class ImportController extends ImportExportController
                 }
             }
 
-            $this->standaloneView->assign('errors', $import->getErrorLog());
+            $this->standaloneView->assign('errors', $this->import->getErrorLog());
         }
     }
 
@@ -293,15 +293,14 @@ class ImportController extends ImportExportController
     /**
      * Gets all export files.
      *
-     * @param Import $import
      * @return File[]
      * @throws \InvalidArgumentException
      */
-    protected function getExportFiles(Import $import): array
+    protected function getExportFiles(): array
     {
         $exportFiles = [];
 
-        $folder = $import->getOrCreateDefaultImportExportFolder();
+        $folder = $this->import->getOrCreateDefaultImportExportFolder();
         if ($folder !== null) {
 
             /** @var FileExtensionFilter $filter */
