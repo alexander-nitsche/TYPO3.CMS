@@ -348,7 +348,7 @@ abstract class ImportExport
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param string $preCode Pre-HTML code
      */
-    public function traversePageTree($pT, &$lines, $preCode = '')
+    protected function traversePageTree($pT, &$lines, $preCode = '')
     {
         foreach ($pT as $k => $v) {
             if ($this->excludeDisabledRecords === true && !$this->isActive('pages', $k)) {
@@ -427,7 +427,7 @@ abstract class ImportExport
      * @param array<int, array> $pT Page tree array with uid/subrow (from ->dat[header][pagetree]
      * @param array $lines Output lines array (is passed by reference and modified)
      */
-    public function traversePageRecords($pT, &$lines)
+    protected function traversePageRecords($pT, &$lines)
     {
         foreach ($pT as $k => $rHeader) {
             $this->singleRecordLines('pages', (int)$k, $lines, '', true);
@@ -451,7 +451,7 @@ abstract class ImportExport
      * @param array $pT Page tree array with uid/subrow (from ->dat[header][pagetree]
      * @param array $lines Output lines array (is passed by reference and modified)
      */
-    public function traverseAllRecords($pT, &$lines)
+    protected function traverseAllRecords($pT, &$lines)
     {
         foreach ($pT as $t => $recUidArr) {
             $this->addGeneralErrorsByTable($t);
@@ -488,7 +488,7 @@ abstract class ImportExport
      * @param string $preCode Pre-HTML code
      * @param bool $checkImportInPidRecord If you want import validation, you can set this so it checks if the import can take place on the specified page.
      */
-    public function singleRecordLines($table, $uid, &$lines, $preCode, $checkImportInPidRecord = false)
+    protected function singleRecordLines($table, $uid, &$lines, $preCode, $checkImportInPidRecord = false)
     {
         // Get record:
         $record = $this->dat['header']['records'][$table][$uid];
@@ -655,7 +655,7 @@ abstract class ImportExport
      * @internal
      * @see singleRecordLines()
      */
-    public function addRelations($rels, &$lines, $preCode, $recurCheck = [], $htmlColorClass = '')
+    protected function addRelations($rels, &$lines, $preCode, $recurCheck = [], $htmlColorClass = '')
     {
         foreach ($rels as $dat) {
             $table = $dat['table'];
@@ -719,7 +719,7 @@ abstract class ImportExport
      * @internal
      * @see singleRecordLines()
      */
-    public function addFiles($rels, &$lines, $preCode, $htmlColorClass = '', $tokenID = '')
+    protected function addFiles($rels, &$lines, $preCode, $htmlColorClass = '', $tokenID = '')
     {
         foreach ($rels as $ID) {
             // Process file:
@@ -819,7 +819,7 @@ abstract class ImportExport
      * @param int $doktype doktype value.
      * @return bool TRUE if OK
      */
-    public function checkDokType($checkTable, $doktype)
+    protected function checkDokType($checkTable, $doktype)
     {
         $allowedTableList = $GLOBALS['PAGES_TYPES'][$doktype]['allowedTables'] ?? $GLOBALS['PAGES_TYPES']['default']['allowedTables'];
         $allowedArray = GeneralUtility::trimExplode(',', $allowedTableList, true);
@@ -836,7 +836,7 @@ abstract class ImportExport
      * @param array $r Configuration for element
      * @return string HTML
      */
-    public function renderControls($r)
+    protected function renderControls($r)
     {
         if ($this->mode === 'export') {
             if ($r['type'] === 'record') {
@@ -864,7 +864,7 @@ abstract class ImportExport
      * @param array $cfg Softref configuration array. An export box is shown only if a substitution scheme is found for the soft reference.
      * @return string Selector box HTML
      */
-    public function softrefSelector($cfg)
+    protected function softrefSelector($cfg)
     {
         // Looking for file ID if any:
         $fI = $cfg['file_ID'] ? $this->dat['header']['files'][$cfg['file_ID']] : [];
@@ -915,7 +915,7 @@ abstract class ImportExport
      * @param bool $noAlternative If set, Do not look for alternative path! Just return FALSE
      * @return string|bool If a path is available that will be returned, otherwise FALSE.
      */
-    public function verifyFolderAccess($dirPrefix, $noAlternative = false)
+    protected function verifyFolderAccess($dirPrefix, $noAlternative = false)
     {
         // Check the absolute path for public web path, if the user has access - no problem
         try {
@@ -944,7 +944,7 @@ abstract class ImportExport
     /**
      * @return string|null
      */
-    public function getTemporaryFolderName(): ?string
+    protected function getTemporaryFolderName(): ?string
     {
         return $this->temporaryFolderName;
     }
@@ -1038,7 +1038,7 @@ abstract class ImportExport
      * @return array Array with uid-uid pairs for all pages in the page tree.
      * @see Import::flatInversePageTreePid()
      */
-    public function flatInversePageTree($idH, $a = [])
+    protected function flatInversePageTree($idH, $a = [])
     {
         if (is_array($idH)) {
             $idH = array_reverse($idH);
@@ -1058,7 +1058,7 @@ abstract class ImportExport
      * @param string $table Table name
      * @return bool TRUE, if table is marked static
      */
-    public function isTableStatic($table)
+    protected function isTableStatic($table)
     {
         if (is_array($GLOBALS['TCA'][$table])) {
             return ($GLOBALS['TCA'][$table]['ctrl']['is_static'] ?? false) || in_array($table, $this->relStaticTables) || in_array('_ALL', $this->relStaticTables);
@@ -1073,7 +1073,7 @@ abstract class ImportExport
      * @param int $uid UID value
      * @return bool TRUE, if table is marked static
      */
-    public function isExcluded($table, $uid)
+    protected function isExcluded($table, $uid)
     {
         return (bool)($this->excludeMap[$table . ':' . $uid] ?? false);
     }
@@ -1084,7 +1084,7 @@ abstract class ImportExport
      * @param string $tokenID Token ID for soft reference
      * @return bool TRUE if softreference media should be included
      */
-    public function includeSoftref($tokenID)
+    protected function includeSoftref($tokenID)
     {
         $mode = $this->softrefCfg[$tokenID]['mode'];
         return $tokenID && $mode !== 'exclude' && $mode !== 'editable';
@@ -1098,7 +1098,7 @@ abstract class ImportExport
      * @param string $fields Field list to select. Default is "uid,pid
      * @return array Result of \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord() which means the record if found, otherwise FALSE
      */
-    public function doesRecordExist($table, $uid, $fields = '')
+    protected function doesRecordExist($table, $uid, $fields = '')
     {
         return BackendUtility::getRecord($table, $uid, $fields ?: 'uid,pid');
     }
@@ -1109,7 +1109,7 @@ abstract class ImportExport
      * @param int $pid Record PID to check
      * @return string The path for the input PID
      */
-    public function getRecordPath($pid)
+    protected function getRecordPath($pid)
     {
         if (!isset($this->cacheGetRecordPath[$pid])) {
             $clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
@@ -1126,7 +1126,7 @@ abstract class ImportExport
      * @param array $optValues Options to display (key/value pairs)
      * @return string HTML select element
      */
-    public function renderSelectBox($prefix, $value, $optValues)
+    protected function renderSelectBox($prefix, $value, $optValues)
     {
         $opt = [];
         $isSelFlag = 0;
@@ -1153,7 +1153,7 @@ abstract class ImportExport
      * @param bool $inverseDiff Inverse the diff view (switch red/green, needed for pre-update difference view)
      * @return string HTML
      */
-    public function compareRecords($databaseRecord, $importRecord, $table, $inverseDiff = false)
+    protected function compareRecords($databaseRecord, $importRecord, $table, $inverseDiff = false)
     {
         // Initialize:
         $output = [];
@@ -1203,7 +1203,7 @@ abstract class ImportExport
      *
      * @return ExtendedFileUtility File processor object
      */
-    public function getFileProcObj()
+    protected function getFileProcObj()
     {
         if ($this->fileProcObj === null) {
             $this->fileProcObj = GeneralUtility::makeInstance(ExtendedFileUtility::class);
@@ -1221,7 +1221,7 @@ abstract class ImportExport
      *
      * @param string $message Error message
      */
-    public function addError(string $message): void
+    protected function addError(string $message): void
     {
         $this->errorLog[] = $message;
     }
