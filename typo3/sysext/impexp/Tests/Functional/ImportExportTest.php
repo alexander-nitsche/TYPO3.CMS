@@ -55,7 +55,7 @@ class ImportExportTest extends AbstractImportExportTestCase
             __DIR__ . '/Fixtures/XmlImports/irre-records.xml',
             1
         );
-        $import->force_all_UIDS = true;
+        $import->setForceAllUids(true);
         $import->importData(0);
 
         $this->exportMock->init();
