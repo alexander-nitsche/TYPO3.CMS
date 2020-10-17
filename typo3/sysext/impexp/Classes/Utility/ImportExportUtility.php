@@ -79,7 +79,7 @@ class ImportExportUtility
                 // Import to root page:
                 $this->import->importData($pid);
                 // Get id of first created page:
-                $newPages = $this->import->import_mapId['pages'];
+                $newPages = $this->import->getImportMapId()['pages'];
                 $importResponse = (int)reset($newPages);
             }
         }

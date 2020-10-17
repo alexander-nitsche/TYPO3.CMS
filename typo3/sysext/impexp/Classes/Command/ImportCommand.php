@@ -97,16 +97,16 @@ class ImportCommand extends Command
 
         $import = GeneralUtility::makeInstance(Import::class);
         $import->init();
-        $import->update = (bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords'));
+        $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
         // Only used when $updateRecords is "true"
-        $import->global_ignore_pid = (bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid'));
+        $import->setGlobalIgnorePid((bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid')));
         // Force using UIDs from File
-        $import->force_all_UIDS = (bool)($input->hasOption('forceUid') && $input->getOption('forceUid'));
+        $import->setForceAllUids((bool)($input->hasOption('forceUid') && $input->getOption('forceUid')));
         // Enables logging of database actions
-        $import->enableLogging = (bool)($input->hasOption('enableLog') && $input->getOption('enableLog'));
+        $import->setEnableLogging((bool)($input->hasOption('enableLog') && $input->getOption('enableLog')));
 
         if (!$import->loadFile($fileName, true)) {
-            $io->error($import->errorLog);
+            $io->error($import->getErrorLog());
             throw new LoadingFileFailedException('Loading of the import file failed.', 1484484619);
         }
 
@@ -117,8 +117,8 @@ class ImportCommand extends Command
         }
 
         $import->importData($pageId);
-        if (!empty($import->errorLog)) {
-            $io->error($import->errorLog);
+        if (!empty($import->getErrorLog())) {
+            $io->error($import->getErrorLog());
             throw new ImportFailedException('The import has failed.', 1484484613);
         }
 

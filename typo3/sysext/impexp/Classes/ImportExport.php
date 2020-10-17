@@ -88,14 +88,14 @@ abstract class ImportExport
      *
      * @var string
      */
-    public $mode = '';
+    protected $mode = '';
 
     /**
      * Updates all records that has same UID instead of creating new!
      *
      * @var bool
      */
-    public $update = false;
+    protected $update = false;
 
     /**
      * Is set by importData() when an import has been done.
@@ -111,49 +111,49 @@ abstract class ImportExport
      *
      * @var array
      */
-    public $display_import_pid_record = [];
+    protected $displayImportPidRecord = [];
 
     /**
      * Setting import modes during update state: as_new, exclude, force_uid
      *
      * @var array
      */
-    public $import_mode = [];
+    protected $importMode = [];
 
     /**
      * If set, PID correct is ignored globally
      *
      * @var bool
      */
-    public $global_ignore_pid = false;
+    protected $globalIgnorePid = false;
 
     /**
      * If set, all UID values are forced! (update or import)
      *
      * @var bool
      */
-    public $force_all_UIDS = false;
+    protected $forceAllUids = false;
 
     /**
      * If set, a diff-view column is added to the overview.
      *
      * @var bool
      */
-    public $showDiff = false;
+    protected $showDiff = false;
 
     /**
      * Array of values to substitute in editable softreferences.
      *
      * @var array
      */
-    public $softrefInputValues = [];
+    protected $softrefInputValues = [];
 
     /**
      * Mapping between the fileID from import memory and the final filenames they are written to.
      *
      * @var array
      */
-    public $fileIDMap = [];
+    protected $fileIDMap = [];
 
     /**
      * Add table names here which are THE ONLY ones which will be included
@@ -197,14 +197,14 @@ abstract class ImportExport
      *
      * @var array
      */
-    public $import_mapId = [];
+    protected $importMapId = [];
 
     /**
      * Error log.
      *
      * @var array
      */
-    public $errorLog = [];
+    protected $errorLog = [];
 
     /**
      * Cache for record paths
@@ -226,7 +226,7 @@ abstract class ImportExport
      *
      * @var bool
      */
-    public $compress = false;
+    protected $compress = false;
 
     /**
      * Internal import/export memory
@@ -499,7 +499,7 @@ abstract class ImportExport
         if ($this->update && $table === 'sys_file') {
             $this->error('Updating sys_file records is not supported! They will be imported as new records!');
         }
-        if ($this->force_all_UIDS && $table === 'sys_file') {
+        if ($this->forceAllUids && $table === 'sys_file') {
             $this->error('Forcing uids of sys_file records is not supported! They will be imported as new records!');
         }
     }
@@ -539,13 +539,13 @@ abstract class ImportExport
             $pInfo['active'] = $this->isActive($table, $uid) ? 'active' : 'hidden';
 
             // Otherwise, set table icon and title.
-            // Import Validation (triggered by $this->display_import_pid_record) will show messages if import is not possible of various items.
-            if (is_array($this->display_import_pid_record) && !empty($this->display_import_pid_record)) {
+            // Import Validation (triggered by $this->displayImportPidRecord) will show messages if import is not possible of various items.
+            if (is_array($this->displayImportPidRecord) && !empty($this->displayImportPidRecord)) {
                 if ($checkImportInPidRecord) {
-                    if (!$this->getBackendUser()->doesUserHaveAccess($this->display_import_pid_record, ($table === 'pages' ? 8 : 16))) {
+                    if (!$this->getBackendUser()->doesUserHaveAccess($this->displayImportPidRecord, ($table === 'pages' ? 8 : 16))) {
                         $pInfo['msg'] .= '\'' . $pInfo['ref'] . '\' cannot be INSERTED on this page! ';
                     }
-                    if (!$this->checkDokType($table, $this->display_import_pid_record['doktype']) && !$GLOBALS['TCA'][$table]['ctrl']['rootLevel']) {
+                    if (!$this->checkDokType($table, $this->displayImportPidRecord['doktype']) && !$GLOBALS['TCA'][$table]['ctrl']['rootLevel']) {
                         $pInfo['msg'] .= '\'' . $table . '\' cannot be INSERTED on this page type (change page type to \'Folder\'.) ';
                     }
                 }
@@ -578,7 +578,7 @@ abstract class ImportExport
                         $optValues['as_new'] = $lang->getLL('impexpcore_singlereco_importAsNew');
                     }
                     if ($recInf) {
-                        if (!$this->global_ignore_pid) {
+                        if (!$this->globalIgnorePid) {
                             $optValues['ignore_pid'] = $lang->getLL('impexpcore_singlereco_ignorePid');
                         } else {
                             $optValues['respect_pid'] = $lang->getLL('impexpcore_singlereco_respectPid');
@@ -591,13 +591,13 @@ abstract class ImportExport
                     if ($table === 'sys_file') {
                         $pInfo['updateMode'] = '';
                     } else {
-                        $pInfo['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', $this->import_mode[$table . ':' . $uid], $optValues);
+                        $pInfo['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', $this->importMode[$table . ':' . $uid], $optValues);
                     }
                 }
                 // Diff view:
                 if ($this->showDiff) {
                     // For IMPORTS, get new id:
-                    if ($newUid = $this->import_mapId[$table][$uid]) {
+                    if ($newUid = $this->importMapId[$table][$uid]) {
                         $diffInverse = false;
                         $recInf = $this->doesRecordExist($table, $newUid, '*');
                         BackendUtility::workspaceOL($table, $recInf);
@@ -613,7 +613,7 @@ abstract class ImportExport
             $pInfo['title'] = htmlspecialchars($record['title']);
             // View page:
             if ($table === 'pages') {
-                $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->import_mapId['pages'][$uid] : 0);
+                $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
                 if ($viewID) {
                     $pInfo['title'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($viewID)) . 'return false;">' . $pInfo['title'] . '</a>';
                 }
@@ -1150,7 +1150,7 @@ abstract class ImportExport
      */
     public function dontIgnorePid($table, $uid)
     {
-        return $this->import_mode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->global_ignore_pid || $this->import_mode[$table . ':' . $uid] === 'respect_pid');
+        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
     }
 
     /**
@@ -1461,5 +1461,165 @@ abstract class ImportExport
     public function setErrorLog(array $errorLog): void
     {
         $this->errorLog = $errorLog;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUpdate(): bool
+    {
+        return $this->update;
+    }
+
+    /**
+     * @param bool $update
+     */
+    public function setUpdate(bool $update): void
+    {
+        $this->update = $update;
+    }
+
+    /**
+     * @return array
+     */
+    public function getImportMode(): array
+    {
+        return $this->importMode;
+    }
+
+    /**
+     * @param array $importMode
+     */
+    public function setImportMode(array $importMode): void
+    {
+        $this->importMode = $importMode;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isGlobalIgnorePid(): bool
+    {
+        return $this->globalIgnorePid;
+    }
+
+    /**
+     * @param bool $globalIgnorePid
+     */
+    public function setGlobalIgnorePid(bool $globalIgnorePid): void
+    {
+        $this->globalIgnorePid = $globalIgnorePid;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isForceAllUids(): bool
+    {
+        return $this->forceAllUids;
+    }
+
+    /**
+     * @param bool $forceAllUids
+     */
+    public function setForceAllUids(bool $forceAllUids): void
+    {
+        $this->forceAllUids = $forceAllUids;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isShowDiff(): bool
+    {
+        return $this->showDiff;
+    }
+
+    /**
+     * @param bool $showDiff
+     */
+    public function setShowDiff(bool $showDiff): void
+    {
+        $this->showDiff = $showDiff;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSoftrefInputValues(): array
+    {
+        return $this->softrefInputValues;
+    }
+
+    /**
+     * @param array $softrefInputValues
+     */
+    public function setSoftrefInputValues(array $softrefInputValues): void
+    {
+        $this->softrefInputValues = $softrefInputValues;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDisplayImportPidRecord(): array
+    {
+        return $this->displayImportPidRecord;
+    }
+
+    /**
+     * @param array $displayImportPidRecord
+     */
+    public function setDisplayImportPidRecord(array $displayImportPidRecord): void
+    {
+        $this->displayImportPidRecord = $displayImportPidRecord;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMode(): string
+    {
+        return $this->mode;
+    }
+
+    /**
+     * @param string $mode
+     */
+    public function setMode(string $mode): void
+    {
+        $this->mode = $mode;
+    }
+
+    /**
+     * @return array
+     */
+    public function getImportMapId(): array
+    {
+        return $this->importMapId;
+    }
+
+    /**
+     * @param array $importMapId
+     */
+    public function setImportMapId(array $importMapId): void
+    {
+        $this->importMapId = $importMapId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCompress(): bool
+    {
+        return $this->compress;
+    }
+
+    /**
+     * @param bool $compress
+     */
+    public function setCompress(bool $compress): void
+    {
+        $this->compress = $compress;
     }
 }

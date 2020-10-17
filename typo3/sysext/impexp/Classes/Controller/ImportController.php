@@ -161,13 +161,13 @@ class ImportController extends ImportExportController
             /** @var Import $import */
             $import = GeneralUtility::makeInstance(Import::class);
             $import->init();
-            $import->update = $inData['do_update'];
-            $import->import_mode = $inData['import_mode'];
-            $import->enableLogging = $inData['enableLogging'];
-            $import->global_ignore_pid = $inData['global_ignore_pid'];
-            $import->force_all_UIDS = $inData['force_all_UIDS'];
-            $import->showDiff = !$inData['notShowDiff'];
-            $import->softrefInputValues = $inData['softrefInputValues'];
+            $import->setUpdate((bool)$inData['do_update']);
+            $import->setImportMode((array)$inData['import_mode']);
+            $import->setEnableLogging((bool)$inData['enableLogging']);
+            $import->setGlobalIgnorePid((bool)$inData['global_ignore_pid']);
+            $import->setForceAllUids((bool)$inData['force_all_UIDS']);
+            $import->setShowDiff(!(bool)$inData['notShowDiff']);
+            $import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
             // OUTPUT creation:
 
@@ -223,7 +223,7 @@ class ImportController extends ImportExportController
                                 BackendUtility::setUpdateSignal('updatePageTree');
                             }
                         }
-                        $import->display_import_pid_record = $this->pageinfo;
+                        $import->setDisplayImportPidRecord($this->pageinfo);
                         $this->standaloneView->assign('contentOverview', $import->displayContentOverview());
                     }
                     // Compile messages which are inhibiting a proper import and add them to output.
@@ -241,7 +241,7 @@ class ImportController extends ImportExportController
                 }
             }
 
-            $this->standaloneView->assign('errors', $import->errorLog);
+            $this->standaloneView->assign('errors', $import->getErrorLog());
         }
     }
 

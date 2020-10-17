@@ -183,7 +183,7 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
             __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
             1
         );
-        $subject->force_all_UIDS = true;
+        $subject->setForceAllUids(true);
         $subject->importData(0);
 
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
@@ -195,7 +195,7 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
         $expectedErrors = [
                 'Forcing uids of sys_file records is not supported! They will be imported as new records!'
         ];
-        $errors = $subject->errorLog;
+        $errors = $subject->getErrorLog();
         self::assertSame($expectedErrors, $errors);
     }
 }

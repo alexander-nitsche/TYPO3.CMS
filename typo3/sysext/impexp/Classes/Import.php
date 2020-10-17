@@ -47,14 +47,14 @@ class Import extends ImportExport
      *
      * @var array
      */
-    public $suggestedInsertUids = [];
+    protected $suggestedInsertUids = [];
 
     /**
      * Disable logging when importing
      *
      * @var bool
      */
-    public $enableLogging = false;
+    protected $enableLogging = false;
 
     /**
      * Keys are [tablename]:[new NEWxxx ids (or when updating it is uids)]
@@ -63,21 +63,21 @@ class Import extends ImportExport
      *
      * @var array
      */
-    public $import_newId = [];
+    protected $importNewId = [];
 
     /**
      * Page id map for page tree (import)
      *
      * @var array
      */
-    public $import_newId_pids = [];
+    protected $importNewIdPids = [];
 
     /**
      * Internal data accumulation for writing records during import
      *
      * @var array
      */
-    public $import_data = [];
+    protected $importData = [];
 
     /**
      * Array of current registered storage objects
@@ -127,9 +127,9 @@ class Import extends ImportExport
         $this->doesImport = 1;
         // Initialize:
         // These vars MUST last for the whole section not being cleared. They are used by the method setRelations() which are called at the end of the import session.
-        $this->import_mapId = [];
-        $this->import_newId = [];
-        $this->import_newId_pids = [];
+        $this->importMapId = [];
+        $this->importNewId = [];
+        $this->importNewIdPids = [];
         // Temporary files stack initialized:
         $this->unlinkFiles = [];
 
@@ -164,7 +164,7 @@ class Import extends ImportExport
         $this->writeRecords_pages($pid);
         $this->writeRecords_records($pid);
         // Finally all the file and DB record references must be fixed. This is done after all records have supposedly been written to database:
-        // $this->import_mapId will indicate two things: 1) that a record WAS written to db and 2) that it has got a new id-number.
+        // $this->importMapId will indicate two things: 1) that a record WAS written to db and 2) that it has got a new id-number.
         $this->setRelations();
         // And when all DB relations are in place, we can fix file and DB relations in flexform fields (since data structures often depends on relations to a DS record):
         $this->setFlexFormRelations();
@@ -189,12 +189,12 @@ class Import extends ImportExport
             if ($storageRecord['driver'] === 'Local' && $storageRecord['is_writable'] && $storageRecord['is_online']) {
                 foreach ($this->storageObjects as $localStorage) {
                     if ($this->isEquivalentObjectStorage($localStorage, $storageRecord)) {
-                        $this->import_mapId['sys_file_storage'][$sysFileStorageUid] = $localStorage->getUid();
+                        $this->importMapId['sys_file_storage'][$sysFileStorageUid] = $localStorage->getUid();
                         break;
                     }
                 }
 
-                if (!isset($this->import_mapId['sys_file_storage'][$sysFileStorageUid])) {
+                if (!isset($this->importMapId['sys_file_storage'][$sysFileStorageUid])) {
                     // Local, writable and online storage. Is allowed to be used to later write files in.
                     // Does currently not exist so add the record.
                     $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
@@ -214,7 +214,7 @@ class Import extends ImportExport
         // Because all records are being submitted in their correct order with positive pid numbers - and so we should reverse submission order internally.
         $tce->reverseOrder = 1;
         $tce->isImporting = true;
-        $tce->start($this->import_data, []);
+        $tce->start($this->importData, []);
         $tce->process_datamap();
         $this->addToMapId($tce->substNEWwithIDs);
 
@@ -225,7 +225,7 @@ class Import extends ImportExport
             $defaultStorageUid = $defaultStorage->getUid();
         }
         foreach ($sysFileStorageUidsToBeResetToDefaultStorage as $sysFileStorageUidToBeResetToDefaultStorage) {
-            $this->import_mapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
+            $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
         // unset the sys_file_storage records to prevent an import in writeRecords_records
@@ -366,8 +366,8 @@ class Import extends ImportExport
             $useStorageFromStorageRecords = false;
 
             // replace storage id, if an alternative one was registered
-            if (isset($this->import_mapId['sys_file_storage'][$fileRecord['storage']])) {
-                $fileRecord['storage'] = $this->import_mapId['sys_file_storage'][$fileRecord['storage']];
+            if (isset($this->importMapId['sys_file_storage'][$fileRecord['storage']])) {
+                $fileRecord['storage'] = $this->importMapId['sys_file_storage'][$fileRecord['storage']];
                 $useStorageFromStorageRecords = true;
             }
 
@@ -444,7 +444,7 @@ class Import extends ImportExport
             }
 
             // save the new uid in the import id map
-            $this->import_mapId['sys_file'][$fileRecord['uid']] = $newFile->getUid();
+            $this->importMapId['sys_file'][$fileRecord['uid']] = $newFile->getUid();
             $this->fixUidLocalInSysFileReferenceRecords($fileRecord['uid'], $newFile->getUid());
         }
 
@@ -467,7 +467,7 @@ class Import extends ImportExport
 
         foreach ($this->dat['header']['records']['sys_file_reference'] as $sysFileReferenceUid => $_) {
             $fileReferenceRecord = $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data'];
-            if (!in_array($fileReferenceRecord['uid_local'], $this->import_mapId['sys_file'])) {
+            if (!in_array($fileReferenceRecord['uid_local'], $this->importMapId['sys_file'])) {
                 unset($this->dat['header']['records']['sys_file_reference'][$sysFileReferenceUid]);
                 unset($this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]);
                 $this->error(
@@ -581,14 +581,14 @@ class Import extends ImportExport
             $this->addGeneralErrorsByTable('pages');
             // $pageRecords is a copy of the pages array in the imported file. Records here are unset one by one when the addSingle function is called.
             $pageRecords = $this->dat['header']['records']['pages'];
-            $this->import_data = [];
+            $this->importData = [];
             // First add page tree if any
             if (is_array($this->dat['header']['pagetree'])) {
                 $pagesFromTree = $this->flatInversePageTree($this->dat['header']['pagetree']);
                 foreach ($pagesFromTree as $uid) {
                     $thisRec = $this->dat['header']['records']['pages'][$uid];
                     // PID: Set the main $pid, unless a NEW-id is found
-                    $setPid = $this->import_newId_pids[$thisRec['pid']] ?? $pid;
+                    $setPid = $this->importNewIdPids[$thisRec['pid']] ?? $pid;
                     $this->addSingle('pages', $uid, $setPid);
                     unset($pageRecords[$uid]);
                 }
@@ -605,10 +605,10 @@ class Import extends ImportExport
             $tce->isImporting = true;
             $this->callHook('before_writeRecordsPages', [
                 'tce' => &$tce,
-                'data' => &$this->import_data
+                'data' => &$this->importData
             ]);
             $tce->suggestedInsertUids = $this->suggestedInsertUids;
-            $tce->start($this->import_data, []);
+            $tce->start($this->importData, []);
             $tce->process_datamap();
             $this->callHook('after_writeRecordsPages', [
                 'tce' => &$tce
@@ -638,9 +638,9 @@ class Import extends ImportExport
         foreach ($pidsFromTree as $origPid => $newPid) {
             if ($newPid >= 0 && $this->dontIgnorePid('pages', $origPid)) {
                 // If the page had a new id (because it was created) use that instead!
-                if (strpos($this->import_newId_pids[$origPid], 'NEW') === 0) {
-                    if ($this->import_mapId['pages'][$origPid]) {
-                        $mappedPid = $this->import_mapId['pages'][$origPid];
+                if (strpos($this->importNewIdPids[$origPid], 'NEW') === 0) {
+                    if ($this->importMapId['pages'][$origPid]) {
+                        $mappedPid = $this->importMapId['pages'][$origPid];
                         $cmd_data['pages'][$mappedPid]['move'] = $newPid;
                     }
                 } else {
@@ -695,7 +695,7 @@ class Import extends ImportExport
     public function writeRecords_records($pid)
     {
         // Write the rest of the records
-        $this->import_data = [];
+        $this->importData = [];
         if (is_array($this->dat['header']['records'])) {
             foreach ($this->dat['header']['records'] as $table => $recs) {
                 $table = (string)$table;
@@ -703,8 +703,8 @@ class Import extends ImportExport
                 if ($table !== 'pages') {
                     foreach ($recs as $uid => $thisRec) {
                         // PID: Set the main $pid, unless a NEW-id is found
-                        $setPid = isset($this->import_mapId['pages'][$thisRec['pid']])
-                            ? (int)$this->import_mapId['pages'][$thisRec['pid']]
+                        $setPid = isset($this->importMapId['pages'][$thisRec['pid']])
+                            ? (int)$this->importMapId['pages'][$thisRec['pid']]
                             : (int)$pid;
                         if (is_array($GLOBALS['TCA'][$table]) && isset($GLOBALS['TCA'][$table]['ctrl']['rootLevel'])) {
                             $rootLevelSetting = (int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'];
@@ -727,13 +727,13 @@ class Import extends ImportExport
         $tce = $this->getNewTCE();
         $this->callHook('before_writeRecordsRecords', [
             'tce' => &$tce,
-            'data' => &$this->import_data
+            'data' => &$this->importData
         ]);
         $tce->suggestedInsertUids = $this->suggestedInsertUids;
         // Because all records are being submitted in their correct order with positive pid numbers - and so we should reverse submission order internally.
         $tce->reverseOrder = 1;
         $tce->isImporting = true;
-        $tce->start($this->import_data, []);
+        $tce->start($this->importData, []);
         $tce->process_datamap();
         $this->callHook('after_writeRecordsRecords', [
             'tce' => &$tce
@@ -765,7 +765,7 @@ class Import extends ImportExport
         }
         if (is_array($this->dat['header']['pid_lookup'])) {
             foreach ($this->dat['header']['pid_lookup'] as $pid => $recList) {
-                $newPid = $this->import_mapId['pages'][$pid] ?? $mainPid;
+                $newPid = $this->importMapId['pages'][$pid] ?? $mainPid;
                 if (MathUtility::canBeInterpretedAsInteger($newPid)) {
                     foreach ($recList as $tableName => $uidList) {
                         // If $mainPid===$newPid then we are on root level and we can consider to move pages as well!
@@ -809,14 +809,14 @@ class Import extends ImportExport
      */
     public function addSingle($table, $uid, $pid)
     {
-        if ($this->import_mode[$table . ':' . $uid] === 'exclude') {
+        if ($this->importMode[$table . ':' . $uid] === 'exclude') {
             return;
         }
         $record = $this->dat['records'][$table . ':' . $uid]['data'];
         if (is_array($record)) {
-            if ($this->update && $this->doesRecordExist($table, $uid) && $this->import_mode[$table . ':' . $uid] !== 'as_new') {
+            if ($this->update && $this->doesRecordExist($table, $uid) && $this->importMode[$table . ':' . $uid] !== 'as_new') {
                 $ID = $uid;
-            } elseif ($table === 'sys_file_metadata' && $record['sys_language_uid'] == '0' && $this->import_mapId['sys_file'][$record['file']]) {
+            } elseif ($table === 'sys_file_metadata' && $record['sys_language_uid'] == '0' && $this->importMapId['sys_file'][$record['file']]) {
                 // on adding sys_file records the belonging sys_file_metadata record was also created
                 // if there is one the record need to be overwritten instead of creating a new one.
                 $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
@@ -827,7 +827,7 @@ class Import extends ImportExport
                         $queryBuilder->expr()->eq(
                             'file',
                             $queryBuilder->createNamedParameter(
-                                $this->import_mapId['sys_file'][$record['file']],
+                                $this->importMapId['sys_file'][$record['file']],
                                 \PDO::PARAM_INT
                             )
                         ),
@@ -842,10 +842,10 @@ class Import extends ImportExport
                     )
                     ->execute()
                     ->fetch();
-                // if no record could be found, $this->import_mapId['sys_file'][$record['file']] is pointing
+                // if no record could be found, $this->importMapId['sys_file'][$record['file']] is pointing
                 // to a file, that was already there, thus a new metadata record should be created
                 if (is_array($recordInDatabase)) {
-                    $this->import_mapId['sys_file_metadata'][$record['uid']] = $recordInDatabase['uid'];
+                    $this->importMapId['sys_file_metadata'][$record['uid']] = $recordInDatabase['uid'];
                     $ID = $recordInDatabase['uid'];
                 } else {
                     $ID = StringUtility::getUniqueId('NEW');
@@ -853,29 +853,29 @@ class Import extends ImportExport
             } else {
                 $ID = StringUtility::getUniqueId('NEW');
             }
-            $this->import_newId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
+            $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
             if ($table === 'pages') {
-                $this->import_newId_pids[$uid] = $ID;
+                $this->importNewIdPids[$uid] = $ID;
             }
             // Set main record data:
-            $this->import_data[$table][$ID] = $record;
-            $this->import_data[$table][$ID]['tx_impexp_origuid'] = $this->import_data[$table][$ID]['uid'];
+            $this->importData[$table][$ID] = $record;
+            $this->importData[$table][$ID]['tx_impexp_origuid'] = $this->importData[$table][$ID]['uid'];
             // Reset permission data:
             if ($table === 'pages') {
                 // Have to reset the user/group IDs so pages are owned by importing user. Otherwise strange things may happen for non-admins!
-                unset($this->import_data[$table][$ID]['perms_userid']);
-                unset($this->import_data[$table][$ID]['perms_groupid']);
+                unset($this->importData[$table][$ID]['perms_userid']);
+                unset($this->importData[$table][$ID]['perms_groupid']);
             }
             // PID and UID:
-            unset($this->import_data[$table][$ID]['uid']);
+            unset($this->importData[$table][$ID]['uid']);
             // Updates:
             if (MathUtility::canBeInterpretedAsInteger($ID)) {
-                unset($this->import_data[$table][$ID]['pid']);
+                unset($this->importData[$table][$ID]['pid']);
             } else {
                 // Inserts:
-                $this->import_data[$table][$ID]['pid'] = $pid;
-                if (($this->import_mode[$table . ':' . $uid] === 'force_uid' && $this->update || $this->force_all_UIDS) && $this->getBackendUser()->isAdmin()) {
-                    $this->import_data[$table][$ID]['uid'] = $uid;
+                $this->importData[$table][$ID]['pid'] = $pid;
+                if (($this->importMode[$table . ':' . $uid] === 'force_uid' && $this->update || $this->forceAllUids) && $this->getBackendUser()->isAdmin()) {
+                    $this->importData[$table][$ID]['uid'] = $uid;
                     $this->suggestedInsertUids[$table . ':' . $uid] = 'DELETE';
                 }
             }
@@ -894,7 +894,7 @@ class Import extends ImportExport
                         // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
                         // delete the reference record if the file extension of the related record doesn't match.
                         if ($table !== 'sys_file_reference' && $field !== 'uid_local') {
-                            $this->import_data[$table][$ID][$field] = '';
+                            $this->importData[$table][$ID][$field] = '';
                         }
                         break;
                     case 'flex':
@@ -902,7 +902,7 @@ class Import extends ImportExport
                         // In the meantime we set NO value for flexforms - this is mainly because file references
                         // inside will not be processed properly; In fact references will point to no file
                         // or existing files (in which case there will be double-references which is a big problem of course!)
-                        $this->import_data[$table][$ID][$field] = '';
+                        $this->importData[$table][$ID][$field] = '';
                         break;
                 }
             }
@@ -920,18 +920,18 @@ class Import extends ImportExport
      */
     public function addToMapId($substNEWwithIDs)
     {
-        foreach ($this->import_data as $table => $recs) {
+        foreach ($this->importData as $table => $recs) {
             foreach ($recs as $id => $value) {
-                $old_uid = $this->import_newId[$table . ':' . $id]['uid'];
+                $old_uid = $this->importNewId[$table . ':' . $id]['uid'];
                 if (isset($substNEWwithIDs[$id])) {
-                    $this->import_mapId[$table][$old_uid] = $substNEWwithIDs[$id];
+                    $this->importMapId[$table][$old_uid] = $substNEWwithIDs[$id];
                 } elseif ($this->update) {
                     // Map same ID to same ID....
-                    $this->import_mapId[$table][$old_uid] = $id;
+                    $this->importMapId[$table][$old_uid] = $id;
                 } else {
-                    // if $this->import_mapId contains already the right mapping, skip the error msg.
+                    // if $this->importMapId contains already the right mapping, skip the error msg.
                     // See special handling of sys_file_metadata in addSingle() => nothing to do
-                    if (!($table === 'sys_file_metadata' && isset($this->import_mapId[$table][$old_uid]) && $this->import_mapId[$table][$old_uid] == $id)) {
+                    if (!($table === 'sys_file_metadata' && isset($this->importMapId[$table][$old_uid]) && $this->importMapId[$table][$old_uid] == $id)) {
                         $this->error('Possible error: ' . $table . ':' . $old_uid . ' had no new id assigned to it. This indicates that the record was not added to database during import. Please check changelog!');
                     }
                 }
@@ -984,14 +984,14 @@ class Import extends ImportExport
     public function setRelations()
     {
         $updateData = [];
-        // import_newId contains a register of all records that was in the import memory's "records" key
-        foreach ($this->import_newId as $nId => $dat) {
+        // importNewId contains a register of all records that was in the import memory's "records" key
+        foreach ($this->importNewId as $nId => $dat) {
             $table = $dat['table'];
             $uid = $dat['uid'];
             // original UID - NOT the new one!
             // If the record has been written and received a new id, then proceed:
-            if (is_array($this->import_mapId[$table]) && isset($this->import_mapId[$table][$uid])) {
-                $thisNewUid = BackendUtility::wsMapId($table, $this->import_mapId[$table][$uid]);
+            if (is_array($this->importMapId[$table]) && isset($this->importMapId[$table][$uid])) {
+                $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                 if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
                     // Traverse relation fields of each record
                     foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
@@ -1052,11 +1052,11 @@ class Import extends ImportExport
     {
         $valArray = [];
         foreach ($itemArray as $relDat) {
-            if (is_array($this->import_mapId[$relDat['table']]) && isset($this->import_mapId[$relDat['table']][$relDat['id']])) {
+            if (is_array($this->importMapId[$relDat['table']]) && isset($this->importMapId[$relDat['table']][$relDat['id']])) {
                 if ($itemConfig['type'] === 'input' && isset($itemConfig['wizards']['link'])) {
                     // If an input field has a relation to a sys_file record this need to be converted back to
                     // the public path. But use getPublicUrl here, because could normally only be a local file path.
-                    $fileUid = $this->import_mapId[$relDat['table']][$relDat['id']];
+                    $fileUid = $this->importMapId[$relDat['table']][$relDat['id']];
                     // Fallback value
                     $value = 'file:' . $fileUid;
                     try {
@@ -1068,7 +1068,7 @@ class Import extends ImportExport
                         $value = $file->getPublicUrl();
                     }
                 } else {
-                    $value = $relDat['table'] . '_' . $this->import_mapId[$relDat['table']][$relDat['id']];
+                    $value = $relDat['table'] . '_' . $this->importMapId[$relDat['table']][$relDat['id']];
                 }
                 $valArray[] = $value;
             } elseif ($this->isTableStatic($relDat['table']) || $this->isExcluded($relDat['table'], $relDat['id']) || $relDat['id'] < 0) {
@@ -1125,13 +1125,13 @@ class Import extends ImportExport
     public function setFlexFormRelations()
     {
         $updateData = [];
-        // import_newId contains a register of all records that were in the import memory's "records" key
-        foreach ($this->import_newId as $nId => $dat) {
+        // importNewId contains a register of all records that were in the import memory's "records" key
+        foreach ($this->importNewId as $nId => $dat) {
             $table = $dat['table'];
             $uid = $dat['uid'];
             // original UID - NOT the new one!
             // If the record has been written and received a new id, then proceed:
-            if (!isset($this->import_mapId[$table][$uid])) {
+            if (!isset($this->importMapId[$table][$uid])) {
                 $this->error('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
                 continue;
             }
@@ -1140,7 +1140,7 @@ class Import extends ImportExport
                 $this->error('Error: no record was found in data array!');
                 continue;
             }
-            $thisNewUid = BackendUtility::wsMapId($table, $this->import_mapId[$table][$uid]);
+            $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
             // Traverse relation fields of each record
             foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
                 switch ((string)$config['type']) {
@@ -1260,7 +1260,7 @@ class Import extends ImportExport
                             }
                         }
                         // The new id:
-                        $thisNewUid = BackendUtility::wsMapId($table, $this->import_mapId[$table][$uid]);
+                        $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                         // Now, if there are any fields that require substitution to be done, lets go for that:
                         foreach ($fieldsIndex as $field => $softRefCfgs) {
                             if (is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
@@ -1390,8 +1390,8 @@ class Import extends ImportExport
                         default:
                             // Trying to map database element if found in the mapID array:
                             [$tempTable, $tempUid] = explode(':', $cfg['subst']['recordRef']);
-                            if (isset($this->import_mapId[$tempTable][$tempUid])) {
-                                $insertValue = BackendUtility::wsMapId($tempTable, $this->import_mapId[$tempTable][$tempUid]);
+                            if (isset($this->importMapId[$tempTable][$tempUid])) {
+                                $insertValue = BackendUtility::wsMapId($tempTable, $this->importMapId[$tempTable][$tempUid]);
                                 if (strpos($cfg['subst']['tokenValue'], ':') !== false) {
                                     [$tokenKey] = explode(':', $cfg['subst']['tokenValue']);
                                     $insertValue = $tokenKey . ':' . $insertValue;
@@ -1459,7 +1459,7 @@ class Import extends ImportExport
         $dirPrefix = (string)$this->verifyFolderAccess($origDirPrefix);
         if ($dirPrefix && (!$this->update || $origDirPrefix === $dirPrefix) && $this->checkOrCreateDir($dirPrefix)) {
             $fileHeaderInfo = $this->dat['header']['files'][$fileID];
-            $updMode = $this->update && $this->import_mapId[$table][$uid] === $uid && $this->import_mode[$table . ':' . $uid] !== 'as_new';
+            $updMode = $this->update && $this->importMapId[$table][$uid] === $uid && $this->importMode[$table . ':' . $uid] !== 'as_new';
             // Create new name for file:
             // Must have same ID in map array (just for security, is not really needed) and NOT be set "as_new".
 
@@ -1768,5 +1768,25 @@ class Import extends ImportExport
         $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
         $this->excludeMap = (array)$this->dat['header']['excludeMap'];
         $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
+    }
+
+    /**************************
+     * Getters and Setters
+     *************************/
+
+    /**
+     * @return bool
+     */
+    public function isEnableLogging(): bool
+    {
+        return $this->enableLogging;
+    }
+
+    /**
+     * @param bool $enableLogging
+     */
+    public function setEnableLogging(bool $enableLogging): void
+    {
+        $this->enableLogging = $enableLogging;
     }
 }
