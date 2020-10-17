@@ -142,7 +142,7 @@ abstract class AbstractImportExportTestCase extends FunctionalTestCase
 
                     $result = $queryBuilder->execute();
                     while ($row = $result->fetch()) {
-                        $export->export_addRecord($table, $this->forceStringsOnRowValues($row));
+                        $export->exportAddRecord($table, $this->forceStringsOnRowValues($row));
                     }
                 }
             }

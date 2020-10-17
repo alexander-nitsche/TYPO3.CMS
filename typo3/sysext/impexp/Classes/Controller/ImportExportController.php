@@ -56,7 +56,7 @@ abstract class ImportExportController
      *
      * @var string
      */
-    protected $perms_clause;
+    protected $permsClause;
 
     /**
      * @var LanguageService
@@ -111,7 +111,7 @@ abstract class ImportExportController
         $this->standaloneView->getRequest()->setControllerExtensionName('impexp');
 
         $this->id = (int)GeneralUtility::_GP('id');
-        $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
         $this->lang = $this->getLanguageService();
     }

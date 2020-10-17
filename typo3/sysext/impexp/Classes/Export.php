@@ -47,21 +47,21 @@ use TYPO3\CMS\Impexp\View\ExportPageTreeView;
  * $this->export->relOnlyTables[]="tt_news";	// exclusively includes. See comment in the class
  *
  * Adding records:
- * $this->export->export_addRecord("pages", $this->pageinfo);
- * $this->export->export_addRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
- * $this->export->export_addRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
- * $this->export->export_addRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
- * $this->export->export_addRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 74));
- * $this->export->export_addRecord("sys_template", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("sys_template", 20));
+ * $this->export->exportAddRecord("pages", $this->pageinfo);
+ * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
+ * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
+ * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
+ * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 74));
+ * $this->export->exportAddRecord("sys_template", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("sys_template", 20));
  *
  * Adding all the relations (recursively in 5 levels so relations has THEIR relations registered as well)
  * for($a=0;$a<5;$a++) {
- * $addR = $this->export->export_addDBRelations($a);
+ * $addR = $this->export->exportAddDbRelations($a);
  * if (empty($addR)) break;
  * }
  *
  * Finally load all the files.
- * $this->export->export_addFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
+ * $this->export->exportAddFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
  *
  * Write export
  * $out = $this->export->render();
@@ -86,7 +86,7 @@ class Export extends ImportExport
      *
      * @var string
      */
-    protected $perms_clause;
+    protected $permsClause;
 
     /**
      * @var string
@@ -191,11 +191,11 @@ class Export extends ImportExport
     protected $supportedFileTypes = [];
 
     /**
-     * Cache of checkPID values.
+     * Cache of checkPid values.
      *
      * @var array
      */
-    protected $checkPID_cache = [];
+    protected $checkPidCache = [];
 
     /**************************
      * Initialize
@@ -208,7 +208,7 @@ class Export extends ImportExport
     {
         parent::init();
         $this->mode = 'export';
-        $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
     }
 
     /**************************
@@ -230,7 +230,7 @@ class Export extends ImportExport
         if (is_array($this->record)) {
             foreach ($this->record as $ref) {
                 $rParts = explode(':', $ref);
-                $this->export_addRecord($rParts[0], BackendUtility::getRecord($rParts[0], (int)$rParts[1]));
+                $this->exportAddRecord($rParts[0], BackendUtility::getRecord($rParts[0], (int)$rParts[1]));
             }
         }
         // Configure which tables to export
@@ -238,9 +238,9 @@ class Export extends ImportExport
             foreach ($this->list as $ref) {
                 $rParts = explode(':', $ref);
                 if ($beUser->check('tables_select', $rParts[0])) {
-                    $statement = $this->exec_listQueryPid($rParts[0], (int)$rParts[1]);
+                    $statement = $this->execListQueryPid($rParts[0], (int)$rParts[1]);
                     while ($subTrow = $statement->fetch()) {
-                        $this->export_addRecord($rParts[0], $subTrow);
+                        $this->exportAddRecord($rParts[0], $subTrow);
                     }
                 }
             }
@@ -271,11 +271,11 @@ class Export extends ImportExport
                         'title' => 'ROOT'
                     ];
                 } else {
-                    $sPage = BackendUtility::getRecordWSOL('pages', $pid, '*', ' AND ' . $this->perms_clause);
+                    $sPage = BackendUtility::getRecordWSOL('pages', $pid, '*', ' AND ' . $this->permsClause);
                 }
                 if (is_array($sPage)) {
                     $tree = GeneralUtility::makeInstance(PageTreeView::class);
-                    $initClause = 'AND ' . $this->perms_clause . $this->filterPageIds($this->excludeMap);
+                    $initClause = 'AND ' . $this->permsClause . $this->filterPageIds($this->excludeMap);
                     if ($this->excludeDisabledRecords) {
                         $initClause .= BackendUtility::BEenableFields('pages');
                     }
@@ -301,23 +301,23 @@ class Export extends ImportExport
                 // Sets the pagetree and gets a 1-dim array in return with the pages (in correct submission order BTW...)
                 $flatList = $this->setPageTree($idH);
                 foreach ($flatList as $k => $value) {
-                    $this->export_addRecord('pages', BackendUtility::getRecord('pages', $k));
+                    $this->exportAddRecord('pages', BackendUtility::getRecord('pages', $k));
                     $this->addRecordsForPid((int)$k, $this->tables);
                 }
             }
         }
         // After adding ALL records we set relations:
         for ($a = 0; $a < 10; $a++) {
-            $addR = $this->export_addDBRelations($a);
+            $addR = $this->exportAddDbRelations($a);
             if (empty($addR)) {
                 break;
             }
         }
         // Finally files are added:
         // MUST be after the DBrelations are set so that files from ALL added records are included!
-        $this->export_addFilesFromRelations();
+        $this->exportAddFilesFromRelations();
 
-        $this->export_addFilesFromSysFilesRecords();
+        $this->exportAddFilesFromSysFilesRecords();
     }
 
     /**
@@ -485,9 +485,9 @@ class Export extends ImportExport
                 && $this->getBackendUser()->check('tables_select', $table)
                 && !$GLOBALS['TCA'][$table]['ctrl']['is_static']
             ) {
-                $statement = $this->exec_listQueryPid($table, $k);
+                $statement = $this->execListQueryPid($table, $k);
                 while ($subTrow = $statement->fetch()) {
-                    $this->export_addRecord($table, $subTrow);
+                    $this->exportAddRecord($table, $subTrow);
                 }
             }
         }
@@ -500,7 +500,7 @@ class Export extends ImportExport
      * @param int $pid Page ID to select from
      * @return Statement Query statement
      */
-    protected function exec_listQueryPid(string $table, int $pid): Statement
+    protected function execListQueryPid(string $table, int $pid): Statement
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
 
@@ -539,14 +539,14 @@ class Export extends ImportExport
      * @param array $row Record row.
      * @param int $relationLevel (Internal) if the record is added as a relation, this is set to the "level" it was on.
      */
-    public function export_addRecord($table, $row, $relationLevel = 0)
+    public function exportAddRecord($table, $row, $relationLevel = 0)
     {
         BackendUtility::workspaceOL($table, $row);
         if ($this->excludeDisabledRecords && !$this->isActive($table, $row['uid'])) {
             return;
         }
         if ((string)$table !== '' && is_array($row) && $row['uid'] > 0 && !$this->excludeMap[$table . ':' . $row['uid']]) {
-            if ($this->checkPID($table === 'pages' ? $row['uid'] : $row['pid'])) {
+            if ($this->checkPid($table === 'pages' ? $row['uid'] : $row['pid'])) {
                 if (!isset($this->dat['records'][$table . ':' . $row['uid']])) {
                     // Prepare header info:
                     $row = $this->filterRecordFields($table, $row);
@@ -572,7 +572,7 @@ class Export extends ImportExport
                     $this->dat['records'][$table . ':' . $row['uid']]['data'] = $row;
                     $this->dat['records'][$table . ':' . $row['uid']]['rels'] = $relations;
                     // Add information about the relations in the record in the header:
-                    $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDBrels($this->dat['records'][$table . ':' . $row['uid']]['rels']);
+                    $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDbRels($this->dat['records'][$table . ':' . $row['uid']]['rels']);
                     // Add information about the softrefs to header:
                     $this->dat['header']['records'][$table][$row['uid']]['softrefs'] = $this->flatSoftRefs($this->dat['records'][$table . ':' . $row['uid']]['rels']);
                 } else {
@@ -590,12 +590,12 @@ class Export extends ImportExport
      * @param int $pid Page ID to check
      * @return bool TRUE if OK
      */
-    public function checkPID(int $pid): bool
+    public function checkPid(int $pid): bool
     {
-        if (!isset($this->checkPID_cache[$pid])) {
-            $this->checkPID_cache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
+        if (!isset($this->checkPidCache[$pid])) {
+            $this->checkPidCache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
         }
-        return $this->checkPID_cache[$pid];
+        return $this->checkPidCache[$pid];
     }
 
     /**
@@ -682,9 +682,9 @@ class Export extends ImportExport
      *
      * @param int $relationLevel Recursion level
      * @return array overview of relations found and added: Keys [table]:[uid], values array with table and id
-     * @see export_addFilesFromRelations()
+     * @see exportAddFilesFromRelations()
      */
-    public function export_addDBRelations($relationLevel = 0)
+    public function exportAddDbRelations($relationLevel = 0)
     {
         // Traverse all "rels" registered for "records"
         if (!is_array($this->dat['records'])) {
@@ -700,7 +700,7 @@ class Export extends ImportExport
                 // For all DB types of relations:
                 if ($vR['type'] === 'db') {
                     foreach ($vR['itemArray'] as $fI) {
-                        $this->export_addDBRelations_registerRelation($fI, $addR);
+                        $this->exportAddDbRelationsRegisterRelation($fI, $addR);
                     }
                 }
                 // For all flex/db types of relations:
@@ -709,7 +709,7 @@ class Export extends ImportExport
                     if (is_array($vR['flexFormRels']['db'])) {
                         foreach ($vR['flexFormRels']['db'] as $subList) {
                             foreach ($subList as $fI) {
-                                $this->export_addDBRelations_registerRelation($fI, $addR);
+                                $this->exportAddDbRelationsRegisterRelation($fI, $addR);
                             }
                         }
                     }
@@ -724,7 +724,7 @@ class Export extends ImportExport
                                             'table' => $tempTable,
                                             'id' => $tempUid
                                         ];
-                                        $this->export_addDBRelations_registerRelation($fI, $addR, $el['subst']['tokenID']);
+                                        $this->exportAddDbRelationsRegisterRelation($fI, $addR, $el['subst']['tokenID']);
                                     }
                                 }
                             }
@@ -741,7 +741,7 @@ class Export extends ImportExport
                                     'table' => $tempTable,
                                     'id' => $tempUid
                                 ];
-                                $this->export_addDBRelations_registerRelation($fI, $addR, $el['subst']['tokenID']);
+                                $this->exportAddDbRelationsRegisterRelation($fI, $addR, $el['subst']['tokenID']);
                             }
                         }
                     }
@@ -762,7 +762,7 @@ class Export extends ImportExport
                         // Keep null but force everything else to string
                         $row[$fieldName] = $value === null ? $value : (string)$value;
                     }
-                    $this->export_addRecord($fI['table'], $row, $relationLevel + 1);
+                    $this->exportAddRecord($fI['table'], $row, $relationLevel + 1);
                 }
                 // Set status message
                 // Relation pointers always larger than zero except certain "select" types with
@@ -781,14 +781,14 @@ class Export extends ImportExport
     }
 
     /**
-     * Helper function for export_addDBRelations()
+     * Helper function for exportAddDbRelations()
      *
      * @param array $fI Array with table/id keys to add
      * @param array $addR Add array, passed by reference to be modified
      * @param string $tokenID Softref Token ID, if applicable.
-     * @see export_addDBRelations()
+     * @see exportAddDbRelations()
      */
-    public function export_addDBRelations_registerRelation($fI, &$addR, $tokenID = '')
+    public function exportAddDbRelationsRegisterRelation($fI, &$addR, $tokenID = '')
     {
         $rId = $fI['table'] . ':' . $fI['id'];
         if (
@@ -819,9 +819,9 @@ class Export extends ImportExport
      * This adds all files in relations.
      * Call this method AFTER adding all records including relations.
      *
-     * @see export_addDBRelations()
+     * @see exportAddDbRelations()
      */
-    public function export_addFilesFromRelations()
+    public function exportAddFilesFromRelations()
     {
         // Traverse all "rels" registered for "records"
         if (!is_array($this->dat['records'])) {
@@ -836,7 +836,7 @@ class Export extends ImportExport
                 // For all file type relations:
                 if ($vR['type'] === 'file') {
                     foreach ($vR['newValueFiles'] as $key => $fI) {
-                        $this->export_addFile($fI, $k, $fieldname);
+                        $this->exportAddFile($fI, $k, $fieldname);
                         // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
                         unset($this->dat['records'][$k]['rels'][$fieldname]['newValueFiles'][$key]['ID_absFile']);
                     }
@@ -846,7 +846,7 @@ class Export extends ImportExport
                     if (is_array($vR['flexFormRels']['file'])) {
                         foreach ($vR['flexFormRels']['file'] as $key => $subList) {
                             foreach ($subList as $subKey => $fI) {
-                                $this->export_addFile($fI, $k, $fieldname);
+                                $this->exportAddFile($fI, $k, $fieldname);
                                 // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
                                 unset($this->dat['records'][$k]['rels'][$fieldname]['flexFormRels']['file'][$key][$subKey]['ID_absFile']);
                             }
@@ -869,7 +869,7 @@ class Export extends ImportExport
                                                     'ID' => $ID,
                                                     'relFileName' => $el['subst']['relFileName']
                                                 ];
-                                                $this->export_addFile($fI, '_SOFTREF_');
+                                                $this->exportAddFile($fI, '_SOFTREF_');
                                             }
                                             $this->dat['records'][$k]['rels'][$fieldname]['flexFormRels']['softrefs'][$key]['keys'][$spKey][$subKey]['file_ID'] = $ID;
                                         }
@@ -895,7 +895,7 @@ class Export extends ImportExport
                                             'ID' => $ID,
                                             'relFileName' => $el['subst']['relFileName']
                                         ];
-                                        $this->export_addFile($fI, '_SOFTREF_');
+                                        $this->exportAddFile($fI, '_SOFTREF_');
                                     }
                                     $this->dat['records'][$k]['rels'][$fieldname]['softrefs']['keys'][$spKey][$subKey]['file_ID'] = $ID;
                                 }
@@ -910,7 +910,7 @@ class Export extends ImportExport
     /**
      * This adds all files from sys_file records
      */
-    public function export_addFilesFromSysFilesRecords()
+    public function exportAddFilesFromSysFilesRecords()
     {
         if (!isset($this->dat['header']['records']['sys_file']) || !is_array($this->dat['header']['records']['sys_file'])) {
             return;
@@ -918,7 +918,7 @@ class Export extends ImportExport
         foreach ($this->dat['header']['records']['sys_file'] as $sysFileUid => $_) {
             $recordData = $this->dat['records']['sys_file:' . $sysFileUid]['data'];
             $file = GeneralUtility::makeInstance(ResourceFactory::class)->createFileObject($recordData);
-            $this->export_addSysFile($file);
+            $this->exportAddSysFile($file);
         }
     }
 
@@ -927,7 +927,7 @@ class Export extends ImportExport
      *
      * @param File $file
      */
-    public function export_addSysFile(File $file)
+    public function exportAddSysFile(File $file)
     {
         $fileContent = '';
         try {
@@ -975,7 +975,7 @@ class Export extends ImportExport
      * @param string $recordRef If the file is related to a record, this is the id on the form [table]:[id]. Information purposes only.
      * @param string $fieldname If the file is related to a record, this is the field name it was related to. Information purposes only.
      */
-    public function export_addFile($fI, $recordRef = '', $fieldname = '')
+    public function exportAddFile($fI, $recordRef = '', $fieldname = '')
     {
         if (!@is_file($fI['ID_absFile'])) {
             $this->addError($fI['ID_absFile'] . ' was not a file! Skipping.');
@@ -1069,7 +1069,7 @@ class Export extends ImportExport
      * @param array $dbrels 2-dim Array of database relations organized by table key
      * @return array 1-dim array where entries are table:uid and keys are array with table/id
      */
-    public function flatDBrels($dbrels)
+    public function flatDbRels($dbrels)
     {
         $list = [];
         foreach ($dbrels as $dat) {

@@ -169,8 +169,8 @@ class Import extends ImportExport
         $this->writeSysFileRecords();
         // Write records, first pages, then the rest
         // Fields with "hard" relations to database, files and flexform fields are kept empty during this run
-        $this->writeRecords_pages($pid);
-        $this->writeRecords_records($pid);
+        $this->writeRecordsPages($pid);
+        $this->writeRecordsRecords($pid);
         // Finally all the file and DB record references must be fixed. This is done after all records have supposedly been written to database:
         // $this->importMapId will indicate two things: 1) that a record WAS written to db and 2) that it has got a new id-number.
         $this->setRelations();
@@ -236,7 +236,7 @@ class Import extends ImportExport
             $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
-        // unset the sys_file_storage records to prevent an import in writeRecords_records
+        // unset the sys_file_storage records to prevent an import in writeRecordsRecords
         unset($this->dat['header']['records']['sys_file_storage']);
     }
 
@@ -456,7 +456,7 @@ class Import extends ImportExport
             $this->fixUidLocalInSysFileReferenceRecords($fileRecord['uid'], $newFile->getUid());
         }
 
-        // unset the sys_file records to prevent an import in writeRecords_records
+        // unset the sys_file records to prevent an import in writeRecordsRecords
         unset($this->dat['header']['records']['sys_file']);
         // remove all sys_file_reference records that point to file records which are unknown
         // in the system to prevent exceptions
@@ -580,9 +580,9 @@ class Import extends ImportExport
      * Writing pagetree/pages to database:
      *
      * @param int $pid PID in which to import. If the operation is an update operation, the root of the page tree inside will be moved to this PID unless it is the same as the root page from the import
-     * @see writeRecords_records()
+     * @see writeRecordsRecords()
      */
-    public function writeRecords_pages($pid)
+    public function writeRecordsPages($pid)
     {
         // First, write page structure if any:
         if (is_array($this->dat['header']['records']['pages'])) {
@@ -625,7 +625,7 @@ class Import extends ImportExport
             $this->addToMapId($tce->substNEWwithIDs);
             // In case of an update, order pages from the page tree correctly:
             if ($this->update && is_array($this->dat['header']['pagetree'])) {
-                $this->writeRecords_pages_order();
+                $this->writeRecordsPagesOrder();
             }
         }
     }
@@ -635,14 +635,14 @@ class Import extends ImportExport
      * Only used for updates and when $this->dat['header']['pagetree'] is an array.
      *
      * @internal
-     * @see writeRecords_pages()
-     * @see writeRecords_records_order()
+     * @see writeRecordsPages()
+     * @see writeRecordsRecordsOrder()
      */
-    public function writeRecords_pages_order()
+    public function writeRecordsPagesOrder()
     {
         $cmd_data = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
-        $pidsFromTree = $this->flatInversePageTree_pid($this->dat['header']['pagetree']);
+        $pidsFromTree = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
         foreach ($pidsFromTree as $origPid => $newPid) {
             if ($newPid >= 0 && $this->dontIgnorePid('pages', $origPid)) {
                 // If the page had a new id (because it was created) use that instead!
@@ -680,14 +680,14 @@ class Import extends ImportExport
      * @return array Array with uid-pid pairs for all pages in the page tree.
      * @see ImportExport::flatInversePageTree()
      */
-    public function flatInversePageTree_pid($idH, $a = [], $pid = -1)
+    public function flatInversePageTreePid($idH, $a = [], $pid = -1)
     {
         if (is_array($idH)) {
             $idH = array_reverse($idH);
             foreach ($idH as $v) {
                 $a[$v['uid']] = $pid;
                 if (is_array($v['subrow'])) {
-                    $a = $this->flatInversePageTree_pid($v['subrow'], $a, $v['uid']);
+                    $a = $this->flatInversePageTreePid($v['subrow'], $a, $v['uid']);
                 }
             }
         }
@@ -707,12 +707,12 @@ class Import extends ImportExport
     }
 
     /**
-     * Write all database records except pages (written in writeRecords_pages())
+     * Write all database records except pages (written in writeRecordsPages())
      *
      * @param int $pid Page id in which to import
-     * @see writeRecords_pages()
+     * @see writeRecordsPages()
      */
-    public function writeRecords_records($pid)
+    public function writeRecordsRecords($pid)
     {
         // Write the rest of the records
         $this->importData = [];
@@ -762,7 +762,7 @@ class Import extends ImportExport
         $this->addToMapId($tce->substNEWwithIDs);
         // In case of an update, order pages from the page tree correctly:
         if ($this->update) {
-            $this->writeRecords_records_order($pid);
+            $this->writeRecordsRecordsOrder($pid);
         }
     }
 
@@ -772,10 +772,10 @@ class Import extends ImportExport
      *
      * @param int $mainPid Main PID into which we import.
      * @internal
-     * @see writeRecords_records()
-     * @see writeRecords_pages_order()
+     * @see writeRecordsRecords()
+     * @see writeRecordsPagesOrder()
      */
-    public function writeRecords_records_order($mainPid)
+    public function writeRecordsRecordsOrder($mainPid)
     {
         $cmd_data = [];
         if (is_array($this->dat['header']['pagetree'])) {
@@ -1024,7 +1024,7 @@ class Import extends ImportExport
                             case 'db':
                                 if (is_array($config['itemArray']) && !empty($config['itemArray'])) {
                                     $itemConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
-                                    $valArray = $this->setRelations_db($config['itemArray'], $itemConfig);
+                                    $valArray = $this->setRelationsDb($config['itemArray'], $itemConfig);
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
                                 }
                                 break;
@@ -1032,7 +1032,7 @@ class Import extends ImportExport
                                 if (is_array($config['newValueFiles']) && !empty($config['newValueFiles'])) {
                                     $valArr = [];
                                     foreach ($config['newValueFiles'] as $fI) {
-                                        $valArr[] = $this->import_addFileNameToBeCopied($fI);
+                                        $valArr[] = $this->importAddFileNameToBeCopied($fI);
                                     }
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArr);
                                 }
@@ -1068,7 +1068,7 @@ class Import extends ImportExport
      * @param array $itemConfig Array of TCA config of the field the relation to be set on
      * @return array Array with values [table]_[uid] or [uid] for field of type group / internal_type file_reference. These values have the regular DataHandler-input group/select type which means they will automatically be processed into a uid-list or MM relations.
      */
-    public function setRelations_db($itemArray, $itemConfig)
+    public function setRelationsDb($itemArray, $itemConfig)
     {
         $valArray = [];
         foreach ($itemArray as $relDat) {
@@ -1108,7 +1108,7 @@ class Import extends ImportExport
      * @param array $fI File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
      * @return string|null Absolute filename of the temporary filename of the file.
      */
-    public function import_addFileNameToBeCopied($fI)
+    public function importAddFileNameToBeCopied($fI)
     {
         if (is_array($this->dat['files'][$fI['ID']])) {
             $tmpFile = null;
@@ -1192,7 +1192,7 @@ class Import extends ImportExport
                                     [],
                                     $dataStructureArray,
                                     [$table, $thisNewUid, $field, $config],
-                                    'remapListedDBRecords_flexFormCallBack'
+                                    'remapListedDbRecordsFlexFormCallBack'
                                 );
                                 // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
                                 if (is_array($currentValueArray['data'])) {
@@ -1231,7 +1231,7 @@ class Import extends ImportExport
      * @return array Array where the "value" key carries the value.
      * @see setFlexFormRelations()
      */
-    public function remapListedDBRecords_flexFormCallBack($pParams, $dsConf, $dataValue, $dataValue_ext1, $dataValue_ext2, $path)
+    public function remapListedDbRecordsFlexFormCallBack($pParams, $dsConf, $dataValue, $dataValue_ext1, $dataValue_ext2, $path)
     {
         // Extract parameters:
         [, , , $config] = $pParams;
@@ -1240,13 +1240,13 @@ class Import extends ImportExport
             $path = rtrim($path, '/');
         }
         if (is_array($config['flexFormRels']['db'][$path])) {
-            $valArray = $this->setRelations_db($config['flexFormRels']['db'][$path], $dsConf);
+            $valArray = $this->setRelationsDb($config['flexFormRels']['db'][$path], $dsConf);
             $dataValue = implode(',', $valArray);
         }
         if (is_array($config['flexFormRels']['file'][$path])) {
             $valArr = [];
             foreach ($config['flexFormRels']['file'][$path] as $fI) {
-                $valArr[] = $this->import_addFileNameToBeCopied($fI);
+                $valArr[] = $this->importAddFileNameToBeCopied($fI);
             }
             $dataValue = implode(',', $valArr);
         }
@@ -1302,7 +1302,7 @@ class Import extends ImportExport
                                         /** @var DataHandler $iteratorObj */
                                         $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
                                         $iteratorObj->callBackObj = $this;
-                                        $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], [], [], $dataStructureArray, [$table, $uid, $field, $softRefCfgs], 'processSoftReferences_flexFormCallBack');
+                                        $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], [], [], $dataStructureArray, [$table, $uid, $field, $softRefCfgs], 'processSoftReferencesFlexFormCallBack');
                                         // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
                                         if (is_array($currentValueArray['data'])) {
                                             $inData[$table][$thisNewUid][$field] = $currentValueArray;
@@ -1312,7 +1312,7 @@ class Import extends ImportExport
                                     // Get tokenizedContent string and proceed only if that is not blank:
                                     $tokenizedContent = $this->dat['records'][$table . ':' . $uid]['rels'][$field]['softrefs']['tokenizedContent'];
                                     if (strlen($tokenizedContent) && is_array($softRefCfgs)) {
-                                        $inData[$table][$thisNewUid][$field] = $this->processSoftReferences_substTokens($tokenizedContent, $softRefCfgs, $table, $uid);
+                                        $inData[$table][$thisNewUid][$field] = $this->processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, $uid);
                                     }
                                 }
                             }
@@ -1348,7 +1348,7 @@ class Import extends ImportExport
      * @return array Array where the "value" key carries the value.
      * @see setFlexFormRelations()
      */
-    public function processSoftReferences_flexFormCallBack($pParams, $dsConf, $dataValue, $dataValue_ext1, $dataValue_ext2, $path)
+    public function processSoftReferencesFlexFormCallBack($pParams, $dsConf, $dataValue, $dataValue_ext1, $dataValue_ext2, $path)
     {
         // Extract parameters:
         [$table, $origUid, $field, $softRefCfgs] = $pParams;
@@ -1365,7 +1365,7 @@ class Import extends ImportExport
                 // Get tokenizedContent string and proceed only if that is not blank:
                 $tokenizedContent = $this->dat['records'][$table . ':' . $origUid]['rels'][$field]['flexFormRels']['softrefs'][$path]['tokenizedContent'];
                 if (strlen($tokenizedContent)) {
-                    $dataValue = $this->processSoftReferences_substTokens($tokenizedContent, $thisSoftRefCfgList, $table, $origUid);
+                    $dataValue = $this->processSoftReferencesSubstTokens($tokenizedContent, $thisSoftRefCfgList, $table, $origUid);
                 }
             }
         }
@@ -1382,7 +1382,7 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string The input content with tokens substituted according to entries in softRefCfgs
      */
-    public function processSoftReferences_substTokens($tokenizedContent, $softRefCfgs, $table, $uid)
+    public function processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, $uid)
     {
         // traverse each softref type for this field:
         foreach ($softRefCfgs as $cfg) {
@@ -1404,7 +1404,7 @@ class Import extends ImportExport
                     switch ((string)$cfg['subst']['type']) {
                         case 'file':
                             // Create / Overwrite file:
-                            $insertValue = $this->processSoftReferences_saveFile($cfg['subst']['relFileName'], $cfg, $table, $uid);
+                            $insertValue = $this->processSoftReferencesSaveFile($cfg['subst']['relFileName'], $cfg, $table, $uid);
                             break;
                         case 'db':
                         default:
@@ -1434,7 +1434,7 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string New relative filename (value to insert instead of the softref token)
      */
-    public function processSoftReferences_saveFile($relFileName, $cfg, $table, $uid)
+    public function processSoftReferencesSaveFile($relFileName, $cfg, $table, $uid)
     {
         if ($this->dat['header']['files'][$cfg['file_ID']]) {
             // Initialize; Get directory prefix for file and find possible RTE filename
@@ -1442,7 +1442,7 @@ class Import extends ImportExport
             if (GeneralUtility::isFirstPartOfStr($dirPrefix, $this->fileadminFolderName . '/')) {
                 // File in fileadmin/ folder:
                 // Create file (and possible resources)
-                $newFileName = $this->processSoftReferences_saveFile_createRelFile($dirPrefix, PathUtility::basename($relFileName), $cfg['file_ID'], $table, $uid) ?: '';
+                $newFileName = $this->processSoftReferencesSaveFileCreateRelFile($dirPrefix, PathUtility::basename($relFileName), $cfg['file_ID'], $table, $uid) ?: '';
                 if (strlen($newFileName)) {
                     $relFileName = $newFileName;
                 } else {
@@ -1468,12 +1468,12 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string|null New relative filename, if any
      */
-    public function processSoftReferences_saveFile_createRelFile($origDirPrefix, $fileName, $fileID, $table, $uid)
+    public function processSoftReferencesSaveFileCreateRelFile($origDirPrefix, $fileName, $fileID, $table, $uid)
     {
         // If the fileID map contains an entry for this fileID then just return the relative filename of that entry;
         // we don't want to write another unique filename for this one!
-        if (isset($this->fileIDMap[$fileID])) {
-            return PathUtility::stripPathSitePrefix($this->fileIDMap[$fileID]);
+        if (isset($this->fileIdMap[$fileID])) {
+            return PathUtility::stripPathSitePrefix($this->fileIdMap[$fileID]);
         }
         // Verify FileMount access to dir-prefix. Returns the best alternative relative path if any
         $dirPrefix = (string)$this->verifyFolderAccess($origDirPrefix);
@@ -1582,7 +1582,7 @@ class Import extends ImportExport
             return false;
         }
         GeneralUtility::writeFile($fileName, $this->dat['files'][$fileID]['content']);
-        $this->fileIDMap[$fileID] = $fileName;
+        $this->fileIdMap[$fileID] = $fileName;
         if (hash_equals(md5((string)file_get_contents($fileName)), $this->dat['files'][$fileID]['content_md5'])) {
             return true;
         }

@@ -79,7 +79,7 @@ class ExportController extends ImportExportController
     {
         $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
 
-        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->perms_clause);
+        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause);
         if (is_array($this->pageinfo)) {
             $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
         }

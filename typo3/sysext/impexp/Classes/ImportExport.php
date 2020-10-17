@@ -43,21 +43,21 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  * $this->export->relOnlyTables[]="tt_news";	// exclusively includes. See comment in the class
  *
  * Adding records:
- * $this->export->export_addRecord("pages", $this->pageinfo);
- * $this->export->export_addRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
- * $this->export->export_addRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
- * $this->export->export_addRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
- * $this->export->export_addRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 74));
- * $this->export->export_addRecord("sys_template", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("sys_template", 20));
+ * $this->export->exportAddRecord("pages", $this->pageinfo);
+ * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
+ * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
+ * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
+ * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 74));
+ * $this->export->exportAddRecord("sys_template", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("sys_template", 20));
  *
  * Adding all the relations (recursively in 5 levels so relations has THEIR relations registered as well)
  * for($a=0;$a<5;$a++) {
- * $addR = $this->export->export_addDBRelations($a);
+ * $addR = $this->export->exportAddDbRelations($a);
  * if (empty($addR)) break;
  * }
  *
  * Finally load all the files.
- * $this->export->export_addFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
+ * $this->export->exportAddFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
  *
  * Write export
  * $out = $this->export->render();
@@ -153,7 +153,7 @@ abstract class ImportExport
      *
      * @var array
      */
-    protected $fileIDMap = [];
+    protected $fileIdMap = [];
 
     /**
      * Add tables names here which should not be exported with the file.
@@ -203,7 +203,7 @@ abstract class ImportExport
      *
      * @var array
      */
-    protected $cache_getRecordPath = [];
+    protected $cacheGetRecordPath = [];
 
     /**
      * Internal import/export memory
@@ -761,7 +761,7 @@ abstract class ImportExport
                     $pInfo['msg'] = 'Your user profile does not allow you to create files on the server!';
                 }
             }
-            $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIDMap[$ID]);
+            $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
             $lines[] = $pInfo;
             unset($this->remainHeader['files'][$ID]);
             // RTE originals:
@@ -773,7 +773,7 @@ abstract class ImportExport
                     $pInfo['msg'] = 'MISSING RTE original FILE: ' . $ID;
                     $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
-                $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIDMap[$ID]);
+                $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
                 $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
                 $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Original)</em>';
                 $pInfo['ref'] = 'FILE';
@@ -792,7 +792,7 @@ abstract class ImportExport
                     } else {
                         $pInfo['updatePath'] = $fI['parentRelFileName'];
                     }
-                    $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIDMap[$extID]);
+                    $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
                     $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
                     $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Resource)</em>';
                     $pInfo['ref'] = 'FILE';
@@ -1028,7 +1028,7 @@ abstract class ImportExport
      * @param array $idH Page uid hierarchy
      * @param array $a Accumulation array of pages (internal, don't set from outside)
      * @return array Array with uid-uid pairs for all pages in the page tree.
-     * @see Import::flatInversePageTree_pid()
+     * @see Import::flatInversePageTreePid()
      */
     public function flatInversePageTree($idH, $a = [])
     {
@@ -1103,11 +1103,11 @@ abstract class ImportExport
      */
     public function getRecordPath($pid)
     {
-        if (!isset($this->cache_getRecordPath[$pid])) {
+        if (!isset($this->cacheGetRecordPath[$pid])) {
             $clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
-            $this->cache_getRecordPath[$pid] = (string)BackendUtility::getRecordPath($pid, $clause, 20);
+            $this->cacheGetRecordPath[$pid] = (string)BackendUtility::getRecordPath($pid, $clause, 20);
         }
-        return $this->cache_getRecordPath[$pid];
+        return $this->cacheGetRecordPath[$pid];
     }
 
     /**
