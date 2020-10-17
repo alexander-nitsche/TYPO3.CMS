@@ -156,14 +156,6 @@ abstract class ImportExport
     protected $fileIDMap = [];
 
     /**
-     * Add table names here which are THE ONLY ones which will be included
-     * into export if found as relations. '_ALL' will allow all tables.
-     *
-     * @var array
-     */
-    protected $relOnlyTables = [];
-
-    /**
      * Add tables names here which should not be exported with the file.
      * (Where relations should be mapped to same UIDs in target system).
      *
@@ -214,21 +206,6 @@ abstract class ImportExport
     protected $cache_getRecordPath = [];
 
     /**
-     * Cache of checkPID values.
-     *
-     * @var array
-     */
-    protected $checkPID_cache = [];
-
-    /**
-     * Set internally if the gzcompress function exists
-     * Used by ImportExportController
-     *
-     * @var bool
-     */
-    protected $compress = false;
-
-    /**
      * Internal import/export memory
      *
      * @var array
@@ -271,18 +248,10 @@ abstract class ImportExport
     protected $excludeDisabledRecords = false;
 
     /**
-     * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
-     *
-     * @var string
-     */
-    protected $perms_clause;
-
-    /**
      * The constructor
      */
     public function __construct()
     {
-        $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
     }
 
@@ -295,7 +264,6 @@ abstract class ImportExport
      */
     public function init()
     {
-        $this->compress = function_exists('gzcompress');
         $this->fileadminFolderName = !empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']) ? rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') : 'fileadmin';
     }
 
@@ -1091,19 +1059,6 @@ abstract class ImportExport
     }
 
     /**
-     * Returns TRUE if the input table name is to be included as relation
-     *
-     * @param string $table Table name
-     * @return bool TRUE, if table is marked static
-     */
-    public function inclRelation($table)
-    {
-        return is_array($GLOBALS['TCA'][$table])
-            && (in_array($table, $this->relOnlyTables) || in_array('_ALL', $this->relOnlyTables))
-            && $this->getBackendUser()->check('tables_select', $table);
-    }
-
-    /**
      * Returns TRUE if the element should be excluded as static record.
      *
      * @param string $table Table name
@@ -1125,32 +1080,6 @@ abstract class ImportExport
     {
         $mode = $this->softrefCfg[$tokenID]['mode'];
         return $tokenID && $mode !== 'exclude' && $mode !== 'editable';
-    }
-
-    /**
-     * Checking if a PID is in the webmounts of the user
-     *
-     * @param int $pid Page ID to check
-     * @return bool TRUE if OK
-     */
-    public function checkPID($pid)
-    {
-        if (!isset($this->checkPID_cache[$pid])) {
-            $this->checkPID_cache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
-        }
-        return $this->checkPID_cache[$pid];
-    }
-
-    /**
-     * Checks if the position of an updated record is configured to be corrected. This can be disabled globally and changed for elements individually.
-     *
-     * @param string $table Table name
-     * @param int $uid Uid or record
-     * @return bool TRUE if the position of the record should be updated to match the one in the import structure
-     */
-    public function dontIgnorePid($table, $uid)
-    {
-        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
     }
 
     /**
@@ -1273,19 +1202,6 @@ abstract class ImportExport
             $this->fileProcObj->setActionPermissions();
         }
         return $this->fileProcObj;
-    }
-
-    /**
-     * Call Hook
-     *
-     * @param string $name Name of the hook
-     * @param array $params Array with params
-     */
-    public function callHook($name, $params)
-    {
-        foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/impexp/class.tx_impexp.php'][$name] ?? [] as $hook) {
-            GeneralUtility::callUserFunction($hook, $params, $this);
-        }
     }
 
     /*****************************
@@ -1429,22 +1345,6 @@ abstract class ImportExport
     public function setRelStaticTables(array $relStaticTables): void
     {
         $this->relStaticTables = $relStaticTables;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRelOnlyTables(): array
-    {
-        return $this->relOnlyTables;
-    }
-
-    /**
-     * @param array $relOnlyTables
-     */
-    public function setRelOnlyTables(array $relOnlyTables): void
-    {
-        $this->relOnlyTables = $relOnlyTables;
     }
 
     /**
@@ -1605,21 +1505,5 @@ abstract class ImportExport
     public function setImportMapId(array $importMapId): void
     {
         $this->importMapId = $importMapId;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isCompress(): bool
-    {
-        return $this->compress;
-    }
-
-    /**
-     * @param bool $compress
-     */
-    public function setCompress(bool $compress): void
-    {
-        $this->compress = $compress;
     }
 }

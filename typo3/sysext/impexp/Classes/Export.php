@@ -32,6 +32,7 @@ use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderWritePermissionsExceptio
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Impexp\View\ExportPageTreeView;
@@ -81,6 +82,13 @@ class Export extends ImportExport
     const FILETYPE_T3DZ = 't3d_compressed';
 
     /**
+     * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
+     *
+     * @var string
+     */
+    protected $perms_clause;
+
+    /**
      * @var string
      */
     protected $title = '';
@@ -119,6 +127,14 @@ class Export extends ImportExport
      * @var array
      */
     protected $tables = [];
+
+    /**
+     * Add table names here which are THE ONLY ones which will be included
+     * into export if found as relations. '_ALL' will allow all tables.
+     *
+     * @var array
+     */
+    protected $relOnlyTables = [];
 
     /**
      * @var string
@@ -174,6 +190,13 @@ class Export extends ImportExport
      */
     protected $supportedFileTypes = [];
 
+    /**
+     * Cache of checkPID values.
+     *
+     * @var array
+     */
+    protected $checkPID_cache = [];
+
     /**************************
      * Initialize
      *************************/
@@ -185,6 +208,7 @@ class Export extends ImportExport
     {
         parent::init();
         $this->mode = 'export';
+        $this->perms_clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
     }
 
     /**************************
@@ -561,6 +585,20 @@ class Export extends ImportExport
     }
 
     /**
+     * Checking if a PID is in the webmounts of the user
+     *
+     * @param int $pid Page ID to check
+     * @return bool TRUE if OK
+     */
+    public function checkPID(int $pid): bool
+    {
+        if (!isset($this->checkPID_cache[$pid])) {
+            $this->checkPID_cache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
+        }
+        return $this->checkPID_cache[$pid];
+    }
+
+    /**
      * This changes the file reference ID from a hash based on the absolute file path
      * (coming from ReferenceIndex) to a hash based on the relative file path.
      *
@@ -762,6 +800,19 @@ class Export extends ImportExport
                 $addR[$rId] = $fI;
             }
         }
+    }
+
+    /**
+     * Returns TRUE if the input table name is to be included as relation
+     *
+     * @param string $table Table name
+     * @return bool TRUE, if table is marked static
+     */
+    public function inclRelation(string $table): bool
+    {
+        return is_array($GLOBALS['TCA'][$table])
+            && (in_array($table, $this->relOnlyTables) || in_array('_ALL', $this->relOnlyTables))
+            && $this->getBackendUser()->check('tables_select', $table);
     }
 
     /**
@@ -1538,6 +1589,22 @@ class Export extends ImportExport
     public function setTables(array $tables): void
     {
         $this->tables = $tables;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelOnlyTables(): array
+    {
+        return $this->relOnlyTables;
+    }
+
+    /**
+     * @param array $relOnlyTables
+     */
+    public function setRelOnlyTables(array $relOnlyTables): void
+    {
+        $this->relOnlyTables = $relOnlyTables;
     }
 
     /**

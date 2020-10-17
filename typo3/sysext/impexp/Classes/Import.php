@@ -101,6 +101,13 @@ class Import extends ImportExport
      */
     protected $filePathMap = [];
 
+    /**
+     * Set internally if the gzcompress function exists
+     *
+     * @var bool
+     */
+    protected $compress = false;
+
     /**************************
      * Initialize
      *************************/
@@ -112,6 +119,7 @@ class Import extends ImportExport
     {
         parent::init();
         $this->mode = 'import';
+        $this->compress = function_exists('gzcompress');
     }
 
     /***********************
@@ -684,6 +692,18 @@ class Import extends ImportExport
             }
         }
         return $a;
+    }
+
+    /**
+     * Checks if the position of an updated record is configured to be corrected. This can be disabled globally and changed for elements individually.
+     *
+     * @param string $table Table name
+     * @param int $uid Uid or record
+     * @return bool TRUE if the position of the record should be updated to match the one in the import structure
+     */
+    public function dontIgnorePid(string $table, int $uid): bool
+    {
+        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
     }
 
     /**
@@ -1602,6 +1622,19 @@ class Import extends ImportExport
         return false;
     }
 
+    /**
+     * Call Hook
+     *
+     * @param string $name Name of the hook
+     * @param array $params Array with params
+     */
+    public function callHook(string $name, array $params): void
+    {
+        foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/impexp/class.tx_impexp.php'][$name] ?? [] as $hook) {
+            GeneralUtility::callUserFunction($hook, $params, $this);
+        }
+    }
+
     /**************************
      * File Input
      *************************/
@@ -1773,6 +1806,22 @@ class Import extends ImportExport
     /**************************
      * Getters and Setters
      *************************/
+
+    /**
+     * @return bool
+     */
+    public function isCompress(): bool
+    {
+        return $this->compress;
+    }
+
+    /**
+     * @param bool $compress
+     */
+    public function setCompress(bool $compress): void
+    {
+        $this->compress = $compress;
+    }
 
     /**
      * @return bool
