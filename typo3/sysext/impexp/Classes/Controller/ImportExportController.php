@@ -83,13 +83,6 @@ abstract class ImportExportController
     protected $moduleTemplate;
 
     /**
-     *  The name of the shortcut for this page
-     *
-     * @var string
-     */
-    protected $shortcutName;
-
-    /**
      * @var StandaloneView
      */
     protected $standaloneView;
