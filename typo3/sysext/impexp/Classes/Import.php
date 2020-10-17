@@ -582,7 +582,7 @@ class Import extends ImportExport
      * @param int $pid PID in which to import. If the operation is an update operation, the root of the page tree inside will be moved to this PID unless it is the same as the root page from the import
      * @see writeRecordsRecords()
      */
-    public function writeRecordsPages($pid)
+    protected function writeRecordsPages($pid)
     {
         // First, write page structure if any:
         if (is_array($this->dat['header']['records']['pages'])) {
@@ -638,7 +638,7 @@ class Import extends ImportExport
      * @see writeRecordsPages()
      * @see writeRecordsRecordsOrder()
      */
-    public function writeRecordsPagesOrder()
+    protected function writeRecordsPagesOrder()
     {
         $cmd_data = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
@@ -680,7 +680,7 @@ class Import extends ImportExport
      * @return array Array with uid-pid pairs for all pages in the page tree.
      * @see ImportExport::flatInversePageTree()
      */
-    public function flatInversePageTreePid($idH, $a = [], $pid = -1)
+    protected function flatInversePageTreePid($idH, $a = [], $pid = -1)
     {
         if (is_array($idH)) {
             $idH = array_reverse($idH);
@@ -701,7 +701,7 @@ class Import extends ImportExport
      * @param int $uid Uid or record
      * @return bool TRUE if the position of the record should be updated to match the one in the import structure
      */
-    public function dontIgnorePid(string $table, int $uid): bool
+    protected function dontIgnorePid(string $table, int $uid): bool
     {
         return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
     }
@@ -712,7 +712,7 @@ class Import extends ImportExport
      * @param int $pid Page id in which to import
      * @see writeRecordsPages()
      */
-    public function writeRecordsRecords($pid)
+    protected function writeRecordsRecords($pid)
     {
         // Write the rest of the records
         $this->importData = [];
@@ -775,7 +775,7 @@ class Import extends ImportExport
      * @see writeRecordsRecords()
      * @see writeRecordsPagesOrder()
      */
-    public function writeRecordsRecordsOrder($mainPid)
+    protected function writeRecordsRecordsOrder($mainPid)
     {
         $cmd_data = [];
         if (is_array($this->dat['header']['pagetree'])) {
@@ -827,7 +827,7 @@ class Import extends ImportExport
      * @param int $pid Page id
      * @see writeRecords()
      */
-    public function addSingle($table, $uid, $pid)
+    protected function addSingle($table, $uid, $pid)
     {
         if ($this->importMode[$table . ':' . $uid] === 'exclude') {
             return;
@@ -938,7 +938,7 @@ class Import extends ImportExport
      * @param array $substNEWwithIDs From DataHandler to be merged into internal mapping variable in this object
      * @see writeRecords()
      */
-    public function addToMapId($substNEWwithIDs)
+    protected function addToMapId($substNEWwithIDs)
     {
         foreach ($this->importData as $table => $recs) {
             foreach ($recs as $id => $value) {
@@ -964,7 +964,7 @@ class Import extends ImportExport
      *
      * @return DataHandler $TCE object
      */
-    public function getNewTCE()
+    protected function getNewTCE()
     {
         $tce = GeneralUtility::makeInstance(DataHandler::class);
         $tce->dontProcessTransformations = 1;
@@ -975,7 +975,7 @@ class Import extends ImportExport
     /**
      * Cleaning up all the temporary files stored in typo3temp/ folder
      */
-    public function unlinkTempFiles()
+    protected function unlinkTempFiles()
     {
         foreach ($this->unlinkFiles as $fileName) {
             if (GeneralUtility::isFirstPartOfStr($fileName, Environment::getPublicPath() . '/typo3temp/')) {
@@ -1001,7 +1001,7 @@ class Import extends ImportExport
      *
      * @see setFlexFormRelations()
      */
-    public function setRelations()
+    protected function setRelations()
     {
         $updateData = [];
         // importNewId contains a register of all records that was in the import memory's "records" key
@@ -1068,7 +1068,7 @@ class Import extends ImportExport
      * @param array $itemConfig Array of TCA config of the field the relation to be set on
      * @return array Array with values [table]_[uid] or [uid] for field of type group / internal_type file_reference. These values have the regular DataHandler-input group/select type which means they will automatically be processed into a uid-list or MM relations.
      */
-    public function setRelationsDb($itemArray, $itemConfig)
+    protected function setRelationsDb($itemArray, $itemConfig)
     {
         $valArray = [];
         foreach ($itemArray as $relDat) {
@@ -1108,7 +1108,7 @@ class Import extends ImportExport
      * @param array $fI File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
      * @return string|null Absolute filename of the temporary filename of the file.
      */
-    public function importAddFileNameToBeCopied($fI)
+    protected function importAddFileNameToBeCopied($fI)
     {
         if (is_array($this->dat['files'][$fI['ID']])) {
             $tmpFile = null;
@@ -1142,7 +1142,7 @@ class Import extends ImportExport
      *
      * @see setRelations()
      */
-    public function setFlexFormRelations()
+    protected function setFlexFormRelations()
     {
         $updateData = [];
         // importNewId contains a register of all records that were in the import memory's "records" key
@@ -1260,7 +1260,7 @@ class Import extends ImportExport
     /**
      * Processing of soft references
      */
-    public function processSoftReferences()
+    protected function processSoftReferences()
     {
         // Initialize:
         $inData = [];
@@ -1382,7 +1382,7 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string The input content with tokens substituted according to entries in softRefCfgs
      */
-    public function processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, $uid)
+    protected function processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, $uid)
     {
         // traverse each softref type for this field:
         foreach ($softRefCfgs as $cfg) {
@@ -1434,7 +1434,7 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string New relative filename (value to insert instead of the softref token)
      */
-    public function processSoftReferencesSaveFile($relFileName, $cfg, $table, $uid)
+    protected function processSoftReferencesSaveFile($relFileName, $cfg, $table, $uid)
     {
         if ($this->dat['header']['files'][$cfg['file_ID']]) {
             // Initialize; Get directory prefix for file and find possible RTE filename
@@ -1468,7 +1468,7 @@ class Import extends ImportExport
      * @param string $uid UID of record from table
      * @return string|null New relative filename, if any
      */
-    public function processSoftReferencesSaveFileCreateRelFile($origDirPrefix, $fileName, $fileID, $table, $uid)
+    protected function processSoftReferencesSaveFileCreateRelFile($origDirPrefix, $fileName, $fileID, $table, $uid)
     {
         // If the fileID map contains an entry for this fileID then just return the relative filename of that entry;
         // we don't want to write another unique filename for this one!
@@ -1552,7 +1552,7 @@ class Import extends ImportExport
      * @param bool $bypassMountCheck Bypasses the checking against filemounts - only for RTE files!
      * @return bool Returns TRUE if it went well. Notice that the content of the file is read again, and md5 from import memory is validated.
      */
-    public function writeFileVerify($fileName, $fileID, $bypassMountCheck = false)
+    protected function writeFileVerify($fileName, $fileID, $bypassMountCheck = false)
     {
         $fileProcObj = $this->getFileProcObj();
         if (!$fileProcObj->actionPerms['addFile']) {
@@ -1596,7 +1596,7 @@ class Import extends ImportExport
      * @param string $dirPrefix Directory to create. Having a trailing slash. Must be in fileadmin/. Relative to public web path
      * @return bool TRUE, if directory exists (was created)
      */
-    public function checkOrCreateDir($dirPrefix)
+    protected function checkOrCreateDir($dirPrefix)
     {
         // Split dir path and remove first directory (which should be "fileadmin")
         $filePathParts = explode('/', $dirPrefix);
@@ -1628,7 +1628,7 @@ class Import extends ImportExport
      * @param string $name Name of the hook
      * @param array $params Array with params
      */
-    public function callHook(string $name, array $params): void
+    protected function callHook(string $name, array $params): void
     {
         foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/impexp/class.tx_impexp.php'][$name] ?? [] as $hook) {
             GeneralUtility::callUserFunction($hook, $params, $this);
@@ -1706,7 +1706,7 @@ class Import extends ImportExport
      * @internal
      * @see loadFile()
      */
-    public function getNextFilePart($fd, $unserialize = false, $name = '')
+    protected function getNextFilePart($fd, $unserialize = false, $name = '')
     {
         $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
         // Getting header data
@@ -1766,7 +1766,7 @@ class Import extends ImportExport
      * @param string $name For error messages this indicates the section of the problem.
      * @return string|null Data string
      */
-    public function getNextContentPart($filecontent, &$pointer, $unserialize = false, $name = '')
+    protected function getNextContentPart($filecontent, &$pointer, $unserialize = false, $name = '')
     {
         $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
         // getting header data
@@ -1796,7 +1796,7 @@ class Import extends ImportExport
     /**
      * Setting up the object based on the recently loaded ->dat array
      */
-    public function loadInit()
+    protected function loadInit()
     {
         $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
         $this->excludeMap = (array)$this->dat['header']['excludeMap'];
