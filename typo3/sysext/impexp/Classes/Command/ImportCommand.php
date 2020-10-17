@@ -95,7 +95,7 @@ class ImportCommand extends Command
 
         $pageId = (int)$input->getArgument('pageId');
 
-        $import = GeneralUtility::makeInstance(Import::class);
+        $import = $this->getImport();
         $import->init();
         $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
         // Only used when $updateRecords is "true"
@@ -124,5 +124,13 @@ class ImportCommand extends Command
 
         $io->success('Imported ' . $input->getArgument('file') . ' to page ' . $pageId . ' successfully');
         return 0;
+    }
+
+    /**
+     * @return Import
+     */
+    protected function getImport(): Import
+    {
+        return GeneralUtility::makeInstance(Import::class);
     }
 }
