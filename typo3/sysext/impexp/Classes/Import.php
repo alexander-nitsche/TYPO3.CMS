@@ -373,7 +373,7 @@ class Import extends ImportExport
 
             if (empty($fileRecord['storage']) && !$this->isFallbackStorage($fileRecord['storage'])) {
                 // no storage for the file is defined, mostly because of a missing default storage.
-                $this->error('Error: No storage for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $originalStorageUid . '"');
+                $this->addError('Error: No storage for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $originalStorageUid . '"');
                 continue;
             }
 
@@ -387,7 +387,7 @@ class Import extends ImportExport
             } elseif ($defaultStorage !== null) {
                 $storage = $defaultStorage;
             } else {
-                $this->error('Error: No storage available for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                $this->addError('Error: No storage available for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
                 continue;
             }
 
@@ -417,7 +417,7 @@ class Import extends ImportExport
                             $sanitizedFolderMappings[$folderName] = $importFolder->getIdentifier();
                         }
                     } catch (Exception $e) {
-                        $this->error('Error: Folder "' . $folderName . '" could not be created for file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                        $this->addError('Error: Folder "' . $folderName . '" could not be created for file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
                         continue;
                     }
                 } else {
@@ -434,12 +434,12 @@ class Import extends ImportExport
                     /** @var File $newFile */
                     $newFile = $storage->addFile($temporaryFile, $importFolder, $fileRecord['name']);
                 } catch (Exception $e) {
-                    $this->error('Error: File could not be added to the storage: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                    $this->addError('Error: File could not be added to the storage: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
                     continue;
                 }
 
                 if ($newFile->getSha1() !== $fileRecord['sha1']) {
-                    $this->error('Error: The hash of the written file is not identical to the import data! File could be corrupted! File: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                    $this->addError('Error: The hash of the written file is not identical to the import data! File could be corrupted! File: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
                 }
             }
 
@@ -470,7 +470,7 @@ class Import extends ImportExport
             if (!in_array($fileReferenceRecord['uid_local'], $this->importMapId['sys_file'])) {
                 unset($this->dat['header']['records']['sys_file_reference'][$sysFileReferenceUid]);
                 unset($this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]);
-                $this->error(
+                $this->addError(
                     'Error: sys_file_reference record ' . (int)$sysFileReferenceUid
                     . ' with relation to sys_file record ' . (int)$fileReferenceRecord['uid_local']
                     . ', which is not part of the import data, was not imported.'
@@ -560,10 +560,10 @@ class Import extends ImportExport
                 $this->unlinkFiles[] = $temporaryFilePathInternal;
                 $temporaryFilePath = $temporaryFilePathInternal;
             } else {
-                $this->error('Error: temporary file ' . $temporaryFilePathInternal . ' was not written as it should have been!');
+                $this->addError('Error: temporary file ' . $temporaryFilePathInternal . ' was not written as it should have been!');
             }
         } else {
-            $this->error('Error: No file found for ID ' . $fileId);
+            $this->addError('Error: No file found for ID ' . $fileId);
         }
         return $temporaryFilePath;
     }
@@ -711,7 +711,7 @@ class Import extends ImportExport
                             if ($rootLevelSetting === 1) {
                                 $setPid = 0;
                             } elseif ($rootLevelSetting === 0 && $setPid === 0) {
-                                $this->error('Error: Record type ' . $table . ' is not allowed on pid 0');
+                                $this->addError('Error: Record type ' . $table . ' is not allowed on pid 0');
                                 continue;
                             }
                         }
@@ -721,7 +721,7 @@ class Import extends ImportExport
                 }
             }
         } else {
-            $this->error('Error: No records defined in internal data array.');
+            $this->addError('Error: No records defined in internal data array.');
         }
         // Now write to database:
         $tce = $this->getNewTCE();
@@ -908,7 +908,7 @@ class Import extends ImportExport
             }
         } elseif ($table . ':' . $uid != 'pages:0') {
             // On root level we don't want this error message.
-            $this->error('Error: no record was found in data array!');
+            $this->addError('Error: no record was found in data array!');
         }
     }
 
@@ -932,7 +932,7 @@ class Import extends ImportExport
                     // if $this->importMapId contains already the right mapping, skip the error msg.
                     // See special handling of sys_file_metadata in addSingle() => nothing to do
                     if (!($table === 'sys_file_metadata' && isset($this->importMapId[$table][$old_uid]) && $this->importMapId[$table][$old_uid] == $id)) {
-                        $this->error('Possible error: ' . $table . ':' . $old_uid . ' had no new id assigned to it. This indicates that the record was not added to database during import. Please check changelog!');
+                        $this->addError('Possible error: ' . $table . ':' . $old_uid . ' had no new id assigned to it. This indicates that the record was not added to database during import. Please check changelog!');
                     }
                 }
             }
@@ -962,10 +962,10 @@ class Import extends ImportExport
                 GeneralUtility::unlink_tempfile($fileName);
                 clearstatcache();
                 if (is_file($fileName)) {
-                    $this->error('Error: ' . $fileName . ' was NOT unlinked as it should have been!');
+                    $this->addError('Error: ' . $fileName . ' was NOT unlinked as it should have been!');
                 }
             } else {
-                $this->error('Error: ' . $fileName . ' was not in temp-path. Not removed!');
+                $this->addError('Error: ' . $fileName . ' was not in temp-path. Not removed!');
             }
         }
         $this->unlinkFiles = [];
@@ -1020,10 +1020,10 @@ class Import extends ImportExport
                         }
                     }
                 } else {
-                    $this->error('Error: no record was found in data array!');
+                    $this->addError('Error: no record was found in data array!');
                 }
             } else {
-                $this->error('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
+                $this->addError('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
             }
         }
         if (!empty($updateData)) {
@@ -1076,7 +1076,7 @@ class Import extends ImportExport
                 // eg. fe_groups (-1, -2) and sys_language (-1 = ALL languages). This must be handled on both export and import.
                 $valArray[] = $relDat['table'] . '_' . $relDat['id'];
             } else {
-                $this->error('Lost relation: ' . $relDat['table'] . ':' . $relDat['id']);
+                $this->addError('Lost relation: ' . $relDat['table'] . ':' . $relDat['id']);
             }
         }
         return $valArray;
@@ -1109,9 +1109,9 @@ class Import extends ImportExport
                 $this->unlinkFiles[] = $tmpFile;
                 return $tmpFile;
             }
-            $this->error('Error: temporary file ' . $tmpFile . ' was not written as it should have been!');
+            $this->addError('Error: temporary file ' . $tmpFile . ' was not written as it should have been!');
         } else {
-            $this->error('Error: No file found for ID ' . $fI['ID']);
+            $this->addError('Error: No file found for ID ' . $fI['ID']);
         }
         return null;
     }
@@ -1132,12 +1132,12 @@ class Import extends ImportExport
             // original UID - NOT the new one!
             // If the record has been written and received a new id, then proceed:
             if (!isset($this->importMapId[$table][$uid])) {
-                $this->error('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
+                $this->addError('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
                 continue;
             }
 
             if (!is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
-                $this->error('Error: no record was found in data array!');
+                $this->addError('Error: no record was found in data array!');
                 continue;
             }
             $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
@@ -1426,13 +1426,13 @@ class Import extends ImportExport
                 if (strlen($newFileName)) {
                     $relFileName = $newFileName;
                 } else {
-                    $this->error('ERROR: No new file created for "' . $relFileName . '"');
+                    $this->addError('ERROR: No new file created for "' . $relFileName . '"');
                 }
             } else {
-                $this->error('ERROR: Sorry, cannot operate on non-RTE files which are outside the fileadmin folder.');
+                $this->addError('ERROR: Sorry, cannot operate on non-RTE files which are outside the fileadmin folder.');
             }
         } else {
-            $this->error('ERROR: Could not find file ID in header.');
+            $this->addError('ERROR: Could not find file ID in header.');
         }
         // Return (new) filename relative to public web path
         return $relFileName;
@@ -1489,10 +1489,10 @@ class Import extends ImportExport
                                     if ($this->verifyFolderAccess($destDir, true) && $this->checkOrCreateDir($destDir)) {
                                         $this->writeFileVerify($absResourceFileName, $res_fileID);
                                     } else {
-                                        $this->error('ERROR: Could not create file in directory "' . $destDir . '"');
+                                        $this->addError('ERROR: Could not create file in directory "' . $destDir . '"');
                                     }
                                 } else {
-                                    $this->error('ERROR: Could not resolve path for "' . $relResourceFileName . '"');
+                                    $this->addError('ERROR: Could not resolve path for "' . $relResourceFileName . '"');
                                 }
                                 $tokenizedContent = str_replace('{EXT_RES_ID:' . $res_fileID . '}', $relResourceFileName, $tokenizedContent);
                                 $tokenSubstituted = true;
@@ -1536,7 +1536,7 @@ class Import extends ImportExport
     {
         $fileProcObj = $this->getFileProcObj();
         if (!$fileProcObj->actionPerms['addFile']) {
-            $this->error('ERROR: You did not have sufficient permissions to write the file "' . $fileName . '"');
+            $this->addError('ERROR: You did not have sufficient permissions to write the file "' . $fileName . '"');
             return false;
         }
         // Just for security, check again. Should actually not be necessary.
@@ -1544,21 +1544,21 @@ class Import extends ImportExport
             try {
                 GeneralUtility::makeInstance(ResourceFactory::class)->getFolderObjectFromCombinedIdentifier(PathUtility::dirname($fileName));
             } catch (InsufficientFolderAccessPermissionsException $e) {
-                $this->error('ERROR: Filename "' . $fileName . '" was not allowed in destination path!');
+                $this->addError('ERROR: Filename "' . $fileName . '" was not allowed in destination path!');
                 return false;
             }
         }
         $fI = GeneralUtility::split_fileref($fileName);
         if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($fI['file'])) {
-            $this->error('ERROR: Filename "' . $fileName . '" failed against extension check or deny-pattern!');
+            $this->addError('ERROR: Filename "' . $fileName . '" failed against extension check or deny-pattern!');
             return false;
         }
         if (!GeneralUtility::getFileAbsFileName($fileName)) {
-            $this->error('ERROR: Filename "' . $fileName . '" was not a valid relative file path!');
+            $this->addError('ERROR: Filename "' . $fileName . '" was not a valid relative file path!');
             return false;
         }
         if (!$this->dat['files'][$fileID]) {
-            $this->error('ERROR: File ID "' . $fileID . '" could not be found');
+            $this->addError('ERROR: File ID "' . $fileID . '" could not be found');
             return false;
         }
         GeneralUtility::writeFile($fileName, $this->dat['files'][$fileID]['content']);
@@ -1566,7 +1566,7 @@ class Import extends ImportExport
         if (hash_equals(md5((string)file_get_contents($fileName)), $this->dat['files'][$fileID]['content_md5'])) {
             return true;
         }
-        $this->error('ERROR: File content "' . $fileName . '" was corrupted');
+        $this->addError('ERROR: File content "' . $fileName . '" was corrupted');
         return false;
     }
 
@@ -1588,14 +1588,14 @@ class Import extends ImportExport
                 if (strlen($dirname)) {
                     if (!@is_dir(Environment::getPublicPath() . '/' . $this->fileadminFolderName . $pathAcc)) {
                         if (!GeneralUtility::mkdir(Environment::getPublicPath() . '/' . $this->fileadminFolderName . $pathAcc)) {
-                            $this->error('ERROR: Directory could not be created....B');
+                            $this->addError('ERROR: Directory could not be created....B');
                             return false;
                         }
                     }
                 } elseif ($dirPrefix === $this->fileadminFolderName . $pathAcc) {
                     return true;
                 } else {
-                    $this->error('ERROR: Directory could not be created....A');
+                    $this->addError('ERROR: Directory could not be created....A');
                 }
             }
         }
@@ -1616,7 +1616,7 @@ class Import extends ImportExport
     public function loadFile($filename, $all = false)
     {
         if (!@is_file($filename)) {
-            $this->error('Filename not found: ' . $filename);
+            $this->addError('Filename not found: ' . $filename);
             return false;
         }
         $fI = pathinfo($filename);
@@ -1625,7 +1625,7 @@ class Import extends ImportExport
                 // copy the folder lowlevel to typo3temp, because the files would be deleted after import
                 GeneralUtility::copyDirectory($filename . '.files', $this->getOrCreateTemporaryFolderName());
             } else {
-                $this->error('External import files for the given import source is currently not supported.');
+                $this->addError('External import files for the given import source is currently not supported.');
             }
         }
         if (strtolower($fI['extension']) === 'xml') {
@@ -1638,12 +1638,12 @@ class Import extends ImportExport
                         $this->loadInit();
                         return true;
                     }
-                    $this->error('XML file did not contain proper XML for TYPO3 Import');
+                    $this->addError('XML file did not contain proper XML for TYPO3 Import');
                 } else {
-                    $this->error('XML could not be parsed: ' . $this->dat);
+                    $this->addError('XML could not be parsed: ' . $this->dat);
                 }
             } else {
-                $this->error('Error opening file: ' . $filename);
+                $this->addError('Error opening file: ' . $filename);
             }
         } else {
             // T3D
@@ -1658,7 +1658,7 @@ class Import extends ImportExport
                 fclose($fd);
                 return true;
             }
-            $this->error('Error opening file: ' . $filename);
+            $this->addError('Error opening file: ' . $filename);
         }
         return false;
     }
@@ -1679,16 +1679,16 @@ class Import extends ImportExport
         // Getting header data
         $initStr = fread($fd, $initStrLen);
         if (empty($initStr)) {
-            $this->error('File does not contain data for "' . $name . '"');
+            $this->addError('File does not contain data for "' . $name . '"');
             return null;
         }
         $initStrDat = explode(':', $initStr);
         if (strpos($initStrDat[0], 'Warning') !== false) {
-            $this->error('File read error: Warning message in file. (' . $initStr . fgets($fd) . ')');
+            $this->addError('File read error: Warning message in file. (' . $initStr . fgets($fd) . ')');
             return null;
         }
         if ((string)$initStrDat[3] !== '') {
-            $this->error('File read error: InitString had a wrong length. (' . $name . ')');
+            $this->addError('File read error: InitString had a wrong length. (' . $name . ')');
             return null;
         }
         $datString = (string)fread($fd, (int)$initStrDat[2]);
@@ -1698,13 +1698,13 @@ class Import extends ImportExport
                 if ($this->compress) {
                     $datString = (string)gzuncompress($datString);
                 } else {
-                    $this->error('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
+                    $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
                     return null;
                 }
             }
             return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
         }
-        $this->error('MD5 check failed (' . $name . ')');
+        $this->addError('MD5 check failed (' . $name . ')');
 
         return null;
     }
@@ -1741,7 +1741,7 @@ class Import extends ImportExport
         $pointer += $initStrLen;
         $initStrDat = explode(':', $initStr);
         if ((string)$initStrDat[3] !== '') {
-            $this->error('Content read error: InitString had a wrong length. (' . $name . ')');
+            $this->addError('Content read error: InitString had a wrong length. (' . $name . ')');
             return null;
         }
         $datString = (string)substr($filecontent, $pointer, (int)$initStrDat[2]);
@@ -1752,10 +1752,10 @@ class Import extends ImportExport
                     $datString = (string)gzuncompress($datString);
                     return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
                 }
-                $this->error('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
+                $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
             }
         } else {
-            $this->error('MD5 check failed (' . $name . ')');
+            $this->addError('MD5 check failed (' . $name . ')');
         }
         return null;
     }

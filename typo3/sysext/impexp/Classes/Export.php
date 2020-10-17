@@ -552,10 +552,10 @@ class Export extends ImportExport
                     // Add information about the softrefs to header:
                     $this->dat['header']['records'][$table][$row['uid']]['softrefs'] = $this->flatSoftRefs($this->dat['records'][$table . ':' . $row['uid']]['rels']);
                 } else {
-                    $this->error('Record ' . $table . ':' . $row['uid'] . ' already added.');
+                    $this->addError('Record ' . $table . ':' . $row['uid'] . ' already added.');
                 }
             } else {
-                $this->error('Record ' . $table . ':' . $row['uid'] . ' was outside your DB mounts!');
+                $this->addError('Record ' . $table . ':' . $row['uid'] . ' was outside your DB mounts!');
             }
         }
     }
@@ -650,7 +650,7 @@ class Export extends ImportExport
     {
         // Traverse all "rels" registered for "records"
         if (!is_array($this->dat['records'])) {
-            $this->error('There were no records available.');
+            $this->addError('There were no records available.');
             return [];
         }
         $addR = [];
@@ -733,7 +733,7 @@ class Export extends ImportExport
                     $rId = $fI['table'] . ':' . $fI['id'];
                     if (!isset($this->dat['records'][$rId])) {
                         $this->dat['records'][$rId] = 'NOT_FOUND';
-                        $this->error('Relation record ' . $rId . ' was not found!');
+                        $this->addError('Relation record ' . $rId . ' was not found!');
                     }
                 }
             }
@@ -774,7 +774,7 @@ class Export extends ImportExport
     {
         // Traverse all "rels" registered for "records"
         if (!is_array($this->dat['records'])) {
-            $this->error('There were no records available.');
+            $this->addError('There were no records available.');
             return;
         }
         foreach ($this->dat['records'] as $k => $value) {
@@ -886,13 +886,13 @@ class Export extends ImportExport
                 $file->checkActionPermission('read');
             }
         } catch (\Exception $e) {
-            $this->error('Error when trying to add file ' . $file->getCombinedIdentifier() . ': ' . $e->getMessage());
+            $this->addError('Error when trying to add file ' . $file->getCombinedIdentifier() . ': ' . $e->getMessage());
             return;
         }
         $fileUid = $file->getUid();
         $fileSha1 = $file->getStorage()->hashFile($file, 'sha1');
         if ($fileSha1 !== $file->getProperty('sha1')) {
-            $this->error('File sha1 hash of ' . $file->getCombinedIdentifier() . ' is not up-to-date in index! File added on current sha1.');
+            $this->addError('File sha1 hash of ' . $file->getCombinedIdentifier() . ' is not up-to-date in index! File added on current sha1.');
             $this->dat['records']['sys_file:' . $fileUid]['data']['sha1'] = $fileSha1;
         }
 
@@ -927,7 +927,7 @@ class Export extends ImportExport
     public function export_addFile($fI, $recordRef = '', $fieldname = '')
     {
         if (!@is_file($fI['ID_absFile'])) {
-            $this->error($fI['ID_absFile'] . ' was not a file! Skipping.');
+            $this->addError($fI['ID_absFile'] . ' was not a file! Skipping.');
             return;
         }
         $fileInfo = stat($fI['ID_absFile']);

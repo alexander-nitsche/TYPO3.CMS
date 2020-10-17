@@ -316,7 +316,7 @@ abstract class ImportExport
         // Check extension dependencies:
         foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
             if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
-                $this->error('DEPENDENCY: The extension with key "' . $extKey . '" must be installed!');
+                $this->addError('DEPENDENCY: The extension with key "' . $extKey . '" must be installed!');
             }
         }
 
@@ -497,10 +497,10 @@ abstract class ImportExport
     protected function addGeneralErrorsByTable($table)
     {
         if ($this->update && $table === 'sys_file') {
-            $this->error('Updating sys_file records is not supported! They will be imported as new records!');
+            $this->addError('Updating sys_file records is not supported! They will be imported as new records!');
         }
         if ($this->forceAllUids && $table === 'sys_file') {
-            $this->error('Forcing uids of sys_file records is not supported! They will be imported as new records!');
+            $this->addError('Forcing uids of sys_file records is not supported! They will be imported as new records!');
         }
     }
 
@@ -519,7 +519,7 @@ abstract class ImportExport
         $record = $this->dat['header']['records'][$table][$uid];
         unset($this->remainHeader['records'][$table][$uid]);
         if (!is_array($record) && !($table === 'pages' && !$uid)) {
-            $this->error('MISSING RECORD: ' . $table . ':' . $uid);
+            $this->addError('MISSING RECORD: ' . $table . ':' . $uid);
         }
         // Begin to create the line arrays information record, pInfo:
         $pInfo = [];
@@ -752,7 +752,7 @@ abstract class ImportExport
             if (!is_array($fI)) {
                 if (!$tokenID || $this->includeSoftref($tokenID)) {
                     $pInfo['msg'] = 'MISSING FILE: ' . $ID;
-                    $this->error('MISSING FILE: ' . $ID);
+                    $this->addError('MISSING FILE: ' . $ID);
                 } else {
                     return;
                 }
@@ -803,7 +803,7 @@ abstract class ImportExport
                 $fI = $this->dat['header']['files'][$ID];
                 if (!is_array($fI)) {
                     $pInfo['msg'] = 'MISSING RTE original FILE: ' . $ID;
-                    $this->error('MISSING RTE original FILE: ' . $ID);
+                    $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
                 $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIDMap[$ID]);
                 $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
@@ -820,7 +820,7 @@ abstract class ImportExport
                     $fI = $this->dat['header']['files'][$extID];
                     if (!is_array($fI)) {
                         $pInfo['msg'] = 'MISSING External Resource FILE: ' . $extID;
-                        $this->error('MISSING External Resource FILE: ' . $extID);
+                        $this->addError('MISSING External Resource FILE: ' . $extID);
                     } else {
                         $pInfo['updatePath'] = $fI['parentRelFileName'];
                     }
@@ -1295,11 +1295,11 @@ abstract class ImportExport
     /**
      * Sets error message in the internal error log
      *
-     * @param string $msg Error message
+     * @param string $message Error message
      */
-    public function error($msg)
+    public function addError(string $message): void
     {
-        $this->errorLog[] = $msg;
+        $this->errorLog[] = $message;
     }
 
     /**
