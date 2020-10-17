@@ -116,7 +116,6 @@ class ImportController extends ImportExportController
                 1464435459
             );
         }
-        $this->shortcutName = $this->lang->getLL('title_import');
         if (GeneralUtility::_POST('_upload')) {
             $this->checkUpload();
         }
@@ -175,8 +174,6 @@ class ImportController extends ImportExportController
             // must have trailing slash.
             $path = $this->import->getOrCreateDefaultImportExportFolder();
             $exportFiles = $this->getExportFiles();
-
-            $this->shortcutName .= ' (' . htmlspecialchars($this->pageinfo['title']) . ')';
 
             // Configuration
             $selectOptions = [''];
