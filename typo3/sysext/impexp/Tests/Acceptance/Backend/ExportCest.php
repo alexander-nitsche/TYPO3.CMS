@@ -94,6 +94,52 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->switchToContentFrame();
+        $I->cantSee('No tree exported - only tables on the page.', $this->inModuleBody);
+        $I->click($tabExport, $this->inModuleTabs);
+        $I->waitForElementVisible($contentExport, 5);
+        $I->click($buttonSaveToFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSee('SAVED FILE', $this->inFlashMessages . ' .alert.alert-success .alert-title');
+        $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
+        preg_match('/[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
+        $saveFilePath = Environment::getProjectPath() . '/' . $flashMessageParts[1];
+        $I->assertFileExists($saveFilePath);
+
+        $this->testFilesToDelete[] = $saveFilePath;
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function exportTable(BackendTester $I)
+    {
+        $I->wantToTest('exporting a table of records.');
+
+        $rootPage = '.node.identifier-0_0 .node-name';
+        $I->canSeeElement($rootPage);
+        $I->click($rootPage);
+
+        $sysLanguageTableTitle = 'Website Language';
+
+        $I->switchToContentFrame();
+        $I->click($sysLanguageTableTitle);
+
+        $listModuleHeader = '.module-docheader';
+        $listModuleBtnExport = 'a[title="Export"]';
+
+        $I->waitForElementVisible($listModuleHeader . ' ' . $listModuleBtnExport, 5);
+        $I->click($listModuleBtnExport, $listModuleHeader);
+
+        $tabExport = 'a[href="#export-filepreset"]';
+        $contentExport = '#export-filepreset';
+        $buttonSaveToFile = 'tx_impexp[save_export]';
+
+        $I->waitForElementVisible($tabExport, 5);
+        $I->canSee('No tree exported - only tables on the page.', $this->inModuleBody);
+        $I->canSee('Export tables from pages', $this->inModuleBody);
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
         $I->click($buttonSaveToFile, $this->inModuleBody);
@@ -138,7 +184,8 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->waitForElementVisible($tabExport, 5);
-        $I->canSee('Export single record');
+        $I->canSee('No tree exported - only tables on the page.', $this->inModuleBody);
+        $I->canSee('Export single record', $this->inModuleBody);
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
         $I->click($buttonSaveToFile, $this->inModuleBody);
