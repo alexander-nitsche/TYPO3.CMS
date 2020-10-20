@@ -67,6 +67,7 @@ class ExportCest
             unlink($filePath);
             $I->dontSeeFileFound($filePath);
         }
+        $this->testFilesToDelete = [];
     }
 
     /**
@@ -93,6 +94,51 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->switchToContentFrame();
+        $I->click($tabExport, $this->inModuleTabs);
+        $I->waitForElementVisible($contentExport, 5);
+        $I->click($buttonSaveToFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSee('SAVED FILE', $this->inFlashMessages . ' .alert.alert-success .alert-title');
+        $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
+        preg_match('/[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
+        $saveFilePath = Environment::getProjectPath() . '/' . $flashMessageParts[1];
+        $I->assertFileExists($saveFilePath);
+
+        $this->testFilesToDelete[] = $saveFilePath;
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function exportRecord(BackendTester $I)
+    {
+        $I->wantToTest('exporting a single record.');
+
+        $rootPage = '.node.identifier-0_0 .node-name';
+        $I->canSeeElement($rootPage);
+        $I->click($rootPage);
+
+        $sysLanguageTable = '#recordlist-sys_language';
+        $sysLanguageIcon = 'tr:first-child a.t3js-contextmenutrigger';
+        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+        $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
+
+        $I->switchToContentFrame();
+        $I->click($sysLanguageIcon, $sysLanguageTable);
+        $I->waitForElementVisible($contextMenuMore, 5);
+        $I->click($contextMenuMore);
+        $I->waitForElementVisible($contextMenuExport, 5);
+        $I->click($contextMenuExport);
+
+        $tabExport = 'a[href="#export-filepreset"]';
+        $contentExport = '#export-filepreset';
+        $buttonSaveToFile = 'tx_impexp[save_export]';
+
+        $I->waitForElementVisible($tabExport, 5);
+        $I->canSee('Export single record');
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
         $I->click($buttonSaveToFile, $this->inModuleBody);
