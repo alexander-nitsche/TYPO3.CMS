@@ -120,4 +120,62 @@ class ImportCest
         $I->switchToContentFrame();
         $I->seeElement($buttonNewImport);
     }
+
+    /**
+     * @param BackendTester $I
+     * @param ModalDialog $modalDialog
+     * @param PageTree $pageTree
+     *
+     * @throws \Exception
+     */
+    public function importTable(BackendTester $I, ModalDialog $modalDialog, PageTree $pageTree)
+    {
+        $I->wantToTest('importing a table of records.');
+
+        $sysCategoryTable = '#recordlist-sys_category';
+
+        $I->switchToContentFrame();
+        $sysCategoryRecordsBefore = $I->grabMultiple($sysCategoryTable . ' .t3js-entity', 'data-uid');
+        $I->switchToMainFrame();
+
+        $page1Icon = '.node.identifier-0_1 .node-icon-container';
+        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
+
+        $I->click($page1Icon);
+        $I->waitForElementVisible($contextMenuMore, 5);
+        $I->click($contextMenuMore);
+        $I->waitForElementVisible($contextMenuImport, 5);
+        $I->click($contextMenuImport);
+
+        $fixtureFilePath = 'Acceptance/Fixtures/sys_category_table.xml';
+        $tabUpload = 'a[href="#import-upload"]';
+        $inputUploadFile = 'input[type=file]';
+        $buttonUploadFile = '_upload';
+        $buttonImport = 'button[name="tx_impexp[import_file]"]';
+
+        $I->switchToContentFrame();
+        $I->click($tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($inputUploadFile, 5);
+        $I->attachFile($inputUploadFile, $fixtureFilePath);
+        $I->click($buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
+        preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
+        $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
+        $I->assertFileExists($loadFilePath);
+        $this->testFilesToDelete[] = $loadFilePath;
+
+        $I->click($buttonImport);
+        $modalDialog->clickButtonInDialog('button[name="ok"]');
+
+        $I->switchToMainFrame();
+        $pageTree->openPath(['styleguide TCA demo']);
+        $I->switchToContentFrame();
+        $sysCategoryRecords = $I->grabMultiple($sysCategoryTable . ' .t3js-entity', 'data-uid');
+        $sysCategoryRecordsNew = array_diff($sysCategoryRecords, $sysCategoryRecordsBefore);
+        $I->assertCount(5, $sysCategoryRecordsNew);
+    }
 }
