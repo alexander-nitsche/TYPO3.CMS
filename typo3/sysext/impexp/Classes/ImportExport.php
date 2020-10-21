@@ -1514,4 +1514,12 @@ abstract class ImportExport
     {
         $this->importMapId = $importMapId;
     }
+
+    /**
+     * @return array
+     */
+    public function getDat(): array
+    {
+        return $this->dat;
+    }
 }
