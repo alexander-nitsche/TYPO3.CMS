@@ -225,6 +225,11 @@ abstract class ImportExport
     protected $remainHeader = [];
 
     /**
+     * @var LanguageService
+     */
+    protected $lang;
+
+    /**
      * @var IconFactory
      */
     protected $iconFactory;
@@ -253,6 +258,7 @@ abstract class ImportExport
     public function __construct()
     {
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
+        $this->lang = $this->getLanguageService();
     }
 
     /**************************
@@ -493,10 +499,9 @@ abstract class ImportExport
         $pInfo = [];
         $pInfo['ref'] = $table . ':' . $uid;
         // Unknown table name:
-        $lang = $this->getLanguageService();
         if ($table === '_SOFTREF_') {
             $pInfo['preCode'] = $preCode;
-            $pInfo['title'] = '<em>' . htmlspecialchars($lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
+            $pInfo['title'] = '<em>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
         } elseif (!isset($GLOBALS['TCA'][$table])) {
             // Unknown table name:
             $pInfo['preCode'] = $preCode;
@@ -541,21 +546,21 @@ abstract class ImportExport
                     $pInfo['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath($recInf['pid'])) : '<strong>NEW!</strong>';
                     // Mode selector:
                     $optValues = [];
-                    $optValues[] = $recInf ? $lang->getLL('impexpcore_singlereco_update') : $lang->getLL('impexpcore_singlereco_insert');
+                    $optValues[] = $recInf ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
                     if ($recInf) {
-                        $optValues['as_new'] = $lang->getLL('impexpcore_singlereco_importAsNew');
+                        $optValues['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
                     }
                     if ($recInf) {
                         if (!$this->globalIgnorePid) {
-                            $optValues['ignore_pid'] = $lang->getLL('impexpcore_singlereco_ignorePid');
+                            $optValues['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
                         } else {
-                            $optValues['respect_pid'] = $lang->getLL('impexpcore_singlereco_respectPid');
+                            $optValues['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
                         }
                     }
                     if (!$recInf && $this->getBackendUser()->isAdmin()) {
-                        $optValues['force_uid'] = sprintf($lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
+                        $optValues['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
                     }
-                    $optValues['exclude'] = $lang->getLL('impexpcore_singlereco_exclude');
+                    $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
                     if ($table === 'sys_file') {
                         $pInfo['updateMode'] = '';
                     } else {
@@ -607,12 +612,12 @@ abstract class ImportExport
                 $pInfo['title'] = '<em>' . $info['field'] . ', "' . $info['spKey'] . '" </em>: <span title="' . htmlspecialchars($info['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['matchString'], 60)) . '</span>';
                 if ($info['subst']['type']) {
                     if (strlen($info['subst']['title'])) {
-                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
+                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
                     }
                     if (strlen($info['subst']['description'])) {
-                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
+                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
                     }
-                    $pInfo['title'] .= '<br/>' . $preCode_B . ($info['subst']['type'] === 'file' ? htmlspecialchars($lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
+                    $pInfo['title'] .= '<br/>' . $preCode_B . ($info['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
                 }
                 $pInfo['ref'] = 'SOFTREF';
                 $pInfo['type'] = 'softref';
@@ -832,7 +837,7 @@ abstract class ImportExport
     {
         if ($this->mode === 'export') {
             if ($r['type'] === 'record') {
-                return '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][' . $r['ref'] . ']" id="checkExclude' . $r['ref'] . '" value="1" /> <label for="checkExclude' . $r['ref'] . '">' . htmlspecialchars($this->getLanguageService()->getLL('impexpcore_singlereco_exclude')) . '</label>';
+                return '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][' . $r['ref'] . ']" id="checkExclude' . $r['ref'] . '" value="1" /> <label for="checkExclude' . $r['ref'] . '">' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_exclude')) . '</label>';
             }
             return  $r['type'] === 'softref' ? $this->softrefSelector($r['_softRefInfo']) : '';
         }
@@ -865,8 +870,8 @@ abstract class ImportExport
             // Create options:
             $optValues = [];
             $optValues[''] = '';
-            $optValues['editable'] = $this->getLanguageService()->getLL('impexpcore_softrefsel_editable');
-            $optValues['exclude'] = $this->getLanguageService()->getLL('impexpcore_softrefsel_exclude');
+            $optValues['editable'] = $this->lang->getLL('impexpcore_softrefsel_editable');
+            $optValues['exclude'] = $this->lang->getLL('impexpcore_softrefsel_exclude');
             // Get current value:
             $value = $this->softrefCfg[$cfg['subst']['tokenID']]['mode'];
             // Render options selector:
@@ -882,7 +887,7 @@ abstract class ImportExport
                 // Description:
                 if (!strlen($cfg['subst']['description'])) {
                     $descriptionField .= '
-					' . htmlspecialchars($this->getLanguageService()->getLL('impexpcore_printerror_description')) . '<br/>
+					' . htmlspecialchars($this->lang->getLL('impexpcore_printerror_description')) . '<br/>
 					<input type="text" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars($this->softrefCfg[$cfg['subst']['tokenID']]['description']) . '" />';
                 } else {
                     $descriptionField .= '
@@ -1176,7 +1181,7 @@ abstract class ImportExport
                 foreach ($output as $fN => $state) {
                     $tRows[] = '
 						<tr>
-							<td>' . htmlspecialchars($this->getLanguageService()->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label'])) . ' (' . htmlspecialchars((string)$fN) . ')</td>
+							<td>' . htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label'])) . ' (' . htmlspecialchars((string)$fN) . ')</td>
 							<td>' . $state . '</td>
 						</tr>
 					';

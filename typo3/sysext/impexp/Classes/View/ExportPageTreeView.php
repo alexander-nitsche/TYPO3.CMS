@@ -19,6 +19,7 @@ use TYPO3\CMS\Backend\Tree\View\BrowseTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Export;
@@ -30,12 +31,19 @@ use TYPO3\CMS\Impexp\Export;
 class ExportPageTreeView extends BrowseTreeView
 {
     /**
+     * @var LanguageService
+     */
+    private $lang;
+
+    /**
      * Initialization
      */
     public function __construct()
     {
         parent::__construct();
         $this->init();
+
+        $this->lang = $this->getLanguageService();
     }
 
     /**
@@ -49,7 +57,7 @@ class ExportPageTreeView extends BrowseTreeView
      */
     public function wrapTitle($title, $row, $bank = 0)
     {
-        return trim($title) === '' ? '<em>[' . htmlspecialchars($this->getLanguageService()->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.no_title')) . ']</em>' : htmlspecialchars($title);
+        return trim($title) === '' ? '<em>[' . htmlspecialchars($this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.no_title')) . ']</em>' : htmlspecialchars($title);
     }
 
     /**

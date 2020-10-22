@@ -114,6 +114,7 @@ abstract class ImportExportController
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
         $this->lang = $this->getLanguageService();
+        $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
     }
 
     /**

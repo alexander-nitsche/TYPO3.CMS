@@ -77,8 +77,6 @@ class ExportController extends ImportExportController
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
-        $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
-
         $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause);
         if (is_array($this->pageinfo)) {
             $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
@@ -222,16 +220,14 @@ class ExportController extends ImportExportController
 
             // Export by saving:
             if ($inData['save_export']) {
-                $lang = $this->getLanguageService();
-
                 try {
                     $saveFile = $this->export->saveToFile();
                     $saveFileSize = $saveFile->getProperty('size');
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
                         FlashMessage::class,
-                        sprintf($lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize($saveFileSize)),
-                        $lang->getLL('exportdata_savedFile'),
+                        sprintf($this->lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize($saveFileSize)),
+                        $this->lang->getLL('exportdata_savedFile'),
                         FlashMessage::OK
                     );
                 } catch (\Exception $e) {
@@ -239,8 +235,8 @@ class ExportController extends ImportExportController
                     /** @var FlashMessage $flashMessage */
                     $flashMessage = GeneralUtility::makeInstance(
                         FlashMessage::class,
-                        sprintf($lang->getLL('exportdata_badPathS'), $saveFolder->getPublicUrl()),
-                        $lang->getLL('exportdata_problemsSavingFile'),
+                        sprintf($this->lang->getLL('exportdata_badPathS'), $saveFolder->getPublicUrl()),
+                        $this->lang->getLL('exportdata_problemsSavingFile'),
                         FlashMessage::ERROR
                     );
                 }
