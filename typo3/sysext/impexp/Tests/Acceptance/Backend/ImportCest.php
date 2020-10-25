@@ -37,8 +37,10 @@ class ImportCest
     protected $testFilesToDelete = [];
 
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
+    protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
     protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inTabImport = '#import-import';
     protected $inFlashMessages = '.typo3-messages';
 
     /**
@@ -69,6 +71,31 @@ class ImportCest
             $I->dontSeeFileFound($filePath);
         }
         $this->testFilesToDelete = [];
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function importDisplaysTitleOfSelectedPageInModuleHeader(BackendTester $I): void
+    {
+        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
+        $pageInPageTreeTitle = $I->grabTextFrom($this->inPageTree . ' .node.identifier-0_32 .node-name');
+        $pageInPageTreeIcon = $this->inPageTree . ' .node.identifier-0_32 .node-icon-container';
+        $I->click($pageInPageTreeIcon);
+        $I->waitForElementVisible($contextMenuMore, 5);
+        $I->click($contextMenuMore);
+        $I->waitForElementVisible($contextMenuImport, 5);
+        $I->click($contextMenuImport);
+        $I->switchToContentFrame();
+        $I->see($pageInPageTreeTitle, $this->inModuleHeader);
+
+        $buttonPreview = '.btn[value=Preview]';
+        $I->click($buttonPreview, $this->inTabImport);
+        $this->waitForAjaxRequestToFinish($I);
+        $I->see($pageInPageTreeTitle, $this->inModuleHeader);
     }
 
     /**
@@ -235,5 +262,15 @@ class ImportCest
         $sysCategoryRecords = $I->grabMultiple($sysCategoryTable . ' .t3js-entity', 'data-uid');
         $sysCategoryRecordsNew = array_diff($sysCategoryRecords, $sysCategoryRecordsBefore);
         $I->assertCount(1, $sysCategoryRecordsNew);
+    }
+
+    /**
+     * @param BackendTester $I
+     */
+    protected function waitForAjaxRequestToFinish(BackendTester $I): void
+    {
+        $I->waitForJS('return $.active == 0;', 10);
+        // sometimes rendering is still slower that ajax being finished.
+        $I->wait(0.5);
     }
 }

@@ -36,8 +36,10 @@ class ExportCest
     protected $testFilesToDelete = [];
 
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
+    protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
     protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inTabConfiguration = '#export-configuration';
     protected $inFlashMessages = '.typo3-messages';
 
     /**
@@ -68,6 +70,97 @@ class ExportCest
             $I->dontSeeFileFound($filePath);
         }
         $this->testFilesToDelete = [];
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function exportPageAndRecordsDisplaysTitleOfSelectedPageInModuleHeader(BackendTester $I): void
+    {
+        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+        $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
+        $selectedPageTitle = $I->grabTextFrom($this->inPageTree . ' .node.identifier-0_32 .node-name');
+        $selectedPageIcon = $this->inPageTree . ' .node.identifier-0_32 .node-icon-container';
+
+        $I->click($selectedPageIcon);
+        $I->waitForElementVisible($contextMenuMore, 5);
+        $I->click($contextMenuMore);
+        $I->waitForElementVisible($contextMenuExport, 5);
+        $I->click($contextMenuExport);
+        $I->switchToContentFrame();
+        $I->see($selectedPageTitle, $this->inModuleHeader);
+
+        $buttonUpdate = '.btn[value=Update]';
+        $I->click($buttonUpdate, $this->inTabConfiguration);
+        $this->waitForAjaxRequestToFinish($I);
+        $I->see($selectedPageTitle, $this->inModuleHeader);
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function exportTableDisplaysTitleOfRootPageInModuleHeader(BackendTester $I): void
+    {
+        $rootPageTitle = $I->grabTextFrom($this->inPageTree . ' .node.identifier-0_0 .node-name');
+        $tablePageName = $this->inPageTree . ' .node.identifier-0_32 .node-name';
+        $tablePageTitle = $I->grabTextFrom($tablePageName);
+        $tableTitle = 'Form engine elements - t3editor';
+
+        $I->click($tablePageName);
+        $I->switchToContentFrame();
+        $I->click($tableTitle);
+
+        $listModuleHeader = '.module-docheader';
+        $listModuleBtnExport = 'a[title="Export"]';
+
+        $I->waitForElementVisible($listModuleHeader . ' ' . $listModuleBtnExport, 5);
+        $I->click($listModuleBtnExport, $listModuleHeader);
+        $I->waitForElementVisible($this->inTabConfiguration, 5);
+        $I->see($rootPageTitle, $this->inModuleHeader);
+        $I->dontSee($tablePageTitle, $this->inModuleHeader);
+
+        $buttonUpdate = '.btn[value=Update]';
+        $I->click($buttonUpdate, $this->inTabConfiguration);
+        $this->waitForAjaxRequestToFinish($I);
+        $I->see($rootPageTitle, $this->inModuleHeader);
+        $I->dontSee($tablePageTitle, $this->inModuleHeader);
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function exportRecordDisplaysTitleOfRootPageInModuleHeader(BackendTester $I): void
+    {
+        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+        $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
+        $rootPageTitle = $I->grabTextFrom($this->inPageTree . ' .node.identifier-0_0 .node-name');
+        $recordPageName = $this->inPageTree . ' .node.identifier-0_32 .node-name';
+        $recordPageTitle = $I->grabTextFrom($recordPageName);
+        $recordTable = '#recordlist-tx_styleguide_elements_t3editor';
+        $recordIcon = 'tr:first-child a.t3js-contextmenutrigger';
+
+        $I->click($recordPageName);
+        $I->switchToContentFrame();
+        $I->click($recordIcon, $recordTable);
+        $I->waitForElementVisible($contextMenuMore, 5);
+        $I->click($contextMenuMore);
+        $I->waitForElementVisible($contextMenuExport, 5);
+        $I->click($contextMenuExport);
+        $I->waitForElementVisible($this->inTabConfiguration, 5);
+        $I->see($rootPageTitle, $this->inModuleHeader);
+        $I->dontSee($recordPageTitle, $this->inModuleHeader);
+
+        $buttonUpdate = '.btn[value=Update]';
+        $I->click($buttonUpdate, $this->inTabConfiguration);
+        $this->waitForAjaxRequestToFinish($I);
+        $I->see($rootPageTitle, $this->inModuleHeader);
+        $I->dontSee($recordPageTitle, $this->inModuleHeader);
     }
 
     /**
