@@ -27,8 +27,6 @@ use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Page\PageRenderer;
-use TYPO3\CMS\Core\Resource\Exception;
-use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -156,12 +154,12 @@ abstract class ImportExportController
      *
      * @param ServerRequestInterface $request
      * @return ResponseInterface
-     * @throws RouteNotFoundException
      */
     abstract public function mainAction(ServerRequestInterface $request): ResponseInterface;
 
     /**
      * @param ServerRequestInterface $request
+     * @throws RouteNotFoundException
      */
     protected function main(ServerRequestInterface $request): void
     {
@@ -183,6 +181,9 @@ abstract class ImportExportController
             'ImpexpInLineJS',
             'if (top.fsMod) top.fsMod.recentIds["web"] = ' . (int)$this->id . ';'
         );
+
+        $this->standaloneView->assign('moduleUrl', (string)$this->uriBuilder->buildUriFromRoute($this->moduleName));
+        $this->standaloneView->assign('id', $this->id);
     }
 
     /**
