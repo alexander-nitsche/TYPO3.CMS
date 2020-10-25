@@ -188,7 +188,7 @@ abstract class ImportExportController
     /**
      * Create the panel of buttons for submitting the form or otherwise perform operations.
      */
-    protected function getButtons(): void
+    protected function registerDocHeaderButtons(): void
     {
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
         // back button

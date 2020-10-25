@@ -72,8 +72,10 @@ class ImportController extends ImportExportController
     {
         parent::main($request);
 
-        // Input data grabbed:
+        // Input data
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
+
+        // Handle upload
         if ($request->getMethod() === 'POST' && empty($request->getParsedBody())) {
             // This happens if the post request was larger than allowed on the server
             // We set the import action as default and output a user information
@@ -87,7 +89,6 @@ class ImportController extends ImportExportController
             $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
             $defaultFlashMessageQueue->enqueue($flashMessage);
         }
-        $this->standaloneView->assign('inData', $inData);
 
         $backendUser = $this->getBackendUser();
         $isEnabledForNonAdmin = (bool)($backendUser->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
@@ -98,9 +99,11 @@ class ImportController extends ImportExportController
                 1464435459
             );
         }
+
         if (GeneralUtility::_POST('_upload')) {
             $this->checkUpload();
         }
+
         // Finally: If upload went well, set the new file as the import file:
         if (!empty($this->uploadedFiles[0])) {
             // Only allowed extensions....
@@ -109,14 +112,16 @@ class ImportController extends ImportExportController
                 $inData['file'] = $this->uploadedFiles[0]->getCombinedIdentifier();
             }
         }
-        // Call import interface:
+
+        // Perform import
         $this->importData($inData);
+
+        // Prepare view
+        $this->registerDocHeaderButtons();
+        $this->standaloneView->assign('inData', $inData);
         $this->standaloneView->setTemplate('Import.html');
-
-        // Setting up the buttons and markers for docheader
-        $this->getButtons();
-
         $this->moduleTemplate->setContent($this->standaloneView->render());
+
         return new HtmlResponse($this->moduleTemplate->renderContent());
     }
 
@@ -224,9 +229,9 @@ class ImportController extends ImportExportController
         }
     }
 
-    protected function getButtons(): void
+    protected function registerDocHeaderButtons(): void
     {
-        parent::getButtons();
+        parent::registerDocHeaderButtons();
 
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
         if ($this->id && is_array($this->pageInfo) || $this->getBackendUser()->isAdmin() && !$this->id) {

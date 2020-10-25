@@ -76,29 +76,24 @@ class ExportController extends ImportExportController
     {
         parent::main($request);
 
-        // Input data grabbed:
+        // Input data
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
-        $this->standaloneView->assign('inData', $inData);
 
-        // Call export interface
+        // Perform export
         $this->processPresets($inData);
         $this->exportData($inData);
 
         // Prepare view
+        $this->registerDocHeaderButtons();
         $this->makeConfigurationForm($inData);
         $this->makeSaveForm($inData);
         $this->makeAdvancedOptionsForm($inData);
+        $this->standaloneView->assign('inData', $inData);
         $this->standaloneView->assign('errors', $this->export->getErrorLog());
-        $this->standaloneView->assign(
-            'contentOverview',
-            $this->export->displayContentOverview()
-        );
+        $this->standaloneView->assign('contentOverview', $this->export->displayContentOverview());
         $this->standaloneView->setTemplate('Export.html');
-
-        // Setting up the buttons and markers for docheader
-        $this->getButtons();
-
         $this->moduleTemplate->setContent($this->standaloneView->render());
+
         return new HtmlResponse($this->moduleTemplate->renderContent());
     }
 
