@@ -175,6 +175,14 @@ abstract class ImportExportController
         if ($this->pageinfo !== []) {
             $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
         }
+
+        // Setting up the context sensitive menu:
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Backend/ContextMenu');
+        $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Impexp/ImportExport');
+        $this->moduleTemplate->addJavaScriptCode(
+            'ImpexpInLineJS',
+            'if (top.fsMod) top.fsMod.recentIds["web"] = ' . (int)$this->id . ';'
+        );
     }
 
     /**
