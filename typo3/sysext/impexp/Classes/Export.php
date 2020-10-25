@@ -197,6 +197,15 @@ class Export extends ImportExport
      */
     protected $checkPidCache = [];
 
+    /**
+     * The constructor
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+    }
+
     /**************************
      * Initialize
      *************************/
@@ -208,7 +217,6 @@ class Export extends ImportExport
     {
         parent::init();
         $this->mode = 'export';
-        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
     }
 
     /**************************
