@@ -19,8 +19,6 @@ namespace TYPO3\CMS\Impexp\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Http\HtmlResponse;
@@ -68,7 +66,6 @@ class ImportController extends ImportExportController
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception
-     * @throws RouteNotFoundException
      * @throws \TYPO3\CMS\Core\Resource\Exception
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
@@ -90,9 +87,6 @@ class ImportController extends ImportExportController
             $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
             $defaultFlashMessageQueue->enqueue($flashMessage);
         }
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $this->standaloneView->assign('moduleUrl', (string)$uriBuilder->buildUriFromRoute($this->moduleName));
-        $this->standaloneView->assign('id', $this->id);
         $this->standaloneView->assign('inData', $inData);
 
         $backendUser = $this->getBackendUser();

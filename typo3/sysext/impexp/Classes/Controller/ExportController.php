@@ -19,8 +19,6 @@ namespace TYPO3\CMS\Impexp\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
-use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Http\HtmlResponse;
@@ -73,7 +71,6 @@ class ExportController extends ImportExportController
      * @return ResponseInterface
      * @throws Exception
      * @throws ExistingTargetFileNameException
-     * @throws RouteNotFoundException
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
@@ -81,10 +78,6 @@ class ExportController extends ImportExportController
 
         // Input data grabbed:
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
-
-        $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-        $this->standaloneView->assign('moduleUrl', (string)$uriBuilder->buildUriFromRoute($this->moduleName));
-        $this->standaloneView->assign('id', $this->id);
         $this->standaloneView->assign('inData', $inData);
 
         // Call export interface

@@ -18,14 +18,13 @@ namespace TYPO3\CMS\Impexp\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
+use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Resource\Exception;
-use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -84,6 +83,11 @@ abstract class ImportExportController
     protected $moduleTemplate;
 
     /**
+     * @var UriBuilder
+     */
+    protected $uriBuilder;
+
+    /**
      * @var StandaloneView
      */
     protected $standaloneView;
@@ -102,6 +106,7 @@ abstract class ImportExportController
     {
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->moduleTemplate = GeneralUtility::makeInstance(ModuleTemplate::class);
+        $this->uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
 
         $templatePath = ExtensionManagementUtility::extPath('impexp') . 'Resources/Private/';
 
@@ -150,12 +155,12 @@ abstract class ImportExportController
      *
      * @param ServerRequestInterface $request
      * @return ResponseInterface
-     * @throws RouteNotFoundException
      */
     abstract public function mainAction(ServerRequestInterface $request): ResponseInterface;
 
     /**
      * @param ServerRequestInterface $request
+     * @throws RouteNotFoundException
      */
     protected function main(ServerRequestInterface $request): void
     {
@@ -175,6 +180,9 @@ abstract class ImportExportController
             'ImpexpInLineJS',
             'if (top.fsMod) top.fsMod.recentIds["web"] = ' . $this->id . ';'
         );
+
+        $this->standaloneView->assign('moduleUrl', (string)$this->uriBuilder->buildUriFromRoute($this->moduleName));
+        $this->standaloneView->assign('id', $this->id);
     }
 
     /**
