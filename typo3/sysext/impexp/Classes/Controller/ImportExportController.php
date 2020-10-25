@@ -21,6 +21,7 @@ use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
@@ -52,7 +53,7 @@ abstract class ImportExportController
      *
      * @var array
      */
-    protected $pageinfo;
+    protected $pageInfo;
 
     /**
      * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
@@ -116,7 +117,6 @@ abstract class ImportExportController
         $this->standaloneView->setPartialRootPaths([$templatePath . 'Partials/']);
         $this->standaloneView->getRequest()->setControllerExtensionName('impexp');
 
-        $this->id = (int)GeneralUtility::_GP('id');
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
         $this->returnUrl = GeneralUtility::sanitizeLocalUrl(GeneralUtility::_GP('returnUrl'));
         $this->lang = $this->getLanguageService();
@@ -159,6 +159,23 @@ abstract class ImportExportController
      * @throws RouteNotFoundException
      */
     abstract public function mainAction(ServerRequestInterface $request): ResponseInterface;
+
+    /**
+     * @param ServerRequestInterface $request
+     */
+    protected function main(ServerRequestInterface $request): void
+    {
+        $queryParams = $request->getQueryParams();
+        $parsedBody = $request->getParsedBody();
+
+        $this->moduleTemplate = $this->moduleTemplateFactory->create($request);
+
+        $this->id = (int)($parsedBody['id'] ?? $queryParams['id'] ?? 0);
+        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause) ?: [];
+        if ($this->pageinfo !== []) {
+            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
+        }
+    }
 
     /**
      * Create the panel of buttons for submitting the form or otherwise perform operations.

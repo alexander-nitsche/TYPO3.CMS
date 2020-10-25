@@ -84,12 +84,8 @@ class ExportController extends ImportExportController
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
-        $this->moduleTemplate = $this->moduleTemplateFactory->create($request);
+        parent::main($request);
 
-        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause) ?: [];
-        if ($this->pageinfo !== []) {
-            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
-        }
         // Setting up the context sensitive menu:
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Backend/ContextMenu');
         $this->pageRenderer->loadRequireJsModule('TYPO3/CMS/Impexp/ImportExport');
