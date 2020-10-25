@@ -81,10 +81,7 @@ class ExportController extends ImportExportController
 
         // Input data grabbed:
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
-        if (!array_key_exists('excludeDisabled', $inData)) {
-            // flag doesn't exist initially; state is on by default
-            $inData['excludeDisabled'] = 1;
-        }
+
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
         $this->standaloneView->assign('moduleUrl', (string)$uriBuilder->buildUriFromRoute($this->moduleName));
         $this->standaloneView->assign('id', $this->id);
@@ -119,6 +116,10 @@ class ExportController extends ImportExportController
      */
     protected function processPresets(array &$inData): void
     {
+        // flag doesn't exist initially; state is on by default
+        if (!array_key_exists('excludeDisabled', $inData)) {
+            $inData['excludeDisabled'] = 1;
+        }
         // Set exclude fields in export object:
         if (!is_array($inData['exclude'])) {
             $inData['exclude'] = [];
