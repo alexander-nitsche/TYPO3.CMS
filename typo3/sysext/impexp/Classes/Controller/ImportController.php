@@ -73,10 +73,8 @@ class ImportController extends ImportExportController
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
-        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause);
-        if (is_array($this->pageinfo)) {
-            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
-        }
+        parent::main($request);
+
         // Setting up the context sensitive menu:
         $this->moduleTemplate->getPageRenderer()->loadRequireJsModule('TYPO3/CMS/Backend/ContextMenu');
         $this->moduleTemplate->getPageRenderer()->loadRequireJsModule('TYPO3/CMS/Impexp/ImportExport');
@@ -146,11 +144,11 @@ class ImportController extends ImportExportController
      */
     protected function importData(array $inData): void
     {
-        $access = is_array($this->pageinfo);
+        $access = is_array($this->pageInfo);
         $beUser = $this->getBackendUser();
         if ($this->id && $access || $beUser->isAdmin() && !$this->id) {
             if ($beUser->isAdmin() && !$this->id) {
-                $this->pageinfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
+                $this->pageInfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
             }
             if ($inData['new_import']) {
                 unset($inData['import_mode']);
@@ -218,7 +216,7 @@ class ImportController extends ImportExportController
                                 BackendUtility::setUpdateSignal('updatePageTree');
                             }
                         }
-                        $this->import->setDisplayImportPidRecord($this->pageinfo);
+                        $this->import->setDisplayImportPidRecord($this->pageInfo);
                         $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                     }
                     // Compile messages which are inhibiting a proper import and add them to output.
@@ -245,13 +243,13 @@ class ImportController extends ImportExportController
         parent::getButtons();
 
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        if ($this->id && is_array($this->pageinfo) || $this->getBackendUser()->isAdmin() && !$this->id) {
-            if (is_array($this->pageinfo) && $this->pageinfo['uid']) {
+        if ($this->id && is_array($this->pageInfo) || $this->getBackendUser()->isAdmin() && !$this->id) {
+            if (is_array($this->pageInfo) && $this->pageInfo['uid']) {
                 // View
                 $onClick = BackendUtility::viewOnClick(
-                    $this->pageinfo['uid'],
+                    $this->pageInfo['uid'],
                     '',
-                    BackendUtility::BEgetRootLine($this->pageinfo['uid'])
+                    BackendUtility::BEgetRootLine($this->pageInfo['uid'])
                 );
                 $viewButton = $buttonBar->makeLinkButton()
                     ->setTitle($this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.showPage'))

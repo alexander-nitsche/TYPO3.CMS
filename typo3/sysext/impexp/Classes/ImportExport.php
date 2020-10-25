@@ -43,7 +43,7 @@ use TYPO3\CMS\Core\Utility\PathUtility;
  * $this->export->relOnlyTables[]="tt_news";	// exclusively includes. See comment in the class
  *
  * Adding records:
- * $this->export->exportAddRecord("pages", $this->pageinfo);
+ * $this->export->exportAddRecord("pages", $this->pageInfo);
  * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
  * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
  * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
