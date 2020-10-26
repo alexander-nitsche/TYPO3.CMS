@@ -43,6 +43,15 @@ class ImportCest
     protected $inTabImport = '#import-import';
     protected $inFlashMessages = '.typo3-messages';
 
+    protected $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
+    protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
+    protected $tabUpload = 'a[href="#import-upload"]';
+    protected $inputUploadFile = 'input[type=file]';
+    protected $buttonUploadFile = '_upload';
+    protected $buttonPreview = '.btn[value=Preview]';
+    protected $buttonImport = 'button[name="tx_impexp[import_file]"]';
+    protected $buttonNewImport = 'input[name="tx_impexp[new_import]"]';
+
     /**
      * @param BackendTester $I
      * @param PageTree $pageTree
@@ -80,22 +89,47 @@ class ImportCest
      */
     public function importDisplaysTitleOfSelectedPageInModuleHeader(BackendTester $I): void
     {
-        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
-        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
         $pageInPageTreeTitle = $I->grabTextFrom($this->inPageTree . ' .node.identifier-0_32 .node-name');
         $pageInPageTreeIcon = $this->inPageTree . ' .node.identifier-0_32 .node-icon-container';
         $I->click($pageInPageTreeIcon);
-        $I->waitForElementVisible($contextMenuMore, 5);
-        $I->click($contextMenuMore);
-        $I->waitForElementVisible($contextMenuImport, 5);
-        $I->click($contextMenuImport);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
         $I->switchToContentFrame();
         $I->see($pageInPageTreeTitle, $this->inModuleHeader);
 
-        $buttonPreview = '.btn[value=Preview]';
-        $I->click($buttonPreview, $this->inTabImport);
+        $I->click($this->buttonPreview, $this->inTabImport);
         $this->waitForAjaxRequestToFinish($I);
         $I->see($pageInPageTreeTitle, $this->inModuleHeader);
+    }
+
+    public function uploadFileReplacesExistingFileByDefault(BackendTester $I): void
+    {
+        $page1Icon = '.node.identifier-0_1 .node-icon-container';
+
+        $I->click($page1Icon);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
+
+        $fixtureFilePath = 'Acceptance/Fixtures/404_page_and_records.xml';
+
+        $I->switchToContentFrame();
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
     }
 
     /**
@@ -109,27 +143,20 @@ class ImportCest
         $I->wantToTest('importing a page with records.');
 
         $page1Icon = '.node.identifier-0_1 .node-icon-container';
-        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
-        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
 
         $I->click($page1Icon);
-        $I->waitForElementVisible($contextMenuMore, 5);
-        $I->click($contextMenuMore);
-        $I->waitForElementVisible($contextMenuImport, 5);
-        $I->click($contextMenuImport);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
 
         $fixtureFilePath = 'Acceptance/Fixtures/404_page_and_records.xml';
-        $tabUpload = 'a[href="#import-upload"]';
-        $inputUploadFile = 'input[type=file]';
-        $buttonUploadFile = '_upload';
-        $buttonImport = 'button[name="tx_impexp[import_file]"]';
-        $buttonNewImport = 'input[name="tx_impexp[new_import]"]';
 
         $I->switchToContentFrame();
-        $I->click($tabUpload, $this->inModuleTabs);
-        $I->waitForElementVisible($inputUploadFile, 5);
-        $I->attachFile($inputUploadFile, $fixtureFilePath);
-        $I->click($buttonUploadFile, $this->inModuleBody);
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -139,13 +166,13 @@ class ImportCest
         $I->assertFileExists($loadFilePath);
         $this->testFilesToDelete[] = $loadFilePath;
 
-        $I->click($buttonImport);
+        $I->click($this->buttonImport);
         $modalDialog->clickButtonInDialog('button[name="ok"]');
 
         $I->switchToMainFrame();
         $I->see('404', $this->inPageTree . ' .node-name');
         $I->switchToContentFrame();
-        $I->seeElement($buttonNewImport);
+        $I->seeElement($this->buttonNewImport);
     }
 
     /**
@@ -166,26 +193,20 @@ class ImportCest
         $I->switchToMainFrame();
 
         $page1Icon = '.node.identifier-0_1 .node-icon-container';
-        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
-        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
 
         $I->click($page1Icon);
-        $I->waitForElementVisible($contextMenuMore, 5);
-        $I->click($contextMenuMore);
-        $I->waitForElementVisible($contextMenuImport, 5);
-        $I->click($contextMenuImport);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
 
         $fixtureFilePath = 'Acceptance/Fixtures/sys_category_table.xml';
-        $tabUpload = 'a[href="#import-upload"]';
-        $inputUploadFile = 'input[type=file]';
-        $buttonUploadFile = '_upload';
-        $buttonImport = 'button[name="tx_impexp[import_file]"]';
 
         $I->switchToContentFrame();
-        $I->click($tabUpload, $this->inModuleTabs);
-        $I->waitForElementVisible($inputUploadFile, 5);
-        $I->attachFile($inputUploadFile, $fixtureFilePath);
-        $I->click($buttonUploadFile, $this->inModuleBody);
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -195,7 +216,7 @@ class ImportCest
         $I->assertFileExists($loadFilePath);
         $this->testFilesToDelete[] = $loadFilePath;
 
-        $I->click($buttonImport);
+        $I->click($this->buttonImport);
         $modalDialog->clickButtonInDialog('button[name="ok"]');
 
         $I->switchToMainFrame();
@@ -224,26 +245,20 @@ class ImportCest
         $I->switchToMainFrame();
 
         $page1Icon = '.node.identifier-0_1 .node-icon-container';
-        $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
-        $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
 
         $I->click($page1Icon);
-        $I->waitForElementVisible($contextMenuMore, 5);
-        $I->click($contextMenuMore);
-        $I->waitForElementVisible($contextMenuImport, 5);
-        $I->click($contextMenuImport);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
 
         $fixtureFilePath = 'Acceptance/Fixtures/sys_category_record.xml';
-        $tabUpload = 'a[href="#import-upload"]';
-        $inputUploadFile = 'input[type=file]';
-        $buttonUploadFile = '_upload';
-        $buttonImport = 'button[name="tx_impexp[import_file]"]';
 
         $I->switchToContentFrame();
-        $I->click($tabUpload, $this->inModuleTabs);
-        $I->waitForElementVisible($inputUploadFile, 5);
-        $I->attachFile($inputUploadFile, $fixtureFilePath);
-        $I->click($buttonUploadFile, $this->inModuleBody);
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -253,7 +268,7 @@ class ImportCest
         $I->assertFileExists($loadFilePath);
         $this->testFilesToDelete[] = $loadFilePath;
 
-        $I->click($buttonImport);
+        $I->click($this->buttonImport);
         $modalDialog->clickButtonInDialog('button[name="ok"]');
 
         $I->switchToMainFrame();
