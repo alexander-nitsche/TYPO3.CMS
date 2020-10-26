@@ -28,7 +28,6 @@ use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Resource\Exception\ExistingTargetFileNameException;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
@@ -207,27 +206,18 @@ class ExportController extends ImportExportController
                 try {
                     $saveFile = $this->export->saveToFile();
                     $saveFileSize = $saveFile->getProperty('size');
-                    /** @var FlashMessage $flashMessage */
-                    $flashMessage = GeneralUtility::makeInstance(
-                        FlashMessage::class,
+                    $this->moduleTemplate->addFlashMessage(
                         sprintf($this->lang->getLL('exportdata_savedInSBytes'), $saveFile->getPublicUrl(), GeneralUtility::formatSize($saveFileSize)),
-                        $this->lang->getLL('exportdata_savedFile'),
-                        FlashMessage::OK
+                        $this->lang->getLL('exportdata_savedFile')
                     );
                 } catch (\Exception $e) {
                     $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
-                    /** @var FlashMessage $flashMessage */
-                    $flashMessage = GeneralUtility::makeInstance(
-                        FlashMessage::class,
+                    $this->moduleTemplate->addFlashMessage(
                         sprintf($this->lang->getLL('exportdata_badPathS'), $saveFolder->getPublicUrl()),
                         $this->lang->getLL('exportdata_problemsSavingFile'),
                         FlashMessage::ERROR
                     );
                 }
-
-                $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
-                $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
-                $defaultFlashMessageQueue->enqueue($flashMessage);
             }
         }
     }
