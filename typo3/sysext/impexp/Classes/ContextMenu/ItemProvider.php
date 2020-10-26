@@ -117,10 +117,12 @@ class ItemProvider extends AbstractProvider
 
     /**
      * Check if import functionality is available for current user
+     *
+     * @return bool
      */
     protected function isImportEnabled(): bool
     {
         return $this->backendUser->isAdmin()
-            || !$this->backendUser->isAdmin() && (bool)($this->backendUser->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
+            || (bool)($this->backendUser->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
     }
 }

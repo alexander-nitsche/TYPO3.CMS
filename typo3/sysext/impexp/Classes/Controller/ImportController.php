@@ -67,9 +67,18 @@ class ImportController extends ImportExportController
      * @return ResponseInterface
      * @throws Exception
      * @throws \TYPO3\CMS\Core\Resource\Exception
+     * @throws \RuntimeException
      */
     public function mainAction(ServerRequestInterface $request): ResponseInterface
     {
+        if ($this->isImportEnabled() === false) {
+            throw new \RuntimeException(
+                'Import module is disabled for non admin users and '
+                . 'userTsConfig options.impexp.enableImportForNonAdminUser is not enabled.',
+                1464435459
+            );
+        }
+
         parent::main($request);
 
         // Input data
@@ -88,16 +97,6 @@ class ImportController extends ImportExportController
             $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
             $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
             $defaultFlashMessageQueue->enqueue($flashMessage);
-        }
-
-        $backendUser = $this->getBackendUser();
-        $isEnabledForNonAdmin = (bool)($backendUser->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
-        if (!$backendUser->isAdmin() && !$isEnabledForNonAdmin) {
-            throw new \RuntimeException(
-                'Import module is disabled for non admin users and '
-                . 'userTsConfig options.impexp.enableImportForNonAdminUser is not enabled.',
-                1464435459
-            );
         }
 
         if (GeneralUtility::_POST('_upload')) {
@@ -123,6 +122,17 @@ class ImportController extends ImportExportController
         $this->moduleTemplate->setContent($this->standaloneView->render());
 
         return new HtmlResponse($this->moduleTemplate->renderContent());
+    }
+
+    /**
+     * Check if import functionality is available for current user
+     *
+     * @return bool
+     */
+    protected function isImportEnabled(): bool
+    {
+        return $this->getBackendUser()->isAdmin()
+            || (bool)($this->getBackendUser()->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
     }
 
     /**
