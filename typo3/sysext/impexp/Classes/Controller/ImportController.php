@@ -85,32 +85,7 @@ class ImportController extends ImportExportController
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
 
         // Handle upload
-        if ($request->getMethod() === 'POST' && empty($request->getParsedBody())) {
-            // This happens if the post request was larger than allowed on the server
-            // We set the import action as default and output a user information
-            $flashMessage = GeneralUtility::makeInstance(
-                FlashMessage::class,
-                $this->lang->getLL('importdata_upload_nodata'),
-                $this->lang->getLL('importdata_upload_error'),
-                FlashMessage::ERROR
-            );
-            $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
-            $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
-            $defaultFlashMessageQueue->enqueue($flashMessage);
-        }
-
-        if (GeneralUtility::_POST('_upload')) {
-            $this->checkUpload();
-        }
-
-        // Finally: If upload went well, set the new file as the import file:
-        if (!empty($this->uploadedFiles[0])) {
-            // Only allowed extensions....
-            $extension = $this->uploadedFiles[0]->getExtension();
-            if ($extension === 't3d' || $extension === 'xml') {
-                $inData['file'] = $this->uploadedFiles[0]->getCombinedIdentifier();
-            }
-        }
+        $this->handleUpload($request, $inData);
 
         // Perform import
         $this->importData($inData);
@@ -133,6 +108,57 @@ class ImportController extends ImportExportController
     {
         return $this->getBackendUser()->isAdmin()
             || (bool)($this->getBackendUser()->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
+    }
+
+    /**
+     * Handle upload of an export file
+     *
+     * @param ServerRequestInterface $request
+     * @param array $inData
+     * @throws Exception
+     * @throws \TYPO3\CMS\Core\Resource\Exception
+     */
+    protected function handleUpload(ServerRequestInterface $request, array &$inData): void
+    {
+        if ($request->getMethod() !== 'POST') {
+            return;
+        }
+
+        $parsedBody = $request->getParsedBody() ?? [];
+
+        if (empty($parsedBody)) {
+            // This happens if the post request was larger than allowed on the server.
+            $this->moduleTemplate->addFlashMessage(
+                $this->lang->getLL('importdata_upload_nodata'),
+                $this->lang->getLL('importdata_upload_error'),
+                FlashMessage::ERROR
+            );
+            return;
+        }
+
+        if (isset($parsedBody['_upload'])) {
+            $file = $parsedBody['file'];
+            $conflictMode = empty($parsedBody['overwriteExistingFiles']) ? DuplicationBehavior::__default : DuplicationBehavior::REPLACE;
+            $this->fileProcessor = GeneralUtility::makeInstance(ExtendedFileUtility::class);
+            $this->fileProcessor->setActionPermissions();
+            $this->fileProcessor->setExistingFilesConflictMode(DuplicationBehavior::cast($conflictMode));
+            $this->fileProcessor->start($file);
+            $result = $this->fileProcessor->processData();
+            if (!empty($result['upload'])) {
+                foreach ($result['upload'] as $uploadedFiles) {
+                    $this->uploadedFiles += $uploadedFiles;
+                }
+            }
+        }
+
+        // Finally: If upload went well, set the new file as the import file.
+        if (!empty($this->uploadedFiles[0])) {
+            // Only allowed extensions....
+            $extension = $this->uploadedFiles[0]->getExtension();
+            if ($extension === 't3d' || $extension === 'xml') {
+                $inData['file'] = $this->uploadedFiles[0]->getCombinedIdentifier();
+            }
+        }
     }
 
     /**
@@ -258,28 +284,6 @@ class ImportController extends ImportExportController
                     ->setIcon($this->iconFactory->getIcon('actions-view-page', Icon::SIZE_SMALL))
                     ->setOnClick($onClick);
                 $buttonBar->addButton($viewButton);
-            }
-        }
-    }
-
-    /**
-     * Check if a file has been uploaded
-     *
-     * @throws \TYPO3\CMS\Core\Resource\Exception
-     */
-    protected function checkUpload(): void
-    {
-        $file = GeneralUtility::_GP('file');
-        // Initializing:
-        $this->fileProcessor = GeneralUtility::makeInstance(ExtendedFileUtility::class);
-        $this->fileProcessor->setActionPermissions();
-        $conflictMode = empty(GeneralUtility::_GP('overwriteExistingFiles')) ? DuplicationBehavior::__default : DuplicationBehavior::REPLACE;
-        $this->fileProcessor->setExistingFilesConflictMode(DuplicationBehavior::cast($conflictMode));
-        $this->fileProcessor->start($file);
-        $result = $this->fileProcessor->processData();
-        if (!empty($result['upload'])) {
-            foreach ($result['upload'] as $uploadedFiles) {
-                $this->uploadedFiles += $uploadedFiles;
             }
         }
     }
