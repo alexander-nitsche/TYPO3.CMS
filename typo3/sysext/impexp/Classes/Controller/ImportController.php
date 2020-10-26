@@ -170,7 +170,7 @@ class ImportController extends ImportExportController
      * @throws \InvalidArgumentException
      * @throws \RuntimeException
      */
-    protected function importData(array $inData): void
+    protected function importData(array &$inData): void
     {
         $access = $this->pageInfo !== [];
         $beUser = $this->getBackendUser();
@@ -206,7 +206,6 @@ class ImportController extends ImportExportController
             }
 
             $this->standaloneView->assign('import', $this->import);
-            $this->standaloneView->assign('inData', $inData);
             $this->standaloneView->assign('fileSelectOptions', $selectOptions);
 
             if ($path) {
