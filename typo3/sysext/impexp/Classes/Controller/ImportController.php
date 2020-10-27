@@ -167,9 +167,8 @@ class ImportController extends ImportExportController
      */
     protected function importData(array &$inData): void
     {
-        $access = is_array($this->pageInfo);
         $beUser = $this->getBackendUser();
-        if ($this->id && $access || $beUser->isAdmin() && !$this->id) {
+        if ($this->hasPageAccess()) {
             if ($beUser->isAdmin() && !$this->id) {
                 $this->pageInfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
             }
@@ -257,8 +256,8 @@ class ImportController extends ImportExportController
         parent::registerDocHeaderButtons();
 
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        if ($this->id && is_array($this->pageInfo) || $this->getBackendUser()->isAdmin() && !$this->id) {
-            if (is_array($this->pageInfo) && $this->pageInfo['uid']) {
+        if ($this->hasPageAccess()) {
+            if ($this->pageInfo['uid']) {
                 // View
                 $onClick = BackendUtility::viewOnClick(
                     $this->pageInfo['uid'],
