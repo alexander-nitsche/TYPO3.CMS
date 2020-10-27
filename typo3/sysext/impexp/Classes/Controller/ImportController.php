@@ -58,11 +58,6 @@ class ImportController extends ImportExportController
     protected $uploadedFiles = [];
 
     /**
-     * @var ExtendedFileUtility
-     */
-    protected $fileProcessor;
-
-    /**
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception
@@ -139,16 +134,18 @@ class ImportController extends ImportExportController
         if (isset($parsedBody['_upload'])) {
             $file = $parsedBody['file'];
             $conflictMode = empty($parsedBody['overwriteExistingFiles']) ? DuplicationBehavior::__default : DuplicationBehavior::REPLACE;
-            $this->fileProcessor = GeneralUtility::makeInstance(ExtendedFileUtility::class);
-            $this->fileProcessor->setActionPermissions();
-            $this->fileProcessor->setExistingFilesConflictMode(DuplicationBehavior::cast($conflictMode));
-            $this->fileProcessor->start($file);
-            $result = $this->fileProcessor->processData();
+            $fileProcessor = GeneralUtility::makeInstance(ExtendedFileUtility::class);
+            $fileProcessor->setActionPermissions();
+            $fileProcessor->setExistingFilesConflictMode(DuplicationBehavior::cast($conflictMode));
+            $fileProcessor->start($file);
+            $result = $fileProcessor->processData();
             if (!empty($result['upload'])) {
                 foreach ($result['upload'] as $uploadedFiles) {
                     $this->uploadedFiles += $uploadedFiles;
                 }
             }
+            $this->standaloneView->assign('submitted', GeneralUtility::_POST('_upload'));
+            $this->standaloneView->assign('noFileUploaded', $fileProcessor->internalUploadMap[1]);
         }
 
         // Finally: If upload went well, set the new file as the import file.
@@ -158,6 +155,7 @@ class ImportController extends ImportExportController
             if ($extension === 't3d' || $extension === 'xml') {
                 $inData['file'] = $this->uploadedFiles[0]->getCombinedIdentifier();
             }
+            $this->standaloneView->assign('uploadedFile', $this->uploadedFiles[0]->getName());
         }
     }
 
@@ -214,18 +212,10 @@ class ImportController extends ImportExportController
             }
             $this->standaloneView->assign('isAdmin', $beUser->isAdmin());
 
-            // Upload file:
             $tempFolder = $this->import->getOrCreateDefaultImportExportFolder();
             if ($tempFolder) {
                 $this->standaloneView->assign('tempFolder', $tempFolder->getCombinedIdentifier());
                 $this->standaloneView->assign('hasTempUploadFolder', true);
-                if (GeneralUtility::_POST('_upload')) {
-                    $this->standaloneView->assign('submitted', GeneralUtility::_POST('_upload'));
-                    $this->standaloneView->assign('noFileUploaded', $this->fileProcessor->internalUploadMap[1]);
-                    if ($this->uploadedFiles[0]) {
-                        $this->standaloneView->assign('uploadedFile', $this->uploadedFiles[0]->getName());
-                    }
-                }
             }
 
             // Perform import or preview depending:
