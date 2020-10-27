@@ -47,6 +47,7 @@ class ImportCest
     protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
     protected $tabUpload = 'a[href="#import-upload"]';
     protected $inputUploadFile = 'input[type=file]';
+    protected $checkboxOverwriteFile = 'input#checkOverwriteExistingFiles';
     protected $buttonUploadFile = '_upload';
     protected $buttonPreview = '.btn[value=Preview]';
     protected $buttonImport = 'button[name="tx_impexp[import_file]"]';
@@ -104,7 +105,7 @@ class ImportCest
         $I->see($pageInPageTreeTitle, $this->inModuleHeader);
     }
 
-    public function uploadFileReplacesExistingFileByDefault(BackendTester $I): void
+    public function uploadFileConsidersOverwritingFlag(BackendTester $I): void
     {
         $page1Icon = '.node.identifier-0_1 .node-icon-container';
 
@@ -122,14 +123,27 @@ class ImportCest
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
         $I->click($this->buttonUploadFile, $this->inModuleBody);
         $I->wait(1);
-        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
-
         $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSeeElement($this->inModuleBody . ' .callout.callout-success');
+
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->checkOption($this->checkboxOverwriteFile);
         $I->click($this->buttonUploadFile, $this->inModuleBody);
         $I->wait(1);
+        $I->click($this->tabUpload, $this->inModuleTabs);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSeeElement($this->inModuleBody . ' .callout.callout-success');
+
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->uncheckOption($this->checkboxOverwriteFile);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->canSeeElement($this->inModuleBody . ' .callout.callout-danger');
     }
 
     /**
