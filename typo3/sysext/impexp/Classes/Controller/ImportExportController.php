@@ -61,6 +61,11 @@ abstract class ImportExportController
     protected $permsClause;
 
     /**
+     * @var bool
+     */
+    protected $pageAccess = false;
+
+    /**
      * @var LanguageService
      */
     protected $lang;
@@ -169,9 +174,10 @@ abstract class ImportExportController
         $this->moduleTemplate = $this->moduleTemplateFactory->create($request);
 
         $this->id = (int)($parsedBody['id'] ?? $queryParams['id'] ?? 0);
-        $this->pageinfo = BackendUtility::readPageAccess($this->id, $this->permsClause) ?: [];
-        if ($this->pageinfo !== []) {
-            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageinfo);
+        $this->pageInfo = BackendUtility::readPageAccess($this->id, $this->permsClause) ?: [];
+        $this->pageAccess = $this->pageInfo !== [];
+        if ($this->pageInfo !== []) {
+            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageInfo);
         }
 
         // Setting up the context sensitive menu:
@@ -216,5 +222,13 @@ abstract class ImportExportController
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPageAccess(): bool
+    {
+        return $this->pageAccess;
     }
 }

@@ -168,9 +168,8 @@ class ImportController extends ImportExportController
      */
     protected function importData(array &$inData): void
     {
-        $access = $this->pageInfo !== [];
         $beUser = $this->getBackendUser();
-        if ($this->id && $access || $beUser->isAdmin() && !$this->id) {
+        if ($this->hasPageAccess()) {
             if ($beUser->isAdmin() && !$this->id) {
                 $this->pageInfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
             }
@@ -258,7 +257,7 @@ class ImportController extends ImportExportController
         parent::registerDocHeaderButtons();
 
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        if ($this->id && $this->pageInfo['uid'] ?? false || $this->getBackendUser()->isAdmin() && !$this->id) {
+        if ($this->hasPageAccess()) {
             // View
             $previewDataAttributes = PreviewUriBuilder::create((int)$this->pageInfo['uid'])
                 ->withRootLine(BackendUtility::BEgetRootLine($this->pageInfo['uid']))
