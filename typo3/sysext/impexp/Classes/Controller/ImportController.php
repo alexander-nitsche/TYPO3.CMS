@@ -40,6 +40,10 @@ use TYPO3\CMS\Impexp\Import;
  */
 class ImportController extends ImportExportController
 {
+    const NO_UPLOAD = 0;
+    const UPLOAD_DONE = 1;
+    const UPLOAD_FAILED = 2;
+
     /**
      * The name of the module
      *
@@ -51,11 +55,6 @@ class ImportController extends ImportExportController
      * @var Import
      */
     protected $import;
-
-    /**
-     * @var array|File[]
-     */
-    protected $uploadedFiles = [];
 
     /**
      * @param ServerRequestInterface $request
@@ -131,32 +130,31 @@ class ImportController extends ImportExportController
             return;
         }
 
+        $uploadStatus = self::NO_UPLOAD;
+
         if (isset($parsedBody['_upload'])) {
             $file = $parsedBody['file'];
-            $conflictMode = empty($parsedBody['overwriteExistingFiles']) ? DuplicationBehavior::__default : DuplicationBehavior::REPLACE;
+            $conflictMode = empty($parsedBody['overwriteExistingFiles']) ? DuplicationBehavior::CANCEL : DuplicationBehavior::REPLACE;
             $fileProcessor = GeneralUtility::makeInstance(ExtendedFileUtility::class);
             $fileProcessor->setActionPermissions();
             $fileProcessor->setExistingFilesConflictMode(DuplicationBehavior::cast($conflictMode));
             $fileProcessor->start($file);
             $result = $fileProcessor->processData();
-            if (!empty($result['upload'])) {
-                foreach ($result['upload'] as $uploadedFiles) {
-                    $this->uploadedFiles += $uploadedFiles;
+            // Finally: If upload went well, set the new file as the import file.
+            if (isset($result['upload'][0][0])) {
+                /** @var File $uploadedFile */
+                $uploadedFile = $result['upload'][0][0];
+                if (in_array($uploadedFile->getExtension(), ['t3d', 'xml'])) {
+                    $inData['file'] = $uploadedFile->getCombinedIdentifier();
                 }
+                $this->standaloneView->assign('uploadedFile', $uploadedFile->getName());
+                $uploadStatus = self::UPLOAD_DONE;
+            } else {
+                $uploadStatus = self::UPLOAD_FAILED;
             }
-            $this->standaloneView->assign('submitted', GeneralUtility::_POST('_upload'));
-            $this->standaloneView->assign('noFileUploaded', $fileProcessor->internalUploadMap[1]);
         }
 
-        // Finally: If upload went well, set the new file as the import file.
-        if (!empty($this->uploadedFiles[0])) {
-            // Only allowed extensions....
-            $extension = $this->uploadedFiles[0]->getExtension();
-            if ($extension === 't3d' || $extension === 'xml') {
-                $inData['file'] = $this->uploadedFiles[0]->getCombinedIdentifier();
-            }
-            $this->standaloneView->assign('uploadedFile', $this->uploadedFiles[0]->getName());
-        }
+        $this->standaloneView->assign('uploadStatus', $uploadStatus);
     }
 
     /**
