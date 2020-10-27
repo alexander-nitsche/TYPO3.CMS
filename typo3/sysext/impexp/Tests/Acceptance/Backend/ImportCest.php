@@ -147,6 +147,42 @@ class ImportCest
     }
 
     /**
+     * Skipping:
+     *
+     * Currently the unsupported file is still uploaded successfully..
+     * In the future, the module should pay strict attention to the file format and reject all but XML and T3D..
+     *
+     * Skip this test by declaring it private instead of using skip annotation or $I->markTestSkipped()
+     * as it seems to break the preceding test.
+     *
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    private function rejectUploadedFileOfUnsupportedFileFormat(BackendTester $I): void
+    {
+        $page1Icon = '.node.identifier-0_1 .node-icon-container';
+
+        $I->click($page1Icon);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
+
+        $fixtureFilePath = 'Acceptance/Fixtures/unsupported.json';
+
+        $I->switchToContentFrame();
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->canSeeElement($this->inModuleBody . ' .callout.callout-danger');
+    }
+
+    /**
      * @param BackendTester $I
      * @param ModalDialog $modalDialog
      *
