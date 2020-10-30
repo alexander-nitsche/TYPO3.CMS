@@ -18,83 +18,12 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Impexp\Tests\Acceptance\Backend;
 
 use TYPO3\CMS\Impexp\Tests\Acceptance\Support\BackendTester;
-use TYPO3\CMS\Impexp\Tests\Acceptance\Support\Helper\SiteConfiguration;
 
 /**
- * Various context menu related tests
+ * Common test helper functions
  */
-class ContextMenuCest
+abstract class AbstractCest
 {
-    protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
-    protected $inModuleHeader = '.module-docheader';
-
-    protected $buttonUser = '#typo3-cms-backend-backend-toolbaritems-usertoolbaritem';
-    protected $buttonLogout = '#typo3-cms-backend-backend-toolbaritems-usertoolbaritem a.btn.btn-danger';
-    protected $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
-    protected $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
-    protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
-
-    /**
-     * @param BackendTester $I
-     * @param SiteConfiguration $siteConfiguration
-     * @throws \Exception
-     */
-    public function _before(BackendTester $I, SiteConfiguration $siteConfiguration)
-    {
-        $siteConfiguration->adjustSiteConfiguration();
-        $I->useExistingSession('admin');
-    }
-
-    /**
-     * @param BackendTester $I
-     *
-     * @throws \Exception
-     */
-    public function doNotShowImportInContextMenuForNonAdminUser(BackendTester $I): void
-    {
-        $selectedPageIcon = $this->inPageTree . ' .node.identifier-1_1 .node-icon-container';
-
-        $this->setPageAccess($I, 1, 1);
-        $this->setModAccess($I, 1, ['web_list' => true]);
-        $this->setUserTsConfig($I, 2, '');
-        $this->switchToUser($I, 2);
-
-        $I->click($selectedPageIcon);
-        $I->waitForElementVisible($this->contextMenuMore, 5);
-        $I->click($this->contextMenuMore);
-        $I->waitForElementVisible($this->contextMenuExport, 5);
-        $I->seeElement($this->contextMenuExport);
-        $I->dontSeeElement($this->contextMenuImport);
-
-        $this->logoutUser($I);
-    }
-
-    /**
-     * @param BackendTester $I
-     *
-     * @throws \Exception
-     */
-    public function showImportInContextMenuForNonAdminUserIfFlagSet(BackendTester $I): void
-    {
-        $selectedPageIcon = $this->inPageTree . ' .node.identifier-1_1 .node-icon-container';
-
-        $this->setUserTsConfig($I, 2, 'options.impexp.enableImportForNonAdminUser = 1');
-        $this->switchToUser($I, 2);
-
-        $I->click($selectedPageIcon);
-        $I->waitForElementVisible($this->contextMenuMore, 5);
-        $I->click($this->contextMenuMore);
-        $I->waitForElementVisible($this->contextMenuExport, 5);
-        $I->seeElement($this->contextMenuExport);
-        $I->seeElement($this->contextMenuImport);
-
-        $this->logoutUser($I);
-
-        $this->setPageAccess($I, 1, 0);
-        $this->setModAccess($I, 1, ['web_list' => false]);
-        $this->setUserTsConfig($I, 2, '');
-    }
-
     protected function setPageAccess(BackendTester $I, int $pageId, int $userGroupId, int $recursionLevel = 1): void
     {
         $selectedPageNode = $this->inPageTree . ' [id="identifier-0_' . $pageId . '"]';
