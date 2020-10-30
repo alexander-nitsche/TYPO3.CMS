@@ -174,7 +174,7 @@ abstract class ImportExportController
         $this->moduleTemplate = $this->moduleTemplateFactory->create($request);
 
         $this->id = (int)($parsedBody['id'] ?? $queryParams['id'] ?? 0);
-        $this->pageInfo = BackendUtility::readPageAccess($this->id, $this->permsClause) ?: [];
+        $this->pageInfo = $this->getPageInfoEnhanced();
         $this->pageAccess = $this->pageInfo !== [];
         if ($this->pageInfo !== []) {
             $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageInfo);
@@ -222,6 +222,28 @@ abstract class ImportExportController
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
+    }
+
+    /**
+     * Return record of selected page for import / export
+     * - or null if access denied to that page.
+     *
+     * If the selected page is the root of the page tree,
+     * add some basic but missing information.
+     *
+     * @return array|null
+     */
+    protected function getPageInfoEnhanced(): ?array
+    {
+        $pageInfo = BackendUtility::readPageAccess($this->id, $this->permsClause);
+
+        if (is_array($pageInfo)) {
+            if ($this->id === 0) {
+                $pageInfo += ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
+            }
+            return $pageInfo;
+        }
+        return null;
     }
 
     /**
