@@ -87,6 +87,7 @@ class ImportController extends ImportExportController
         // Prepare view
         $this->registerDocHeaderButtons();
         $this->standaloneView->assign('inData', $inData);
+        $this->standaloneView->assign('isAdmin', $this->getBackendUser()->isAdmin());
         $this->standaloneView->setTemplate('Import.html');
         $this->moduleTemplate->setContent($this->standaloneView->render());
 
@@ -167,9 +168,8 @@ class ImportController extends ImportExportController
      */
     protected function importData(array &$inData): void
     {
-        $beUser = $this->getBackendUser();
         if ($this->hasPageAccess()) {
-            if ($beUser->isAdmin() && !$this->id) {
+            if ($this->getBackendUser()->isAdmin() && !$this->id) {
                 $this->pageInfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
             }
             if ($inData['new_import']) {
@@ -207,7 +207,6 @@ class ImportController extends ImportExportController
             } else {
                 $this->standaloneView->assign('importPath', $this->lang->getLL('importdata_no_default_upload_folder'));
             }
-            $this->standaloneView->assign('isAdmin', $beUser->isAdmin());
 
             $tempFolder = $this->import->getOrCreateDefaultImportExportFolder();
             if ($tempFolder) {
