@@ -169,7 +169,7 @@ class ImportController extends ImportExportController
     protected function importData(array &$inData): void
     {
         if ($this->hasPageAccess()) {
-            if ($this->getBackendUser()->isAdmin() && !$this->id) {
+            if ($this->getBackendUser()->isAdmin() && $this->id === 0) {
                 $this->pageInfo = ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
             }
             if ($inData['new_import']) {
