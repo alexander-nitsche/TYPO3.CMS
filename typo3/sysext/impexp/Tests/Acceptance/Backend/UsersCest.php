@@ -27,6 +27,7 @@ class UsersCest extends AbstractCest
 {
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
     protected $inModuleHeader = '.module-docheader';
+    protected $inModuleTabs = '#ImportExportController .nav-tabs';
     protected $inModuleBody = '#ImportExportController .tab-content';
 
     protected $buttonUser = '#typo3-cms-backend-backend-toolbaritems-usertoolbaritem';
@@ -34,6 +35,7 @@ class UsersCest extends AbstractCest
     protected $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
     protected $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
     protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
+    protected $tabUpload = 'a[href="#import-upload"]';
     protected $checkboxForceAllUids = 'input#checkForce_all_UIDS';
 
     /**
@@ -117,6 +119,36 @@ class UsersCest extends AbstractCest
         $I->click($this->contextMenuImport);
         $I->switchToContentFrame();
         $I->dontSeeElement($this->checkboxForceAllUids);
+
+        $this->logoutUser($I);
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function hideUploadTabAndImportPathIfNoImportFolderAvailable(BackendTester $I): void
+    {
+        $I->click($this->inPageTree . ' .node.identifier-0_1 .node-icon-container');
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
+        $I->switchToContentFrame();
+        $I->see('From path:', $this->inModuleBody);
+        $I->seeElement($this->inModuleTabs . ' ' . $this->tabUpload);
+
+        $this->switchToUser($I, 2);
+
+        $I->click($this->inPageTree . ' .node.identifier-1_1 .node-icon-container');
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
+        $I->switchToContentFrame();
+        $I->dontSee('From path:', $this->inModuleBody);
+        $I->dontSeeElement($this->inModuleTabs . ' ' . $this->tabUpload);
 
         $this->logoutUser($I);
 

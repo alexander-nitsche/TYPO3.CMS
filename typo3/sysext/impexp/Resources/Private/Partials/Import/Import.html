@@ -5,7 +5,7 @@
         <f:be.buttons.csh table="xMOD_tx_impexp" field="importFile"><f:translate key="importdata_file" /></f:be.buttons.csh>
     </label>
     <f:form.select name="tx_impexp[file]" class="form-control" id="impexp-file" value="{inData.file}" options="{fileSelectOptions}" />
-    <p class="help-block">{importPath}</p>
+    <p class="help-block">{importFolderHint}</p>
     <f:if condition="{import.compress}">
         <f:else><span class="text-danger"><f:translate key="importdata_noteNoDecompressorAvailable" /></span></f:else>
     </f:if>
