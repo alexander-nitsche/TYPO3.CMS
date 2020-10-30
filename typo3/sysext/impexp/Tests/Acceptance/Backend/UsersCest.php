@@ -35,6 +35,7 @@ class UsersCest extends AbstractCest
     protected $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
     protected $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
     protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
+    protected $buttonViewPage = 'span[data-identifier="actions-view-page"]';
     protected $tabUpload = 'a[href="#import-upload"]';
     protected $checkboxForceAllUids = 'input#checkForce_all_UIDS';
 
@@ -149,6 +150,52 @@ class UsersCest extends AbstractCest
         $I->switchToContentFrame();
         $I->dontSee('From path:', $this->inModuleBody);
         $I->dontSeeElement($this->inModuleTabs . ' ' . $this->tabUpload);
+
+        $this->logoutUser($I);
+
+        $this->setPageAccess($I, 1, 0);
+        $this->setModAccess($I, 1, ['web_list' => false]);
+        $this->setUserTsConfig($I, 2, '');
+    }
+
+    /**
+     * @param BackendTester $I
+     *
+     * @throws \Exception
+     */
+    public function checkVisualElements(BackendTester $I): void
+    {
+        $I->click($this->inPageTree . ' .node.identifier-0_0 .node-icon-container');
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuExport, 5);
+        $I->click($this->contextMenuImport);
+        $I->switchToContentFrame();
+        $I->dontSeeElement($this->inModuleHeader . ' ' . $this->buttonViewPage);
+
+        $I->switchToMainFrame();
+
+        $I->click("List");
+        $I->click($this->inPageTree . ' .node.identifier-0_1 .node-icon-container');
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuExport, 5);
+        $I->click($this->contextMenuImport);
+        $I->switchToContentFrame();
+        $I->seeElement($this->inModuleHeader . ' ' . $this->buttonViewPage);
+
+        $this->setPageAccess($I, 1, 1);
+        $this->setModAccess($I, 1, ['web_list' => true]);
+        $this->setUserTsConfig($I, 2, 'options.impexp.enableImportForNonAdminUser = 1');
+        $this->switchToUser($I, 2);
+
+        $I->click($this->inPageTree . ' .node.identifier-1_1 .node-icon-container');
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuExport, 5);
+        $I->click($this->contextMenuImport);
+        $I->switchToContentFrame();
+        $I->seeElement($this->inModuleHeader . ' ' . $this->buttonViewPage);
 
         $this->logoutUser($I);
 
