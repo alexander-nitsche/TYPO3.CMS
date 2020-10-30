@@ -10,7 +10,7 @@
                 <f:translate key="importdata_import" />
             </a>
         </li>
-        <f:if condition="{hasTempUploadFolder}">
+        <f:if condition="{importFolder}">
             <li role="presentation" class="nav-item">
                 <a class="nav-link text-capitalize" href="#import-upload" aria-controls="import-upload" role="tab" data-bs-toggle="tab">
                     <f:translate key="importdata_upload" />
@@ -41,7 +41,7 @@
                 </div>
             </div>
         </div>
-        <f:if condition="{hasTempUploadFolder}">
+        <f:if condition="{importFolder}">
             <div role="tabpanel" class="tab-pane" id="import-upload">
                 <div class="panel panel-tab">
                     <div class="panel-body">

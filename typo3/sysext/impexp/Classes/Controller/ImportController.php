@@ -87,6 +87,7 @@ class ImportController extends ImportExportController
 
         // Prepare view
         $this->registerDocHeaderButtons();
+        $this->makeForm();
         $this->standaloneView->assign('inData', $inData);
         $this->standaloneView->assign('isAdmin', $this->getBackendUser()->isAdmin());
         $this->standaloneView->setTemplate('Import.html');
@@ -187,34 +188,6 @@ class ImportController extends ImportExportController
             $this->import->setShowDiff(!(bool)$inData['notShowDiff']);
             $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
-            // OUTPUT creation:
-
-            // Make input selector:
-            // must have trailing slash.
-            $path = $this->import->getOrCreateDefaultImportExportFolder();
-            $exportFiles = $this->getExportFiles();
-
-            // Configuration
-            $selectOptions = [''];
-            foreach ($exportFiles as $file) {
-                $selectOptions[$file->getCombinedIdentifier()] = $file->getPublicUrl();
-            }
-
-            $this->standaloneView->assign('import', $this->import);
-            $this->standaloneView->assign('fileSelectOptions', $selectOptions);
-
-            if ($path) {
-                $this->standaloneView->assign('importPath', sprintf($this->lang->getLL('importdata_fromPathS'), $path->getCombinedIdentifier()));
-            } else {
-                $this->standaloneView->assign('importPath', $this->lang->getLL('importdata_no_default_upload_folder'));
-            }
-
-            $tempFolder = $this->import->getOrCreateDefaultImportExportFolder();
-            if ($tempFolder) {
-                $this->standaloneView->assign('tempFolder', $tempFolder->getCombinedIdentifier());
-                $this->standaloneView->assign('hasTempUploadFolder', true);
-            }
-
             // Perform import or preview depending:
             if (isset($inData['file'])) {
                 $inFile = $this->getFile($inData['file']);
@@ -246,8 +219,6 @@ class ImportController extends ImportExportController
                     }
                 }
             }
-
-            $this->standaloneView->assign('errors', $this->import->getErrorLog());
         }
     }
 
@@ -267,6 +238,35 @@ class ImportController extends ImportExportController
                 ->setIcon($this->iconFactory->getIcon('actions-view-page', Icon::SIZE_SMALL))
                 ->setDataAttributes($previewDataAttributes ?? []);
             $buttonBar->addButton($viewButton);
+        }
+    }
+
+    /**
+     * Create module forms
+     */
+    protected function makeForm(): void
+    {
+        if ($this->hasPageAccess()) {
+            $selectOptions = [''];
+            foreach ($this->getExportFiles() as $file) {
+                $selectOptions[$file->getCombinedIdentifier()] = $file->getPublicUrl();
+            }
+
+            $importFolder = $this->import->getOrCreateDefaultImportExportFolder();
+            if ($importFolder) {
+                $this->standaloneView->assign('importFolder', $importFolder->getCombinedIdentifier());
+                $this->standaloneView->assign('importFolderHint', sprintf(
+                    $this->lang->getLL('importdata_fromPathS'), $importFolder->getCombinedIdentifier())
+                );
+            } else {
+                $this->standaloneView->assign('importFolderHint',
+                    $this->lang->getLL('importdata_no_default_upload_folder')
+                );
+            }
+
+            $this->standaloneView->assign('fileSelectOptions', $selectOptions);
+            $this->standaloneView->assign('import', $this->import);
+            $this->standaloneView->assign('errors', $this->import->getErrorLog());
         }
     }
 
