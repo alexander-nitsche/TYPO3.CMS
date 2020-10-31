@@ -41,7 +41,7 @@ class PagesAndTtContentWithRteImagesAndFileLinkTest extends AbstractImportExport
         $subject->init();
 
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent-with-rte-image-n-file-link.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-rte-image-n-file-link.xml',
             1
         );
         $subject->importData(0);
