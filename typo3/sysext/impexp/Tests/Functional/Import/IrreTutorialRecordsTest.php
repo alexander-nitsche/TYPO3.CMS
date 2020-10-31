@@ -40,7 +40,7 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
         $subject->init();
 
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/irre-records.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/irre-records.xml',
             1
         );
         $subject->importData(0);

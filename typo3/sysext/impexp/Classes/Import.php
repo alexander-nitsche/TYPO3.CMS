@@ -1640,30 +1640,35 @@ class Import extends ImportExport
      *************************/
 
     /**
-     * Loads the header section/all of the $filename into memory
+     * Loads the header section/all of the $fileName into memory
      *
-     * @param string $filename Filename, absolute
+     * @param string $fileName File path, has to be within the TYPO3's base folder
      * @param bool $all If set, all information is loaded (header, records and files). Otherwise the default is to read only the header information
      * @return bool TRUE if the operation went well
      */
-    public function loadFile($filename, $all = false)
+    public function loadFile($fileName, $all = false)
     {
-        if (!@is_file($filename)) {
-            $this->addError('Filename not found: ' . $filename);
+        $filePath = GeneralUtility::getFileAbsFileName($fileName);
+        if (empty($filePath)) {
+            $this->addError('File path is not valid: ' . $fileName);
             return false;
         }
-        $fI = pathinfo($filename);
-        if (@is_dir($filename . '.files')) {
-            if (GeneralUtility::isAllowedAbsPath($filename . '.files')) {
+        if (!@is_file($filePath)) {
+            $this->addError('File not found: ' . $filePath);
+            return false;
+        }
+        $fI = pathinfo($filePath);
+        if (@is_dir($filePath . '.files')) {
+            if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
                 // copy the folder lowlevel to typo3temp, because the files would be deleted after import
-                GeneralUtility::copyDirectory($filename . '.files', $this->getOrCreateTemporaryFolderName());
+                GeneralUtility::copyDirectory($filePath . '.files', $this->getOrCreateTemporaryFolderName());
             } else {
                 $this->addError('External import files for the given import source is currently not supported.');
             }
         }
         if (strtolower($fI['extension']) === 'xml') {
             // XML:
-            $xmlContent = (string)file_get_contents($filename);
+            $xmlContent = (string)file_get_contents($filePath);
             if (strlen($xmlContent)) {
                 $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
                 if (is_array($this->dat)) {
@@ -1676,11 +1681,11 @@ class Import extends ImportExport
                     $this->addError('XML could not be parsed: ' . $this->dat);
                 }
             } else {
-                $this->addError('Error opening file: ' . $filename);
+                $this->addError('Error opening file: ' . $filePath);
             }
         } else {
             // T3D
-            if ($fd = fopen($filename, 'rb')) {
+            if ($fd = fopen($filePath, 'rb')) {
                 $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
                 if ($all) {
                     $this->dat['records'] = $this->getNextFilePart($fd, true, 'records');
@@ -1691,7 +1696,7 @@ class Import extends ImportExport
                 fclose($fd);
                 return true;
             }
-            $this->addError('Error opening file: ' . $filename);
+            $this->addError('Error opening file: ' . $filePath);
         }
         return false;
     }

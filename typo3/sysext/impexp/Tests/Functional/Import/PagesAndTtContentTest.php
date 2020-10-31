@@ -34,7 +34,7 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
         $subject->init();
 
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml',
             1
         );
         $subject->importData(0);

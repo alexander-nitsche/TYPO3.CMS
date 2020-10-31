@@ -82,12 +82,6 @@ class ImportCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $fileName = (string)$input->getArgument('file');
-        $fileName = GeneralUtility::getFileAbsFileName($fileName);
-        if ($fileName === '' || !file_exists($fileName)) {
-            throw new InvalidFileException('The given filename "' . $fileName . '" could not be found', 1484483040);
-        }
-
         $io = new SymfonyStyle($input, $output);
 
         // Ensure the _cli_ user is authenticated
@@ -105,7 +99,7 @@ class ImportCommand extends Command
         // Enables logging of database actions
         $import->setEnableLogging((bool)($input->hasOption('enableLog') && $input->getOption('enableLog')));
 
-        if (!$import->loadFile($fileName, true)) {
+        if (!$import->loadFile((string)$input->getArgument('file'), true)) {
             $io->error($import->getErrorLog());
             throw new LoadingFileFailedException('Loading of the import file failed.', 1484484619);
         }

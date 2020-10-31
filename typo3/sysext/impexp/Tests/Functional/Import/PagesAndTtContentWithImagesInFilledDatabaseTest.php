@@ -56,7 +56,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
 
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
             1
         );
         $subject->importData(0);
@@ -87,7 +87,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
 
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent-with-existing-same-image.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-same-image.xml',
             1
         );
         $subject->importData(0);
@@ -135,7 +135,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         // Import file with sys_file:1 and sys_file:2, where sys_file:1 has one connected
         // content element, and sys_file:2 has two connected content elements.
         $subject->loadFile(
-            __DIR__ . '/../Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml',
             1
         );
         $subject->importData(0);

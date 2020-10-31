@@ -185,22 +185,19 @@ class ImportController extends ImportExportController
             $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
             // Perform import or preview depending:
-            if (isset($inData['file'])) {
-                $inFile = $this->getFile($inData['file']);
-                if ($inFile !== null && $inFile->exists()) {
-                    $this->standaloneView->assign('metaDataInFileExists', true);
-                    $importInhibitedMessages = [];
-                    if ($this->import->loadFile($inFile->getForLocalProcessing(false), 1)) {
-                        $importInhibitedMessages = $this->import->checkImportPrerequisites();
-                        if ($inData['import_file']) {
-                            if (empty($importInhibitedMessages)) {
-                                $this->import->importData($this->id);
-                                BackendUtility::setUpdateSignal('updatePageTree');
-                            }
+            if (!empty($inData['file'])) {
+                $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
+                if ($this->import->loadFile($filePath, true)) {
+                    $importInhibitedMessages = $this->import->checkImportPrerequisites();
+                    if ($inData['import_file']) {
+                        if (empty($importInhibitedMessages)) {
+                            $this->import->importData($this->id);
+                            BackendUtility::setUpdateSignal('updatePageTree');
                         }
-                        $this->import->setDisplayImportPidRecord($this->pageInfo);
-                        $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                     }
+                    $this->import->setDisplayImportPidRecord($this->pageInfo);
+                    $this->standaloneView->assign('metaDataInFileExists', true);
+                    $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                     // Compile messages which are inhibiting a proper import and add them to output.
                     if (!empty($importInhibitedMessages)) {
                         $flashMessageQueue = GeneralUtility::makeInstance(FlashMessageService::class)->getMessageQueueByIdentifier('impexp.errors');
@@ -215,6 +212,16 @@ class ImportController extends ImportExportController
                     }
                 }
             }
+        }
+    }
+
+    protected function getFilePathWithinFileMountBoundaries(string $filePath): string
+    {
+        try {
+            $file = GeneralUtility::makeInstance(ResourceFactory::class)->getFileObjectFromCombinedIdentifier($filePath);
+            return $file->getForLocalProcessing(false);
+        } catch (\Exception $exception) {
+            return '';
         }
     }
 
