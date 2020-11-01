@@ -24,7 +24,6 @@ use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Resource\DuplicationBehavior;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Filter\FileExtensionFilter;
@@ -195,15 +194,8 @@ class ImportController extends ImportExportController
                             BackendUtility::setUpdateSignal('updatePageTree');
                         }
                     } else {
-                        // Compile messages which are inhibiting a proper import and add them to output.
-                        $flashMessageQueue = GeneralUtility::makeInstance(FlashMessageService::class)->getMessageQueueByIdentifier('impexp.errors');
                         foreach ($importInhibitedMessages as $message) {
-                            $flashMessageQueue->addMessage(GeneralUtility::makeInstance(
-                                FlashMessage::class,
-                                $message,
-                                '',
-                                FlashMessage::ERROR
-                            ));
+                            $this->moduleTemplate->addFlashMessage($message, '', FlashMessage::ERROR);
                         }
                     }
                     $this->import->setDisplayImportPidRecord($this->pageInfo);
