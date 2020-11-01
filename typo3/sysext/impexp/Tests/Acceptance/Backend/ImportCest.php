@@ -188,6 +188,47 @@ class ImportCest
      *
      * @throws \Exception
      */
+    public function rejectImportIfPrerequisitesNotMet(BackendTester $I, ModalDialog $modalDialog)
+    {
+        $I->wantToTest('rejecting import if prerequisites not met.');
+
+        $page1Icon = '.node.identifier-0_1 .node-icon-container';
+
+        $I->click($page1Icon);
+        $I->waitForElementVisible($this->contextMenuMore, 5);
+        $I->click($this->contextMenuMore);
+        $I->waitForElementVisible($this->contextMenuImport, 5);
+        $I->click($this->contextMenuImport);
+
+        $fixtureFilePath = 'Acceptance/Fixtures/sys_language_with_bootstrap_package.xml';
+
+        $I->switchToContentFrame();
+        $I->click($this->tabUpload, $this->inModuleTabs);
+        $I->waitForElementVisible($this->inputUploadFile, 5);
+        $I->attachFile($this->inputUploadFile, $fixtureFilePath);
+        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->wait(1);
+        $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
+        $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
+        preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
+        $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
+        $I->assertFileExists($loadFilePath);
+        $this->testFilesToDelete[] = $loadFilePath;
+
+        $I->click($this->buttonImport);
+        $modalDialog->clickButtonInDialog('button[name="ok"]');
+
+        $I->switchToContentFrame();
+        $I->seeElement($this->inFlashMessages . ' .alert.alert-danger');
+    }
+
+    /**
+     * @param BackendTester $I
+     * @param ModalDialog $modalDialog
+     *
+     * @throws \Exception
+     */
     public function importPageAndRecords(BackendTester $I, ModalDialog $modalDialog)
     {
         $I->wantToTest('importing a page with records.');
