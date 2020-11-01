@@ -200,7 +200,6 @@ class ImportController extends ImportExportController
                         }
                     }
                     $this->import->setDisplayImportPidRecord($this->pageInfo);
-                    $this->standaloneView->assign('metaDataInFileExists', true);
                     $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                 }
             }

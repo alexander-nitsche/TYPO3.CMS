@@ -1804,6 +1804,11 @@ class Import extends ImportExport
         $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
     }
 
+    public function getMetaData(): array
+    {
+        return $this->dat['header']['meta'] ?? [];
+    }
+
     /**************************
      * Getters and Setters
      *************************/
