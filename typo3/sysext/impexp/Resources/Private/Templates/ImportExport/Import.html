@@ -18,7 +18,7 @@
                 </a>
             </li>
         </f:if>
-        <f:if condition="{metaDataInFileExists}">
+        <f:if condition="{import.metaData}">
             <li role="presentation">
                 <a class="text-capitalize" href="#import-metadata" aria-controls="import-metadata" role="tab" data-toggle="tab">
                     <f:translate key="importdata_metaData_1387" />
@@ -51,7 +51,7 @@
                 </div>
             </div>
         </f:if>
-        <f:if condition="{metaDataInFileExists}">
+        <f:if condition="{import.metaData}">
             <div role="tabpanel" class="tab-pane" id="import-metadata">
                 <div class="panel panel-tab">
                     <div class="panel-body">
