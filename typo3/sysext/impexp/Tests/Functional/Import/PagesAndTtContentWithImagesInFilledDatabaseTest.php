@@ -46,6 +46,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
     {
         $subject = GeneralUtility::makeInstance(Import::class);
         $subject->init();
+        $subject->setPid(0);
 
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
@@ -59,7 +60,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
             1
         );
-        $subject->importData(0);
+        $subject->importData();
 
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg';
@@ -77,6 +78,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
     {
         $subject = GeneralUtility::makeInstance(Import::class);
         $subject->init();
+        $subject->setPid(0);
 
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
@@ -90,7 +92,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-same-image.xml',
             1
         );
-        $subject->importData(0);
+        $subject->importData();
 
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
 
@@ -127,6 +129,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
     {
         $subject = GeneralUtility::makeInstance(Import::class);
         $subject->init();
+        $subject->setPid(0);
 
         // Have a single sys_file entry with uid 1
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_single_image.xml');
@@ -138,7 +141,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml',
             1
         );
-        $subject->importData(0);
+        $subject->importData();
 
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/used-1.jpg';

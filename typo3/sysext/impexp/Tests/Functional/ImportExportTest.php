@@ -51,12 +51,13 @@ class ImportExportTest extends AbstractImportExportTestCase
 
         $import = GeneralUtility::makeInstance(Import::class);
         $import->init();
+        $import->setPid(0);
         $import->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/irre-records.xml',
             1
         );
         $import->setForceAllUids(true);
-        $import->importData(0);
+        $import->importData();
 
         $this->exportMock->init();
         $this->exportMock->setPid(1);

@@ -38,12 +38,13 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
     {
         $subject = GeneralUtility::makeInstance(Import::class);
         $subject->init();
+        $subject->setPid(0);
 
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/irre-records.xml',
             1
         );
-        $subject->importData(0);
+        $subject->importData();
 
         $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/importIrreRecords.csv');
     }

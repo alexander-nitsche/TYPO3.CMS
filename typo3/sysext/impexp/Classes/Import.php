@@ -156,10 +156,8 @@ class Import extends ImportExport
 
     /**
      * Imports the internal data array to $pid.
-     *
-     * @param int $pid Page ID in which to import the content
      */
-    public function importData($pid)
+    public function importData()
     {
         $this->initializeImport();
 
@@ -169,8 +167,8 @@ class Import extends ImportExport
         $this->writeSysFileRecords();
         // Write records, first pages, then the rest
         // Fields with "hard" relations to database, files and flexform fields are kept empty during this run
-        $this->writeRecordsPages($pid);
-        $this->writeRecordsRecords($pid);
+        $this->writeRecordsPages();
+        $this->writeRecordsRecords();
         // Finally all the file and DB record references must be fixed. This is done after all records have supposedly been written to database:
         // $this->importMapId will indicate two things: 1) that a record WAS written to db and 2) that it has got a new id-number.
         $this->setRelations();
@@ -577,12 +575,13 @@ class Import extends ImportExport
     }
 
     /**
-     * Writing pagetree/pages to database:
+     * Writing page tree / pages to database:
+     * If the operation is an update operation, the root of the page tree inside will be moved to $this->pid
+     * unless it is the same as the root page from the import.
      *
-     * @param int $pid PID in which to import. If the operation is an update operation, the root of the page tree inside will be moved to this PID unless it is the same as the root page from the import
      * @see writeRecordsRecords()
      */
-    protected function writeRecordsPages($pid)
+    protected function writeRecordsPages()
     {
         // First, write page structure if any:
         if (is_array($this->dat['header']['records']['pages'])) {
@@ -595,8 +594,8 @@ class Import extends ImportExport
                 $pagesFromTree = $this->flatInversePageTree($this->dat['header']['pagetree']);
                 foreach ($pagesFromTree as $uid) {
                     $thisRec = $this->dat['header']['records']['pages'][$uid];
-                    // PID: Set the main $pid, unless a NEW-id is found
-                    $setPid = $this->importNewIdPids[$thisRec['pid']] ?? $pid;
+                    // PID: Set the main $this->pid, unless a NEW-id is found
+                    $setPid = $this->importNewIdPids[$thisRec['pid']] ?? $this->pid;
                     $this->addSingle('pages', $uid, $setPid);
                     unset($pageRecords[$uid]);
                 }
@@ -605,7 +604,7 @@ class Import extends ImportExport
             if (!empty($pageRecords)) {
                 $remainingPageUids = array_keys($pageRecords);
                 foreach ($remainingPageUids as $pUid) {
-                    $this->addSingle('pages', (int)$pUid, $pid);
+                    $this->addSingle('pages', (int)$pUid, $this->pid);
                 }
             }
             // Now write to database:
@@ -709,10 +708,9 @@ class Import extends ImportExport
     /**
      * Write all database records except pages (written in writeRecordsPages())
      *
-     * @param int $pid Page id in which to import
      * @see writeRecordsPages()
      */
-    protected function writeRecordsRecords($pid)
+    protected function writeRecordsRecords()
     {
         // Write the rest of the records
         $this->importData = [];
@@ -722,10 +720,10 @@ class Import extends ImportExport
                 $this->addGeneralErrorsByTable($table);
                 if ($table !== 'pages') {
                     foreach ($recs as $uid => $thisRec) {
-                        // PID: Set the main $pid, unless a NEW-id is found
+                        // PID: Set the main $this->pid, unless a NEW-id is found
                         $setPid = isset($this->importMapId['pages'][$thisRec['pid']])
                             ? (int)$this->importMapId['pages'][$thisRec['pid']]
-                            : (int)$pid;
+                            : (int)$this->pid;
                         if (is_array($GLOBALS['TCA'][$table]) && isset($GLOBALS['TCA'][$table]['ctrl']['rootLevel'])) {
                             $rootLevelSetting = (int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'];
                             if ($rootLevelSetting === 1) {
@@ -762,7 +760,7 @@ class Import extends ImportExport
         $this->addToMapId($tce->substNEWwithIDs);
         // In case of an update, order pages from the page tree correctly:
         if ($this->update) {
-            $this->writeRecordsRecordsOrder($pid);
+            $this->writeRecordsRecordsOrder($this->pid);
         }
     }
 
