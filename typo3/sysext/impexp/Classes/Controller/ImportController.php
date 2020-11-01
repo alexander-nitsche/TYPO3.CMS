@@ -187,15 +187,15 @@ class ImportController extends ImportExportController
             if (!empty($inData['file'])) {
                 $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
                 if ($this->import->loadFile($filePath, true)) {
-                    $importInhibitedMessages = $this->import->checkImportPrerequisites();
-                    if (empty($importInhibitedMessages)) {
+                    $prerequisitesErrors = $this->import->checkImportPrerequisites();
+                    if (empty($prerequisitesErrors)) {
                         if ($inData['import_file']) {
                             $this->import->importData($this->id);
                             BackendUtility::setUpdateSignal('updatePageTree');
                         }
                     } else {
-                        foreach ($importInhibitedMessages as $message) {
-                            $this->moduleTemplate->addFlashMessage($message, '', FlashMessage::ERROR);
+                        foreach ($prerequisitesErrors as $error) {
+                            $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
                         }
                     }
                     $this->import->setDisplayImportPidRecord($this->pageInfo);
