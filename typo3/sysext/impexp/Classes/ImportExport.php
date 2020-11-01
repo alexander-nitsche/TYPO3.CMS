@@ -287,12 +287,6 @@ abstract class ImportExport
         if (!isset($this->dat['header'])) {
             return [];
         }
-        // Check extension dependencies:
-        foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
-            if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
-                $this->addError('DEPENDENCY: The extension with key "' . $extKey . '" must be installed!');
-            }
-        }
 
         // Probably this is done to save memory space?
         unset($this->dat['files']);
