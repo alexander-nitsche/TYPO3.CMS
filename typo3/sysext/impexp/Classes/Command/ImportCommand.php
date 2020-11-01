@@ -91,6 +91,7 @@ class ImportCommand extends Command
 
         $import = $this->getImport();
         $import->init();
+        $import->setPid($pageId);
         $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
         // Only used when $updateRecords is "true"
         $import->setGlobalIgnorePid((bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid')));
@@ -110,7 +111,7 @@ class ImportCommand extends Command
             throw new PrerequisitesNotMetException('Prerequisites for file import are not met.', 1484484612);
         }
 
-        $import->importData($pageId);
+        $import->importData();
         if (!empty($import->getErrorLog())) {
             $io->error($import->getErrorLog());
             throw new ImportFailedException('The import has failed.', 1484484613);

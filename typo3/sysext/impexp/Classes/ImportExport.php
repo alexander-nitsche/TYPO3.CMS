@@ -70,6 +70,27 @@ use TYPO3\CMS\Core\Utility\PathUtility;
 abstract class ImportExport
 {
     /**
+     * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
+     *
+     * @var string
+     */
+    protected $permsClause;
+
+    /**
+     * Root page of import or export page tree
+     *
+     * @var int
+     */
+    protected $pid = -1;
+
+    /**
+     * Root page record of import or of export page tree
+     *
+     * @var array
+     */
+    protected $pidRecord = null;
+
+    /**
      * If set, static relations (not exported) will be shown in overview as well
      *
      * @var bool
@@ -103,15 +124,6 @@ abstract class ImportExport
      * @var bool
      */
     protected $doesImport = false;
-
-    /**
-     * If set to a page-record, then the preview display of the content will expect this page-record to be the target
-     * for the import and accordingly display validation information. This triggers the visual view of the
-     * import/export memory to validate if import is possible
-     *
-     * @var array
-     */
-    protected $displayImportPidRecord = [];
 
     /**
      * Setting import modes during update state: as_new, exclude, force_uid
@@ -259,6 +271,7 @@ abstract class ImportExport
     {
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->lang = $this->getLanguageService();
+        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
     }
 
     /**************************
@@ -506,13 +519,14 @@ abstract class ImportExport
             $pInfo['active'] = $this->isActive($table, $uid) ? 'active' : 'hidden';
 
             // Otherwise, set table icon and title.
-            // Import Validation (triggered by $this->displayImportPidRecord) will show messages if import is not possible of various items.
-            if (is_array($this->displayImportPidRecord) && !empty($this->displayImportPidRecord)) {
+            // Import validation will show messages if import is not possible of various items.
+            $pidRecord = $this->getPidRecord();
+            if ($this->mode === 'import' && !empty($pidRecord)) {
                 if ($checkImportInPidRecord) {
-                    if (!$this->getBackendUser()->doesUserHaveAccess($this->displayImportPidRecord, ($table === 'pages' ? 8 : 16))) {
+                    if (!$this->getBackendUser()->doesUserHaveAccess($pidRecord, ($table === 'pages' ? 8 : 16))) {
                         $pInfo['msg'] .= '\'' . $pInfo['ref'] . '\' cannot be INSERTED on this page! ';
                     }
-                    if (!$this->checkDokType($table, $this->displayImportPidRecord['doktype']) && !$GLOBALS['TCA'][$table]['ctrl']['rootLevel']) {
+                    if (!$this->checkDokType($table, $pidRecord['doktype']) && !$GLOBALS['TCA'][$table]['ctrl']['rootLevel']) {
                         $pInfo['msg'] .= '\'' . $table . '\' cannot be INSERTED on this page type (change page type to \'Folder\'.) ';
                     }
                 }
@@ -1248,6 +1262,48 @@ abstract class ImportExport
      *************************/
 
     /**
+     * @return int
+     */
+    public function getPid(): int
+    {
+        return $this->pid;
+    }
+
+    /**
+     * @param int $pid
+     */
+    public function setPid(int $pid): void
+    {
+        $this->pid = $pid;
+        $this->pidRecord = null;
+    }
+
+    /**
+     * Return record of root page of import or of export page tree
+     * - or null if access denied to that page.
+     *
+     * If the page is the root of the page tree,
+     * add some basic but missing information.
+     *
+     * @return array|null
+     */
+    protected function getPidRecord(): ?array
+    {
+        if ($this->pidRecord === null && $this->pid >= 0) {
+            $pidRecord = BackendUtility::readPageAccess($this->pid, $this->permsClause);
+
+            if (is_array($pidRecord)) {
+                if ($this->pid === 0) {
+                    $pidRecord += ['title' => '[root-level]', 'uid' => 0, 'pid' => 0];
+                }
+                $this->pidRecord = $pidRecord;
+            }
+        }
+
+        return $this->pidRecord;
+    }
+
+    /**
      * Set flag to control whether disabled records and their children are excluded (true) or included (false). Defaults
      * to the old behaviour of including everything.
      *
@@ -1456,22 +1512,6 @@ abstract class ImportExport
     public function setSoftrefInputValues(array $softrefInputValues): void
     {
         $this->softrefInputValues = $softrefInputValues;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDisplayImportPidRecord(): array
-    {
-        return $this->displayImportPidRecord;
-    }
-
-    /**
-     * @param array $displayImportPidRecord
-     */
-    public function setDisplayImportPidRecord(array $displayImportPidRecord): void
-    {
-        $this->displayImportPidRecord = $displayImportPidRecord;
     }
 
     /**

@@ -82,13 +82,6 @@ class Export extends ImportExport
     const FILETYPE_T3DZ = 't3d_compressed';
 
     /**
-     * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
-     *
-     * @var string
-     */
-    protected $permsClause;
-
-    /**
      * @var string
      */
     protected $title = '';
@@ -112,11 +105,6 @@ class Export extends ImportExport
      * @var array
      */
     protected $list = [];
-
-    /**
-     * @var int
-     */
-    protected $pid = -1;
 
     /**
      * @var int
@@ -196,15 +184,6 @@ class Export extends ImportExport
      * @var array
      */
     protected $checkPidCache = [];
-
-    /**
-     * The constructor
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
-    }
 
     /**************************
      * Initialize
@@ -1549,22 +1528,6 @@ class Export extends ImportExport
     public function setList(array $list): void
     {
         $this->list = $list;
-    }
-
-    /**
-     * @return int
-     */
-    public function getPid(): int
-    {
-        return $this->pid;
-    }
-
-    /**
-     * @param int $pid
-     */
-    public function setPid(int $pid): void
-    {
-        $this->pid = $pid;
     }
 
     /**

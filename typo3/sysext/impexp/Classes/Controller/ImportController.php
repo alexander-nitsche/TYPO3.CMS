@@ -175,6 +175,7 @@ class ImportController extends ImportExportController
 
             $this->import = GeneralUtility::makeInstance(Import::class);
             $this->import->init();
+            $this->import->setPid($this->id);
             $this->import->setUpdate((bool)$inData['do_update']);
             $this->import->setImportMode((array)$inData['import_mode']);
             $this->import->setEnableLogging((bool)$inData['enableLogging']);
@@ -190,7 +191,7 @@ class ImportController extends ImportExportController
                     $prerequisitesErrors = $this->import->checkImportPrerequisites();
                     if (empty($prerequisitesErrors)) {
                         if ($inData['import_file']) {
-                            $this->import->importData($this->id);
+                            $this->import->importData();
                             BackendUtility::setUpdateSignal('updatePageTree');
                         }
                     } else {
@@ -198,7 +199,6 @@ class ImportController extends ImportExportController
                             $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
                         }
                     }
-                    $this->import->setDisplayImportPidRecord($this->pageInfo);
                     $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                 }
             }

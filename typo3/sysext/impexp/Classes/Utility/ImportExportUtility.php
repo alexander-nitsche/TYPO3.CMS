@@ -70,6 +70,7 @@ class ImportExportUtility
         }
         $this->import = GeneralUtility::makeInstance(Import::class);
         $this->import->init();
+        $this->import->setPid($pid);
 
         $this->eventDispatcher->dispatch(new BeforeImportEvent($this->import));
 
@@ -77,7 +78,7 @@ class ImportExportUtility
         if ($file && @is_file($file)) {
             if ($this->import->loadFile($file, 1)) {
                 // Import to root page:
-                $this->import->importData($pid);
+                $this->import->importData();
                 // Get id of first created page:
                 $newPages = $this->import->getImportMapId()['pages'];
                 $importResponse = (int)reset($newPages);

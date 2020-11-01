@@ -46,6 +46,7 @@ class ImportCest
     protected $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
     protected $contextMenuImport = '#contentMenu1 .list-group-item[data-callback-action=importT3d]';
     protected $tabUpload = 'a[href="#import-upload"]';
+    protected $tabMessages = 'a[href="#import-errors"]';
     protected $inputUploadFile = 'input[type=file]';
     protected $checkboxOverwriteFile = 'input#checkOverwriteExistingFiles';
     protected $buttonUploadFile = '_upload';
@@ -185,12 +186,19 @@ class ImportCest
     /**
      * @param BackendTester $I
      * @param ModalDialog $modalDialog
+     * @param PageTree $pageTree
      *
      * @throws \Exception
      */
-    public function rejectImportIfPrerequisitesNotMet(BackendTester $I, ModalDialog $modalDialog)
+    public function rejectImportIfPrerequisitesNotMet(BackendTester $I, ModalDialog $modalDialog, PageTree $pageTree)
     {
         $I->wantToTest('rejecting import if prerequisites not met.');
+
+        $sysCategoryTable = '#recordlist-sys_category';
+
+        $I->switchToContentFrame();
+        $sysCategoryRecordsBefore = $I->grabMultiple($sysCategoryTable . ' .t3js-entity', 'data-uid');
+        $I->switchToMainFrame();
 
         $page1Icon = '.node.identifier-0_1 .node-icon-container';
 
@@ -200,7 +208,7 @@ class ImportCest
         $I->waitForElementVisible($this->contextMenuImport, 5);
         $I->click($this->contextMenuImport);
 
-        $fixtureFilePath = 'Acceptance/Fixtures/sys_language_with_bootstrap_package.xml';
+        $fixtureFilePath = 'Acceptance/Fixtures/sys_category_table_with_bootstrap_package.xml';
 
         $I->switchToContentFrame();
         $I->click($this->tabUpload, $this->inModuleTabs);
@@ -210,6 +218,9 @@ class ImportCest
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $I->seeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->see('Before you can install this T3D file you need to install the extensions', $this->inFlashMessages);
+        $I->cantSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
         $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
         preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
         $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
@@ -219,8 +230,12 @@ class ImportCest
         $I->click($this->buttonImport);
         $modalDialog->clickButtonInDialog('button[name="ok"]');
 
+        $I->switchToMainFrame();
+        $pageTree->openPath(['styleguide TCA demo']);
         $I->switchToContentFrame();
-        $I->seeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $sysCategoryRecords = $I->grabMultiple($sysCategoryTable . ' .t3js-entity', 'data-uid');
+        $sysCategoryRecordsNew = array_diff($sysCategoryRecords, $sysCategoryRecordsBefore);
+        $I->assertCount(0, $sysCategoryRecordsNew);
     }
 
     /**
@@ -251,6 +266,8 @@ class ImportCest
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $I->cantSeeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->cantSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
         $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
         preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
         $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
@@ -301,6 +318,8 @@ class ImportCest
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $I->cantSeeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->cantSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
         $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
         preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
         $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
@@ -353,6 +372,8 @@ class ImportCest
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
+        $I->cantSeeElement($this->inFlashMessages . ' .alert.alert-danger');
+        $I->cantSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
         $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
         preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
         $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];
