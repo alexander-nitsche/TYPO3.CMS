@@ -189,17 +189,13 @@ class ImportController extends ImportExportController
                 $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
                 if ($this->import->loadFile($filePath, true)) {
                     $importInhibitedMessages = $this->import->checkImportPrerequisites();
-                    if ($inData['import_file']) {
-                        if (empty($importInhibitedMessages)) {
+                    if (empty($importInhibitedMessages)) {
+                        if ($inData['import_file']) {
                             $this->import->importData($this->id);
                             BackendUtility::setUpdateSignal('updatePageTree');
                         }
-                    }
-                    $this->import->setDisplayImportPidRecord($this->pageInfo);
-                    $this->standaloneView->assign('metaDataInFileExists', true);
-                    $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
-                    // Compile messages which are inhibiting a proper import and add them to output.
-                    if (!empty($importInhibitedMessages)) {
+                    } else {
+                        // Compile messages which are inhibiting a proper import and add them to output.
                         $flashMessageQueue = GeneralUtility::makeInstance(FlashMessageService::class)->getMessageQueueByIdentifier('impexp.errors');
                         foreach ($importInhibitedMessages as $message) {
                             $flashMessageQueue->addMessage(GeneralUtility::makeInstance(
@@ -210,6 +206,9 @@ class ImportController extends ImportExportController
                             ));
                         }
                     }
+                    $this->import->setDisplayImportPidRecord($this->pageInfo);
+                    $this->standaloneView->assign('metaDataInFileExists', true);
+                    $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
                 }
             }
         }
