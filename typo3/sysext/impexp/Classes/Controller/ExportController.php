@@ -45,8 +45,6 @@ use TYPO3\CMS\Impexp\Export;
 class ExportController extends ImportExportController
 {
     /**
-     * The name of the module
-     *
      * @var string
      */
     protected $moduleName = 'tx_impexp_export';
@@ -57,8 +55,6 @@ class ExportController extends ImportExportController
     protected $export;
 
     /**
-     * preset repository
-     *
      * @var PresetRepository
      */
     protected $presetRepository;
@@ -74,6 +70,19 @@ class ExportController extends ImportExportController
     }
 
     /**
+     * Incoming array has syntax:
+     *
+     * file[] = file
+     * dir[] = dir
+     * list[] = table:pid
+     * record[] = table:uid
+     *
+     * pagetree[id] = (single id)
+     * pagetree[levels]=1,2,3, -1 = currently unpacked tree, -2 = only tables on page
+     * pagetree[tables][]=table/_ALL
+     *
+     * external_ref[tables][]=table/_ALL
+     *
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception
@@ -94,10 +103,8 @@ class ExportController extends ImportExportController
         $this->registerDocHeaderButtons();
         $this->makeConfigurationForm($inData);
         $this->makeSaveForm($inData);
-        $this->makeAdvancedOptionsForm($inData);
+        $this->makeAdvancedOptionsForm();
         $this->standaloneView->assign('inData', $inData);
-        $this->standaloneView->assign('errors', $this->export->getErrorLog());
-        $this->standaloneView->assign('contentOverview', $this->export->displayContentOverview());
         $this->standaloneView->setTemplate('Export.html');
         $this->moduleTemplate->setContent($this->standaloneView->render());
 
@@ -111,13 +118,13 @@ class ExportController extends ImportExportController
      */
     protected function processPresets(array &$inData): void
     {
-        // flag doesn't exist initially; state is on by default
+        // Flag doesn't exist initially; state is on by default
         if (!array_key_exists('excludeDisabled', $inData)) {
             $inData['excludeDisabled'] = 1;
         }
         // Set exclude fields in export object:
         $inData['exclude'] ??= [];
-        // Saving/Loading/Deleting presets:
+        // Saving / Loading / Deleting presets:
         $this->presetRepository->processPresets($inData);
     }
 
@@ -186,10 +193,10 @@ class ExportController extends ImportExportController
 
         $inData['filename'] = $this->export->getExportFileName();
 
-        // If the download button is clicked, return file
+        // Perform export:
         if (($inData['download_export'] ?? null) || ($inData['save_export'] ?? null)) {
 
-            // Export for download:
+            // Export by download:
             if ($inData['download_export'] ?? null) {
                 $fileName = $this->export->getOrGenerateExportFileNameWithFileExtension();
                 $fileContent = $this->export->render();
@@ -201,7 +208,7 @@ class ExportController extends ImportExportController
                 die;
             }
 
-            // Export by saving:
+            // Export by saving on server:
             if ($inData['save_export'] ?? null) {
                 try {
                     $saveFile = $this->export->saveToFile();
@@ -220,6 +227,9 @@ class ExportController extends ImportExportController
                 }
             }
         }
+
+        $this->standaloneView->assign('errors', $this->export->getErrorLog());
+        $this->standaloneView->assign('contentOverview', $this->export->displayContentOverview());
     }
 
     /**
@@ -229,10 +239,8 @@ class ExportController extends ImportExportController
      */
     protected function makeConfigurationForm(array $inData): void
     {
-        // Page tree export options:
+        // Page tree export:
         if (MathUtility::canBeInterpretedAsInteger($inData['pagetree']['id'] ?? '')) {
-            $this->standaloneView->assign('treeHTML', $this->export->getTreeHTML());
-
             $opt = [
                 Export::LEVELS_RECORDS_ON_THIS_PAGE => $this->lang->getLL('makeconfig_tablesOnThisPage'),
                 Export::LEVELS_EXPANDED_TREE => $this->lang->getLL('makeconfig_expandedTree'),
@@ -245,8 +253,10 @@ class ExportController extends ImportExportController
             ];
             $this->standaloneView->assign('levelSelectOptions', $opt);
             $this->standaloneView->assign('tableSelectOptions', $this->getTableSelectOptions('pages'));
+            $this->standaloneView->assign('treeHTML', $this->export->getTreeHTML());
         }
-        // Single record export:
+
+        // Single records export:
         if (is_array($inData['record'] ?? null)) {
             $records = [];
             foreach ($inData['record'] as $ref) {
@@ -265,7 +275,7 @@ class ExportController extends ImportExportController
             $this->standaloneView->assign('records', $records);
         }
 
-        // Single tables/pids:
+        // Single tables export:
         if (is_array($inData['list'] ?? false)) {
             // Display information about pages from which the export takes place
             $tableList = [];
@@ -298,15 +308,12 @@ class ExportController extends ImportExportController
 
     /**
      * Create advanced options form
-     *
-     * @param array $inData Form configuration data
      */
-    protected function makeAdvancedOptionsForm(array $inData): void
+    protected function makeAdvancedOptionsForm(): void
     {
         $loadedExtensions = ExtensionManagementUtility::getLoadedExtensionListArray();
         $loadedExtensions = array_combine($loadedExtensions, $loadedExtensions);
         $this->standaloneView->assign('extensions', $loadedExtensions);
-        $this->standaloneView->assign('inData', $inData);
     }
 
     /**
@@ -316,28 +323,22 @@ class ExportController extends ImportExportController
      */
     protected function makeSaveForm(array $inData): void
     {
-        $opt = $this->presetRepository->getPresets((int)($inData['pagetree']['id'] ?? 0));
+        $presetOptions = $this->presetRepository->getPresets((int)($inData['pagetree']['id'] ?? 0));
 
-        $this->standaloneView->assign('presetSelectOptions', $opt);
+        $fileTypeOptions = [];
+        foreach ($this->export->getSupportedFileTypes() as $supportedFileType) {
+            $fileTypeOptions[$supportedFileType] = $this->lang->getLL('makesavefo_' . $supportedFileType);
+        }
 
         $saveFolder = $this->export->getOrCreateDefaultImportExportFolder();
-        if ($saveFolder) {
-            $this->standaloneView->assign('saveFolder', $saveFolder->getCombinedIdentifier());
-        }
-
-        // Add file options:
-        $opt = [];
-        foreach ($this->export->getSupportedFileTypes() as $supportedFileType) {
-            $opt[$supportedFileType] = $this->lang->getLL('makesavefo_' . $supportedFileType);
-        }
-        $this->standaloneView->assign('filetypeSelectOptions', $opt);
-
-        $fileName = '';
         if ($saveFolder) {
             $this->standaloneView->assign('saveFolder', $saveFolder->getPublicUrl());
             $this->standaloneView->assign('hasSaveFolder', true);
         }
-        $this->standaloneView->assign('fileName', $fileName);
+
+        $this->standaloneView->assign('fileName', '');
+        $this->standaloneView->assign('presetSelectOptions', $presetOptions);
+        $this->standaloneView->assign('filetypeSelectOptions', $fileTypeOptions);
     }
 
     /**
