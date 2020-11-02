@@ -44,8 +44,6 @@ class ImportController extends ImportExportController
     const UPLOAD_FAILED = 2;
 
     /**
-     * The name of the module
-     *
      * @var string
      */
     protected $moduleName = 'tx_impexp_import';
@@ -56,6 +54,18 @@ class ImportController extends ImportExportController
     protected $import;
 
     /**
+     * Incoming array has syntax:
+     *
+     * id = import page id (must be readable)
+     *
+     * file = pointing to filename relative to public web path
+     *
+     * [all relation fields are clear, but not files]
+     * - page-tree is written first
+     * - then remaining pages (to the root of import)
+     * - then all other records are written either to related included pages or if not found to import-root (should be a sysFolder in most cases)
+     * - then all internal relations are set and non-existing relations removed, relations to static tables preserved.
+     *
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      * @throws Exception
@@ -161,7 +171,7 @@ class ImportController extends ImportExportController
     /**
      * Import part of module
      *
-     * @param array $inData Content of POST VAR tx_impexp[]..
+     * @param array $inData
      * @throws \BadFunctionCallException
      * @throws \InvalidArgumentException
      * @throws \RuntimeException
@@ -172,6 +182,7 @@ class ImportController extends ImportExportController
             unset($inData['import_mode']);
         }
 
+        // Create import object and configure it:
         $this->import = GeneralUtility::makeInstance(Import::class);
         $this->import->init();
         $this->import->setPid($this->id);
@@ -183,7 +194,7 @@ class ImportController extends ImportExportController
         $this->import->setShowDiff(!(bool)$inData['notShowDiff']);
         $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
-        // Perform import or preview depending:
+        // Perform preview and import:
         if (!empty($inData['file'])) {
             $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
             if ($this->import->loadFile($filePath, true)) {
@@ -198,9 +209,12 @@ class ImportController extends ImportExportController
                         $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
                     }
                 }
-                $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
             }
         }
+
+        $this->standaloneView->assign('import', $this->import);
+        $this->standaloneView->assign('errors', $this->import->getErrorLog());
+        $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
     }
 
     protected function getFilePathWithinFileMountBoundaries(string $filePath): string
@@ -217,10 +231,8 @@ class ImportController extends ImportExportController
     {
         parent::registerDocHeaderButtons();
 
-        $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
-
         if ($this->pageInfo['uid']) {
-            // View
+            $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
             $onClick = BackendUtility::viewOnClick(
                 $this->pageInfo['uid'],
                 '',
@@ -258,8 +270,6 @@ class ImportController extends ImportExportController
         }
 
         $this->standaloneView->assign('fileSelectOptions', $selectOptions);
-        $this->standaloneView->assign('import', $this->import);
-        $this->standaloneView->assign('errors', $this->import->getErrorLog());
     }
 
     /**

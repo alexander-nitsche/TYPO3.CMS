@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -38,14 +40,14 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 abstract class ImportExportController
 {
     /**
-     * The integer value of the GET/POST var, 'id'. Used for submodules to the 'Web' module (page id)
+     * Page id
      *
      * @var int
      */
     protected $id;
 
     /**
-     * Array containing the current page.
+     * Page record of page id
      *
      * @var array
      */
@@ -59,6 +61,23 @@ abstract class ImportExportController
     protected $permsClause;
 
     /**
+     * @var string
+     */
+    protected $moduleName = '';
+
+    /**
+     * @var ModuleTemplate
+     */
+    protected $moduleTemplate;
+
+    /**
+     * Return URL of list module
+     *
+     * @var string
+     */
+    protected $returnUrl;
+
+    /**
      * @var LanguageService
      */
     protected $lang;
@@ -69,20 +88,6 @@ abstract class ImportExportController
     protected $iconFactory;
 
     /**
-     * The name of the module
-     *
-     * @var string
-     */
-    protected $moduleName = '';
-
-    /**
-     * ModuleTemplate Container
-     *
-     * @var ModuleTemplate
-     */
-    protected $moduleTemplate;
-
-    /**
      * @var UriBuilder
      */
     protected $uriBuilder;
@@ -91,13 +96,6 @@ abstract class ImportExportController
      * @var StandaloneView
      */
     protected $standaloneView;
-
-    /**
-     * Return URL
-     *
-     * @var string
-     */
-    protected $returnUrl;
 
     /**
      * Constructor
@@ -123,36 +121,6 @@ abstract class ImportExportController
     }
 
     /**
-     * Injects the request object for the current request and gathers all data
-     *
-     * IMPORTING DATA:
-     *
-     * Incoming array has syntax:
-     * GETvar 'id' = import page id (must be readable)
-     *
-     * file = pointing to filename relative to public web path
-     *
-     * [all relation fields are clear, but not files]
-     * - page-tree is written first
-     * - then remaining pages (to the root of import)
-     * - then all other records are written either to related included pages or if not found to import-root (should be a sysFolder in most cases)
-     * - then all internal relations are set and non-existing relations removed, relations to static tables preserved.
-     *
-     * EXPORTING DATA:
-     *
-     * Incoming array has syntax:
-     *
-     * file[] = file
-     * dir[] = dir
-     * list[] = table:pid
-     * record[] = table:uid
-     *
-     * pagetree[id] = (single id)
-     * pagetree[levels]=1,2,3, -1 = currently unpacked tree, -2 = only tables on page
-     * pagetree[tables][]=table/_ALL
-     *
-     * external_ref[tables][]=table/_ALL
-     *
      * @param ServerRequestInterface $request
      * @return ResponseInterface
      */
