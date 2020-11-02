@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -165,7 +167,7 @@ class ExportCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // Make sure the _cli_ user is loaded
+        // Ensure the _cli_ user is authenticated
         Bootstrap::initializeBackendAuthentication();
 
         $io = new SymfonyStyle($input, $output);

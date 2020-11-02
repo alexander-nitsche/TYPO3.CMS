@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -24,7 +26,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Command\Exception\ImportFailedException;
-use TYPO3\CMS\Impexp\Command\Exception\InvalidFileException;
 use TYPO3\CMS\Impexp\Command\Exception\LoadingFileFailedException;
 use TYPO3\CMS\Impexp\Command\Exception\PrerequisitesNotMetException;
 use TYPO3\CMS\Impexp\Import;
@@ -37,7 +38,7 @@ class ImportCommand extends Command
     /**
      * Configure the command by defining the name, options and arguments
      */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setDescription('Imports a T3D / XML file with content into a page tree')
@@ -49,23 +50,28 @@ class ImportCommand extends Command
             ->addArgument(
                 'pageId',
                 InputArgument::OPTIONAL,
-                'The page ID to start from. If empty, the root level (= pageId=0) is used.'
-            )->addOption(
+                'The page ID to start from.',
+                0
+            )
+            ->addOption(
                 'updateRecords',
                 null,
                 InputOption::VALUE_NONE,
                 'If set, existing records with the same UID will be updated instead of inserted'
-            )->addOption(
+            )
+            ->addOption(
                 'ignorePid',
                 null,
                 InputOption::VALUE_NONE,
                 'If set, page IDs of updated records are not corrected (only works in conjunction with the updateRecords option)'
-            )->addOption(
+            )
+            ->addOption(
                 'forceUid',
                 null,
                 InputOption::VALUE_NONE,
                 'If set, UIDs from file will be forced.'
-            )->addOption(
+            )
+            ->addOption(
                 'enableLog',
                 null,
                 InputOption::VALUE_NONE,
@@ -80,12 +86,12 @@ class ImportCommand extends Command
      * @param OutputInterface $output
      * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
-
         // Ensure the _cli_ user is authenticated
         Bootstrap::initializeBackendAuthentication();
+
+        $io = new SymfonyStyle($input, $output);
 
         $pageId = (int)$input->getArgument('pageId');
 

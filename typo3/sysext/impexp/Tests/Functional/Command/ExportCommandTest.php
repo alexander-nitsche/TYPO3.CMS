@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -15,13 +17,11 @@
 
 namespace TYPO3\CMS\Impexp\Tests\Functional\Command;
 
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Impexp\Command\ExportCommand;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
-use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 
 /**
  * Test case
@@ -29,29 +29,15 @@ use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 class ExportCommandTest extends AbstractImportExportTestCase
 {
     /**
-     * @var Export|MockObject|AccessibleObjectInterface
-     */
-    protected $exportMock;
-
-    /**
-     * @var ExportCommand|MockObject|AccessibleObjectInterface
-     */
-    protected $commandMock;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $this->commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
-        $this->commandMock->expects(self::any())->method('getExport')->willReturn($this->exportMock);
-    }
-
-    /**
      * @test
      */
     public function exportCommandRequiresNoArguments(): void
     {
-        $tester = new CommandTester($this->commandMock);
+        $exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
+        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+
+        $tester = new CommandTester($commandMock);
         $tester->execute([], []);
 
         self::assertEquals(0, $tester->getStatusCode());
@@ -64,7 +50,11 @@ class ExportCommandTest extends AbstractImportExportTestCase
     {
         $fileName = 'empty_export';
 
-        $tester = new CommandTester($this->commandMock);
+        $exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
+        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+
+        $tester = new CommandTester($commandMock);
         $tester->execute(['file' => $fileName], []);
 
         preg_match('/([^\s]*importexport[^\s]*)/', $tester->getDisplay(), $display);
@@ -73,5 +63,61 @@ class ExportCommandTest extends AbstractImportExportTestCase
         self::assertEquals(0, $tester->getStatusCode());
         self::assertStringEndsWith('empty_export.xml', $filePath);
         self::assertXmlFileEqualsXmlFile(__DIR__ . '/../Fixtures/XmlExports/empty.xml', $filePath);
+    }
+
+    /**
+     * @test
+     */
+    public function exportCommandPassesArgumentsToExportObject(): void
+    {
+        $input = [
+            'file' => 'empty_export',
+            '--fileType' => Export::FILETYPE_T3D,
+            '--pid' => 123,
+            '--levels' => Export::LEVELS_RECORDS_ON_THIS_PAGE,
+            '--table' => ['tt_content'],
+            '--record' => ['sys_category:6'],
+            '--list' => ['sys_category:123'],
+            '--relative' => ['be_users'],
+            '--static' => ['sys_language'],
+            '--exclude' => ['be_users:3'],
+            '--excludeDisabledRecords' => true,
+            '--excludeHtmlCss' => true,
+            '--title' => 'Export Command',
+            '--description' => 'The export which considers all arguments passed on the command line.',
+            '--notes' => 'This export is not for production use.',
+            '--dependency' => ['bootstrap_package'],
+            '--saveFilesOutsideExportFile' => true
+        ];
+
+        $exportMock = $this->getAccessibleMock(Export::class, [
+            'setExportFileType', 'setExportFileName', 'setPid', 'setLevels', 'setTables', 'setRecord', 'setList',
+            'setRelOnlyTables', 'setRelStaticTables', 'setExcludeMap', 'setExcludeDisabledRecords',
+            'setIncludeExtFileResources', 'setTitle', 'setDescription', 'setNotes', 'setExtensionDependencies',
+            'setSaveFilesOutsideExportFile'
+        ]);
+        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
+        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+
+        $exportMock->expects(self::once())->method('setExportFileType')->with(self::equalTo($input['--fileType']));
+        $exportMock->expects(self::once())->method('setExportFileName')->with(self::equalTo($input['file']));
+        $exportMock->expects(self::once())->method('setPid')->with(self::equalTo($input['--pid']));
+        $exportMock->expects(self::once())->method('setLevels')->with(self::equalTo($input['--levels']));
+        $exportMock->expects(self::once())->method('setTables')->with(self::equalTo($input['--table']));
+        $exportMock->expects(self::once())->method('setRecord')->with(self::equalTo($input['--record']));
+        $exportMock->expects(self::once())->method('setList')->with(self::equalTo($input['--list']));
+        $exportMock->expects(self::once())->method('setRelOnlyTables')->with(self::equalTo($input['--relative']));
+        $exportMock->expects(self::once())->method('setRelStaticTables')->with(self::equalTo($input['--static']));
+        $exportMock->expects(self::once())->method('setExcludeMap')->with(self::equalTo($input['--exclude']));
+        $exportMock->expects(self::once())->method('setExcludeDisabledRecords')->with(self::equalTo($input['--excludeDisabledRecords']));
+        $exportMock->expects(self::once())->method('setIncludeExtFileResources')->with(self::equalTo(!$input['--excludeHtmlCss']));
+        $exportMock->expects(self::once())->method('setTitle')->with(self::equalTo($input['--title']));
+        $exportMock->expects(self::once())->method('setDescription')->with(self::equalTo($input['--description']));
+        $exportMock->expects(self::once())->method('setNotes')->with(self::equalTo($input['--notes']));
+        $exportMock->expects(self::once())->method('setExtensionDependencies')->with(self::equalTo($input['--dependency']));
+        $exportMock->expects(self::once())->method('setSaveFilesOutsideExportFile')->with(self::equalTo($input['--saveFilesOutsideExportFile']));
+
+        $tester = new CommandTester($commandMock);
+        $tester->execute($input);
     }
 }
