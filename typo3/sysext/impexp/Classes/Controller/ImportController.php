@@ -169,39 +169,37 @@ class ImportController extends ImportExportController
      */
     protected function importData(array &$inData): void
     {
-        if ($this->hasPageAccess()) {
-            if ($inData['new_import']) {
-                unset($inData['import_mode']);
-            }
+        if ($inData['new_import']) {
+            unset($inData['import_mode']);
+        }
 
-            $this->import = GeneralUtility::makeInstance(Import::class);
-            $this->import->init();
-            $this->import->setPid($this->id);
-            $this->import->setUpdate((bool)$inData['do_update']);
-            $this->import->setImportMode((array)$inData['import_mode']);
-            $this->import->setEnableLogging((bool)$inData['enableLogging']);
-            $this->import->setGlobalIgnorePid((bool)$inData['global_ignore_pid']);
-            $this->import->setForceAllUids((bool)$inData['force_all_UIDS']);
-            $this->import->setShowDiff(!(bool)$inData['notShowDiff']);
-            $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
+        $this->import = GeneralUtility::makeInstance(Import::class);
+        $this->import->init();
+        $this->import->setPid($this->id);
+        $this->import->setUpdate((bool)$inData['do_update']);
+        $this->import->setImportMode((array)$inData['import_mode']);
+        $this->import->setEnableLogging((bool)$inData['enableLogging']);
+        $this->import->setGlobalIgnorePid((bool)$inData['global_ignore_pid']);
+        $this->import->setForceAllUids((bool)$inData['force_all_UIDS']);
+        $this->import->setShowDiff(!(bool)$inData['notShowDiff']);
+        $this->import->setSoftrefInputValues((array)$inData['softrefInputValues']);
 
-            // Perform import or preview depending:
-            if (!empty($inData['file'])) {
-                $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
-                if ($this->import->loadFile($filePath, true)) {
-                    $prerequisitesErrors = $this->import->checkImportPrerequisites();
-                    if (empty($prerequisitesErrors)) {
-                        if ($inData['import_file']) {
-                            $this->import->importData();
-                            BackendUtility::setUpdateSignal('updatePageTree');
-                        }
-                    } else {
-                        foreach ($prerequisitesErrors as $error) {
-                            $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
-                        }
+        // Perform import or preview depending:
+        if (!empty($inData['file'])) {
+            $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
+            if ($this->import->loadFile($filePath, true)) {
+                $prerequisitesErrors = $this->import->checkImportPrerequisites();
+                if (empty($prerequisitesErrors)) {
+                    if ($inData['import_file']) {
+                        $this->import->importData();
+                        BackendUtility::setUpdateSignal('updatePageTree');
                     }
-                    $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
+                } else {
+                    foreach ($prerequisitesErrors as $error) {
+                        $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
+                    }
                 }
+                $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
             }
         }
     }
@@ -221,7 +219,8 @@ class ImportController extends ImportExportController
         parent::registerDocHeaderButtons();
 
         $buttonBar = $this->moduleTemplate->getDocHeaderComponent()->getButtonBar();
-        if ($this->hasPageAccess()) {
+
+        if ($this->pageInfo['uid']) {
             // View
             $previewDataAttributes = PreviewUriBuilder::create((int)$this->pageInfo['uid'])
                 ->withRootLine(BackendUtility::BEgetRootLine($this->pageInfo['uid']))
@@ -240,28 +239,26 @@ class ImportController extends ImportExportController
      */
     protected function makeForm(): void
     {
-        if ($this->hasPageAccess()) {
-            $selectOptions = [''];
-            foreach ($this->getExportFiles() as $file) {
-                $selectOptions[$file->getCombinedIdentifier()] = $file->getPublicUrl();
-            }
-
-            $importFolder = $this->import->getOrCreateDefaultImportExportFolder();
-            if ($importFolder) {
-                $this->standaloneView->assign('importFolder', $importFolder->getCombinedIdentifier());
-                $this->standaloneView->assign('importFolderHint', sprintf(
-                    $this->lang->getLL('importdata_fromPathS'), $importFolder->getCombinedIdentifier())
-                );
-            } else {
-                $this->standaloneView->assign('importFolderHint',
-                    $this->lang->getLL('importdata_no_default_upload_folder')
-                );
-            }
-
-            $this->standaloneView->assign('fileSelectOptions', $selectOptions);
-            $this->standaloneView->assign('import', $this->import);
-            $this->standaloneView->assign('errors', $this->import->getErrorLog());
+        $selectOptions = [''];
+        foreach ($this->getExportFiles() as $file) {
+            $selectOptions[$file->getCombinedIdentifier()] = $file->getPublicUrl();
         }
+
+        $importFolder = $this->import->getOrCreateDefaultImportExportFolder();
+        if ($importFolder) {
+            $this->standaloneView->assign('importFolder', $importFolder->getCombinedIdentifier());
+            $this->standaloneView->assign('importFolderHint', sprintf(
+                $this->lang->getLL('importdata_fromPathS'), $importFolder->getCombinedIdentifier())
+            );
+        } else {
+            $this->standaloneView->assign('importFolderHint',
+                $this->lang->getLL('importdata_no_default_upload_folder')
+            );
+        }
+
+        $this->standaloneView->assign('fileSelectOptions', $selectOptions);
+        $this->standaloneView->assign('import', $this->import);
+        $this->standaloneView->assign('errors', $this->import->getErrorLog());
     }
 
     /**
