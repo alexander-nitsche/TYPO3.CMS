@@ -59,11 +59,6 @@ abstract class ImportExportController
     protected $permsClause;
 
     /**
-     * @var bool
-     */
-    protected $pageAccess = false;
-
-    /**
      * @var LanguageService
      */
     protected $lang;
@@ -172,12 +167,19 @@ abstract class ImportExportController
         $queryParams = $request->getQueryParams();
         $parsedBody = $request->getParsedBody();
 
+        // Checking page access
         $this->id = (int)($parsedBody['id'] ?? $queryParams['id'] ?? 0);
         $this->pageInfo = BackendUtility::readPageAccess($this->id, $this->permsClause);
-        $this->pageAccess = is_array($this->pageInfo);
-        if (is_array($this->pageInfo)) {
-            $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageInfo);
+
+        if (!is_array($this->pageInfo)) {
+            throw new \RuntimeException(
+                'You don\'t have access to this page.',
+                1604308205
+            );
         }
+
+        // Setting up the module meta data:
+        $this->moduleTemplate->getDocHeaderComponent()->setMetaInformation($this->pageInfo);
 
         // Setting up the context sensitive menu:
         $this->moduleTemplate->getPageRenderer()->loadRequireJsModule('TYPO3/CMS/Backend/ContextMenu');
@@ -221,13 +223,5 @@ abstract class ImportExportController
     protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
-    }
-
-    /**
-     * @return bool
-     */
-    public function hasPageAccess(): bool
-    {
-        return $this->pageAccess;
     }
 }
