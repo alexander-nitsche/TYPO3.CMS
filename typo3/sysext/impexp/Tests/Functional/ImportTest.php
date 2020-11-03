@@ -16,6 +16,7 @@
 namespace TYPO3\CMS\Impexp\Tests\Functional;
 
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Impexp\Exception\LoadingFileFailedException;
 use TYPO3\CMS\Impexp\Import;
 
 /**
@@ -51,9 +52,9 @@ class ImportTest extends AbstractImportExportTestCase
         $filePath = str_replace('%EnvironmentPublicPath%', Environment::getPublicPath(), $filePath);
 
         $this->importMock->init();
-        $success = $this->importMock->loadFile($filePath);
+        $this->importMock->loadFile($filePath);
 
-        self::assertTrue($success);
+        self::assertTrue(true);
     }
 
     public function loadingFileFromWithinTypo3BaseFolderSucceedsProvider(): array
@@ -73,10 +74,10 @@ class ImportTest extends AbstractImportExportTestCase
      */
     public function loadingFileFails(string $filePath): void
     {
-        $this->importMock->init();
-        $success = $this->importMock->loadFile($filePath);
+        $this->expectException(LoadingFileFailedException::class);
 
-        self::assertFalse($success);
+        $this->importMock->init();
+        $this->importMock->loadFile($filePath);
     }
 
     public function loadingFileFailsProvider(): array

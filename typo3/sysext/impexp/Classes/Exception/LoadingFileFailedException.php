@@ -13,11 +13,11 @@
  * The TYPO3 project - inspiring people to share!
  */
 
-namespace TYPO3\CMS\Impexp\Command\Exception;
+namespace TYPO3\CMS\Impexp\Exception;
 
 /**
- * File was not found or could not be opened
+ * File could not be loaded
  */
-class InvalidFileException extends \InvalidArgumentException
+class LoadingFileFailedException extends \RuntimeException
 {
 }

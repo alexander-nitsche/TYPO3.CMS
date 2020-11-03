@@ -1239,6 +1239,11 @@ abstract class ImportExport
         $this->errorLog[] = $message;
     }
 
+    public function hasErrors(): bool
+    {
+        return empty($this->errorLog) === false;
+    }
+
     /**
      * Returns a table with the error-messages.
      *

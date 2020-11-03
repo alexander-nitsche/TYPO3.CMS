@@ -74,22 +74,23 @@ class ImportExportUtility
 
         $this->eventDispatcher->dispatch(new BeforeImportEvent($this->import));
 
+        try {
+            $this->import->loadFile($file, true);
+            $this->import->importData();
+        } catch (\Exception $e) {}
+
+        // Get id of first created page:
         $importResponse = 0;
-        if ($file && @is_file($file)) {
-            if ($this->import->loadFile($file, 1)) {
-                // Import to root page:
-                $this->import->importData();
-                // Get id of first created page:
-                $newPages = $this->import->getImportMapId()['pages'];
-                $importResponse = (int)reset($newPages);
-            }
+        $importMapId = $this->import->getImportMapId();
+        if (isset($importMapId['pages'])) {
+            $newPages = $importMapId['pages'];
+            $importResponse = (int)reset($newPages);
         }
 
         // Check for errors during the import process:
-        $errors = $this->import->printErrorLog();
-        if ($errors !== '') {
+        if ($this->import->hasErrors()) {
             $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
-            $logger->warning($errors);
+            $logger->warning($this->import->printErrorLog());
 
             if (!$importResponse) {
                 throw new \ErrorException('No page records imported', 1377625537);

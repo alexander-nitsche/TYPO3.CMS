@@ -219,8 +219,8 @@ class ImportCest
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
         $I->seeElement($this->inFlashMessages . ' .alert.alert-danger');
-        $I->see('Before you can install this T3D file you need to install the extensions', $this->inFlashMessages);
-        $I->cantSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
+        $I->see('Prerequisites for file import are not met.', $this->inFlashMessages);
+        $I->canSeeElement($this->inModuleTabs . ' ' . $this->tabMessages);
         $flashMessage = $I->grabTextFrom($this->inFlashMessages . ' .alert.alert-success .alert-message');
         preg_match('/[^"]+"([^"]+)"[^"]+"([^"]+)"[^"]+/', $flashMessage, $flashMessageParts);
         $loadFilePath = Environment::getProjectPath() . '/fileadmin' . $flashMessageParts[2] . $flashMessageParts[1];

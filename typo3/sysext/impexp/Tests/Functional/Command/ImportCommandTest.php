@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Impexp\Tests\Functional\Command;
 
+use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Impexp\Command\ImportCommand;
 use TYPO3\CMS\Impexp\Import;
@@ -67,10 +68,6 @@ class ImportCommandTest extends AbstractImportExportTestCase
      */
     public function importCommandPassesArgumentsToImportObject(): void
     {
-        // Catch exception which is thrown due to mocking of all setters of the Import object
-        // - but this test is not about this exception but the expectations further down
-        $this->expectException(\TYPO3\CMS\Impexp\Command\Exception\LoadingFileFailedException::class);
-
         $input = [
             'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_language.xml',
             'pageId' => 3,
@@ -95,5 +92,45 @@ class ImportCommandTest extends AbstractImportExportTestCase
 
         $tester = new CommandTester($commandMock);
         $tester->execute($input);
+    }
+
+    /**
+     * @test
+     * @dataProvider importCommandFailsDataProvider
+     * @param string $filePath
+     * @param string $expected
+     */
+    public function importCommandFails(string $filePath, string $expected): void
+    {
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $commandMock = $this->getAccessibleMock(ImportCommand::class, ['getImport']);
+        $commandMock->expects(self::any())->method('getImport')->willReturn($importMock);
+
+        $tester = new CommandTester($commandMock);
+        $tester->execute(
+            ['file' => $filePath, '--forceUid' => true],
+            ['verbosity' => Output::VERBOSITY_VERBOSE]
+        );
+
+        self::assertEquals(1, $tester->getStatusCode());
+        self::assertStringContainsString($expected, $tester->getDisplay(true));
+    }
+
+    public function importCommandFailsDataProvider(): array
+    {
+        return [
+            'path to not existing file' => [
+                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml',
+                'expected' => 'Loading of the import file "EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml" failed.'
+            ],
+            'missing required extension' => [
+                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',
+                'expected' => 'Prerequisites for file import are not met.'
+            ],
+            'forcing uids of sys_file records not supported' => [
+                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
+                'expected' => 'The import has failed.',
+            ],
+        ];
     }
 }

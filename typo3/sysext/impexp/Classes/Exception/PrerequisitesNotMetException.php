@@ -13,11 +13,11 @@
  * The TYPO3 project - inspiring people to share!
  */
 
-namespace TYPO3\CMS\Impexp\Command\Exception;
+namespace TYPO3\CMS\Impexp\Exception;
 
 /**
- * Import failed
+ * Prerequisites are not met
  */
-class ImportFailedException extends \RuntimeException
+class PrerequisitesNotMetException extends \RuntimeException
 {
 }
