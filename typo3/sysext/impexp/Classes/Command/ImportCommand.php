@@ -25,9 +25,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Impexp\Command\Exception\ImportFailedException;
-use TYPO3\CMS\Impexp\Command\Exception\LoadingFileFailedException;
-use TYPO3\CMS\Impexp\Command\Exception\PrerequisitesNotMetException;
 use TYPO3\CMS\Impexp\Import;
 
 /**
@@ -93,38 +90,30 @@ class ImportCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
-        $pageId = (int)$input->getArgument('pageId');
-
         $import = $this->getImport();
-        $import->init();
-        $import->setPid($pageId);
-        $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
-        // Only used when $updateRecords is "true"
-        $import->setGlobalIgnorePid((bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid')));
-        // Force using UIDs from File
-        $import->setForceAllUids((bool)($input->hasOption('forceUid') && $input->getOption('forceUid')));
-        // Enables logging of database actions
-        $import->setEnableLogging((bool)($input->hasOption('enableLog') && $input->getOption('enableLog')));
 
-        if (!$import->loadFile((string)$input->getArgument('file'), true)) {
-            $io->error($import->getErrorLog());
-            throw new LoadingFileFailedException('Loading of the import file failed.', 1484484619);
+        try {
+            $import->init();
+            $import->setPid((int)$input->getArgument('pageId'));
+            $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
+            $import->setGlobalIgnorePid((bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid')));
+            $import->setForceAllUids((bool)($input->hasOption('forceUid') && $input->getOption('forceUid')));
+            $import->setEnableLogging((bool)($input->hasOption('enableLog') && $input->getOption('enableLog')));
+
+            $import->loadFile((string)$input->getArgument('file'), true);
+            $import->checkImportPrerequisites();
+            $import->importData();
+
+            $io->success('Importing ' . $input->getArgument('file') . ' to page ' . $input->getArgument('pageId') . ' succeeded.');
+            return 0;
+        } catch (\Exception $e) {
+            $io->error('Importing ' . $input->getArgument('file') . ' to page ' . $input->getArgument('pageId') . ' failed.');
+            if ($io->isVerbose()) {
+                $io->writeln($e->getMessage());
+                $io->writeln($import->getErrorLog());
+            }
+            return 1;
         }
-
-        $messages = $import->checkImportPrerequisites();
-        if (!empty($messages)) {
-            $io->error($messages);
-            throw new PrerequisitesNotMetException('Prerequisites for file import are not met.', 1484484612);
-        }
-
-        $import->importData();
-        if (!empty($import->getErrorLog())) {
-            $io->error($import->getErrorLog());
-            throw new ImportFailedException('The import has failed.', 1484484613);
-        }
-
-        $io->success('Imported ' . $input->getArgument('file') . ' to page ' . $pageId . ' successfully');
-        return 0;
     }
 
     /**

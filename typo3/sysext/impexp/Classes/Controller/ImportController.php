@@ -197,18 +197,15 @@ class ImportController extends ImportExportController
         // Perform preview and import:
         if (!empty($inData['file'])) {
             $filePath = $this->getFilePathWithinFileMountBoundaries((string)$inData['file']);
-            if ($this->import->loadFile($filePath, true)) {
-                $prerequisitesErrors = $this->import->checkImportPrerequisites();
-                if (empty($prerequisitesErrors)) {
-                    if ($inData['import_file']) {
-                        $this->import->importData();
-                        BackendUtility::setUpdateSignal('updatePageTree');
-                    }
-                } else {
-                    foreach ($prerequisitesErrors as $error) {
-                        $this->moduleTemplate->addFlashMessage($error, '', FlashMessage::ERROR);
-                    }
+            try {
+                $this->import->loadFile($filePath, true);
+                $this->import->checkImportPrerequisites();
+                if ($inData['import_file']) {
+                    $this->import->importData();
+                    BackendUtility::setUpdateSignal('updatePageTree');
                 }
+            } catch (\Exception $e) {
+                $this->moduleTemplate->addFlashMessage($e->getMessage(), '', FlashMessage::ERROR);
             }
         }
 

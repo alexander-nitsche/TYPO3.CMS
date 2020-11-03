@@ -172,8 +172,9 @@ class ExportCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
+        $export = $this->getExport();
+
         try {
-            $export = $this->getExport();
             $export->init();
             if ($input->getOption('fileType') != $export->getExportFileType()) {
                 $export->setExportFileType((string)$input->getOption('fileType'));

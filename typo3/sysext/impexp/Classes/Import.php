@@ -34,6 +34,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Impexp\Exception\ImportFailedException;
+use TYPO3\CMS\Impexp\Exception\LoadingFileFailedException;
+use TYPO3\CMS\Impexp\Exception\PrerequisitesNotMetException;
 
 /**
  * T3D file Import library (TYPO3 Record Document)
@@ -156,8 +159,10 @@ class Import extends ImportExport
 
     /**
      * Imports the internal data array to $pid.
+     *
+     * @throws ImportFailedException
      */
-    public function importData()
+    public function importData(): void
     {
         $this->initializeImport();
 
@@ -178,6 +183,10 @@ class Import extends ImportExport
         $this->unlinkTempFiles();
         // Finally, traverse all records and process softreferences with substitution attributes.
         $this->processSoftReferences();
+
+        if ($this->hasErrors()) {
+            throw new ImportFailedException('The import has failed.', 1484484613);
+        }
     }
 
     /**
@@ -268,12 +277,10 @@ class Import extends ImportExport
     /**
      * Checks any prerequisites necessary to get fulfilled before import
      *
-     * @return array Messages explaining issues which need to get resolved before import
+     * @throws PrerequisitesNotMetException
      */
-    public function checkImportPrerequisites()
+    public function checkImportPrerequisites(): void
     {
-        $messages = [];
-
         // Check #1: Extension dependencies
         $extKeysToInstall = [];
         foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
@@ -282,8 +289,12 @@ class Import extends ImportExport
             }
         }
         if (!empty($extKeysToInstall)) {
-            $messages['missingExtensions'] = 'Before you can install this T3D file you need to install the extensions "'
-                . implode('", "', $extKeysToInstall) . '".';
+            $this->addError(
+                sprintf(
+                    'Before you can import this file you need to install the extensions "%s".',
+                    implode('", "', $extKeysToInstall)
+                )
+            );
         }
 
         // Check #2: If the path for every local storage object exists.
@@ -315,18 +326,23 @@ class Import extends ImportExport
                         $resourceStorage = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecord);
                         if (!$resourceStorage->isOnline()) {
                             $configuration = $resourceStorage->getConfiguration();
-                            $messages['resourceStorageFolderMissing_' . $storageRecordUid] =
-                                'The resource storage "'
-                                . $resourceStorage->getName()
-                                . $configuration['basePath']
-                                . '" does not exist. Please create the directory prior to starting the import!';
+                            $this->addError(
+                                sprintf(
+                                    'The resource storage "%s" does not exist. Please create the directory prior to starting the import!',
+                                    $resourceStorage->getName() . $configuration['basePath']
+                                )
+                            );
                         }
                     }
                 }
             }
         }
 
-        return $messages;
+        if ($this->hasErrors()) {
+            throw new PrerequisitesNotMetException(
+                'Prerequisites for file import are not met.', 1484484612
+            );
+        }
     }
 
     /**
@@ -1642,61 +1658,67 @@ class Import extends ImportExport
      *
      * @param string $fileName File path, has to be within the TYPO3's base folder
      * @param bool $all If set, all information is loaded (header, records and files). Otherwise the default is to read only the header information
-     * @return bool TRUE if the operation went well
+     * @throws LoadingFileFailedException
      */
-    public function loadFile($fileName, $all = false)
+    public function loadFile(string $fileName, bool $all = false): void
     {
         $filePath = GeneralUtility::getFileAbsFileName($fileName);
+
         if (empty($filePath)) {
             $this->addError('File path is not valid: ' . $fileName);
-            return false;
-        }
-        if (!@is_file($filePath)) {
+        } elseif (!@is_file($filePath)) {
             $this->addError('File not found: ' . $filePath);
-            return false;
         }
-        $fI = pathinfo($filePath);
-        if (@is_dir($filePath . '.files')) {
-            if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
-                // copy the folder lowlevel to typo3temp, because the files would be deleted after import
-                GeneralUtility::copyDirectory($filePath . '.files', $this->getOrCreateTemporaryFolderName());
-            } else {
-                $this->addError('External import files for the given import source is currently not supported.');
-            }
-        }
-        if (strtolower($fI['extension']) === 'xml') {
-            // XML:
-            $xmlContent = (string)file_get_contents($filePath);
-            if (strlen($xmlContent)) {
-                $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
-                if (is_array($this->dat)) {
-                    if ($this->dat['_DOCUMENT_TAG'] === 'T3RecordDocument' && is_array($this->dat['header']) && is_array($this->dat['records'])) {
-                        $this->loadInit();
-                        return true;
-                    }
-                    $this->addError('XML file did not contain proper XML for TYPO3 Import');
+
+        if ($this->hasErrors() === false) {
+            $fI = pathinfo($filePath);
+            if (@is_dir($filePath . '.files')) {
+                if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
+                    // copy the folder lowlevel to typo3temp, because the files would be deleted after import
+                    GeneralUtility::copyDirectory($filePath . '.files', $this->getOrCreateTemporaryFolderName());
                 } else {
-                    $this->addError('XML could not be parsed: ' . $this->dat);
+                    $this->addError('External import files for the given import source is currently not supported.');
+                }
+            }
+            if (strtolower($fI['extension']) === 'xml') {
+                // XML:
+                $xmlContent = (string)file_get_contents($filePath);
+                if (strlen($xmlContent)) {
+                    $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
+                    if (is_array($this->dat)) {
+                        if ($this->dat['_DOCUMENT_TAG'] === 'T3RecordDocument' && is_array($this->dat['header']) && is_array($this->dat['records'])) {
+                            $this->loadInit();
+                        } else {
+                            $this->addError('XML file did not contain proper XML for TYPO3 Import');
+                        }
+                    } else {
+                        $this->addError('XML could not be parsed: ' . $this->dat);
+                    }
+                } else {
+                    $this->addError('Error opening file: ' . $filePath);
                 }
             } else {
-                $this->addError('Error opening file: ' . $filePath);
-            }
-        } else {
-            // T3D
-            if ($fd = fopen($filePath, 'rb')) {
-                $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
-                if ($all) {
-                    $this->dat['records'] = $this->getNextFilePart($fd, true, 'records');
-                    $this->dat['files'] = $this->getNextFilePart($fd, true, 'files');
-                    $this->dat['files_fal'] = $this->getNextFilePart($fd, true, 'files_fal');
+                // T3D
+                if ($fd = fopen($filePath, 'rb')) {
+                    $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
+                    if ($all) {
+                        $this->dat['records'] = $this->getNextFilePart($fd, true, 'records');
+                        $this->dat['files'] = $this->getNextFilePart($fd, true, 'files');
+                        $this->dat['files_fal'] = $this->getNextFilePart($fd, true, 'files_fal');
+                    }
+                    $this->loadInit();
+                    fclose($fd);
+                } else {
+                    $this->addError('Error opening file: ' . $filePath);
                 }
-                $this->loadInit();
-                fclose($fd);
-                return true;
             }
-            $this->addError('Error opening file: ' . $filePath);
         }
-        return false;
+
+        if ($this->hasErrors()) {
+            throw new LoadingFileFailedException(
+                sprintf('Loading of the import file "%s" failed.', $fileName), 1484484619
+            );
+        }
     }
 
     /**

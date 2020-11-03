@@ -13,11 +13,11 @@
  * The TYPO3 project - inspiring people to share!
  */
 
-namespace TYPO3\CMS\Impexp\Command\Exception;
+namespace TYPO3\CMS\Impexp\Exception;
 
 /**
- * File could not be loaded
+ * Import failed
  */
-class LoadingFileFailedException extends \RuntimeException
+class ImportFailedException extends \RuntimeException
 {
 }

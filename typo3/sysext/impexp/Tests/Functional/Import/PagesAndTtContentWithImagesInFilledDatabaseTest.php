@@ -58,7 +58,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
 
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
-            1
+            true
         );
         $subject->importData();
 
@@ -90,7 +90,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
 
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-same-image.xml',
-            1
+            true
         );
         $subject->importData();
 
@@ -139,7 +139,7 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         // content element, and sys_file:2 has two connected content elements.
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml',
-            1
+            true
         );
         $subject->importData();
 

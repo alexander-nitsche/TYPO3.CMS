@@ -42,7 +42,7 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
 
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/irre-records.xml',
-            1
+            true
         );
         $subject->importData();
 
