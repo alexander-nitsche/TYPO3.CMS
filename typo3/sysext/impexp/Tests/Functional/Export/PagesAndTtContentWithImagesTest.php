@@ -57,8 +57,7 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
         $out = $subject->render();
 
-        $errors = $subject->printErrorLog();
-        self::assertSame('', $errors);
+        self::assertFalse($subject->hasErrors());
 
         self::assertXmlStringEqualsXmlFile(
             __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent-with-image.xml',

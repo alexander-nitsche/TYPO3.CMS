@@ -1237,16 +1237,6 @@ abstract class ImportExport
     }
 
     /**
-     * Returns a table with the error-messages.
-     *
-     * @return string HTML print of error log
-     */
-    public function printErrorLog()
-    {
-        return !empty($this->errorLog) ? DebugUtility::viewArray($this->errorLog) : '';
-    }
-
-    /**
      * @return BackendUserAuthentication
      */
     protected function getBackendUser()

@@ -77,7 +77,12 @@ class ImportExportUtility
         try {
             $this->import->loadFile($file, true);
             $this->import->importData();
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) {
+            $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
+            $logger->warning(
+                $e->getMessage() . PHP_EOL . implode(PHP_EOL, $this->import->getErrorLog())
+            );
+        }
 
         // Get id of first created page:
         $importResponse = 0;
@@ -89,9 +94,6 @@ class ImportExportUtility
 
         // Check for errors during the import process:
         if ($this->import->hasErrors()) {
-            $logger = GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__);
-            $logger->warning($this->import->printErrorLog());
-
             if (!$importResponse) {
                 throw new \ErrorException('No page records imported', 1377625537);
             }
