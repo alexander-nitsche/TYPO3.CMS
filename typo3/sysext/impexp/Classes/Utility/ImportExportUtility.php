@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -57,17 +59,10 @@ class ImportExportUtility
      * @param string $file The full absolute path to the file
      * @param int $pid The pid under which the t3d file should be imported
      * @throws \ErrorException
-     * @throws \InvalidArgumentException
-     * @return int
+     * @return int ID of first created page
      */
-    public function importT3DFile($file, $pid)
+    public function importT3DFile(string $file, int $pid): int
     {
-        if (!is_string($file)) {
-            throw new \InvalidArgumentException('Input parameter $file has to be of type string', 1377625645);
-        }
-        if (!is_int($pid)) {
-            throw new \InvalidArgumentException('Input parameter $int has to be of type integer', 1377625646);
-        }
         $this->import = GeneralUtility::makeInstance(Import::class);
         $this->import->init();
         $this->import->setPid($pid);
