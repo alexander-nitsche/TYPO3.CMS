@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -15,6 +17,7 @@
 
 namespace TYPO3\CMS\Impexp\Domain\Repository;
 
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
@@ -23,23 +26,29 @@ use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * Handling of presets
- * @internal this is not part of TYPO3's Core API.
+ * Export preset repository
+ *
+ * @internal This class is a specific repository implementation and is not considered part of the Public TYPO3 API.
  */
 class PresetRepository
 {
     /**
+     * @var string
+     */
+    protected $table = 'tx_impexp_presets';
+
+    /**
      * @param int $pageId
      * @return array
      */
-    public function getPresets($pageId)
+    public function getPresets(int $pageId): array
     {
         $options = [''];
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable('tx_impexp_presets');
+            ->getQueryBuilderForTable($this->table);
 
         $queryBuilder->select('*')
-            ->from('tx_impexp_presets')
+            ->from($this->table)
             ->where(
                 $queryBuilder->expr()->orX(
                     $queryBuilder->expr()->gt(
@@ -83,13 +92,13 @@ class PresetRepository
      * @param int $uid Preset record
      * @return array Preset record, if any (otherwise FALSE)
      */
-    public function getPreset($uid)
+    protected function getPreset(int $uid): ?array
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable('tx_impexp_presets');
+            ->getQueryBuilderForTable($this->table);
 
-        return $queryBuilder->select('*')
-            ->from('tx_impexp_presets')
+        $preset = $queryBuilder->select('*')
+            ->from($this->table)
             ->where(
                 $queryBuilder->expr()->eq(
                     'uid',
@@ -98,6 +107,8 @@ class PresetRepository
             )
             ->execute()
             ->fetch();
+
+        return $preset !== false ? $preset : null;
     }
 
     /**
@@ -105,9 +116,9 @@ class PresetRepository
      *
      * @param array $inData In data array, passed by reference!
      */
-    public function processPresets(&$inData)
+    public function processPresets(array &$inData): void
     {
-        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable('tx_impexp_presets');
+        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
         $presetData = GeneralUtility::_GP('preset');
         $err = false;
         $msg = '';
@@ -116,12 +127,12 @@ class PresetRepository
         // cast public checkbox to int, since this is an int field and NULL is not allowed
         $inData['preset']['public'] = (int)$inData['preset']['public'];
         if (isset($presetData['save'])) {
-            $preset = $this->getPreset($presetData['select']);
+            $preset = $this->getPreset((int)$presetData['select']);
             // Update existing
             if (is_array($preset)) {
                 if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
                     $connection->update(
-                        'tx_impexp_presets',
+                        $this->table,
                         [
                             'public' => $inData['preset']['public'],
                             'title' => $inData['preset']['title'],
@@ -140,7 +151,7 @@ class PresetRepository
             } else {
                 // Insert new:
                 $connection->insert(
-                    'tx_impexp_presets',
+                    $this->table,
                     [
                         'user_uid' => $beUser->user['uid'],
                         'public' => $inData['preset']['public'],
@@ -156,12 +167,12 @@ class PresetRepository
         }
         // Delete preset:
         if (isset($presetData['delete'])) {
-            $preset = $this->getPreset($presetData['select']);
+            $preset = $this->getPreset((int)$presetData['select']);
             if (is_array($preset)) {
                 // Update existing
                 if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
                     $connection->delete(
-                        'tx_impexp_presets',
+                        $this->table,
                         ['uid' => (int)$preset['uid']]
                     );
 
@@ -177,7 +188,7 @@ class PresetRepository
         }
         // Load preset
         if (isset($presetData['load']) || isset($presetData['merge'])) {
-            $preset = $this->getPreset($presetData['select']);
+            $preset = $this->getPreset((int)$presetData['select']);
             if (is_array($preset)) {
                 // Update existing
                 $inData_temp = unserialize($preset['preset_data'], ['allowed_classes' => false]);
@@ -222,9 +233,9 @@ class PresetRepository
     }
 
     /**
-     * @return \TYPO3\CMS\Core\Authentication\BackendUserAuthentication
+     * @return BackendUserAuthentication
      */
-    protected function getBackendUser()
+    protected function getBackendUser(): BackendUserAuthentication
     {
         return $GLOBALS['BE_USER'];
     }
