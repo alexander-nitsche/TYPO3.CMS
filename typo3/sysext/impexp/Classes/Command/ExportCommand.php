@@ -34,10 +34,17 @@ use TYPO3\CMS\Impexp\Export;
 class ExportCommand extends Command
 {
     /**
+     * @var Export
+     */
+    protected $export;
+
+    /**
      * Configure the command by defining the name, options and arguments
      */
     protected function configure(): void
     {
+        $export = $this->getExport();
+
         $this
             ->setDescription('Exports a T3D / XML file with content of a page tree')
             ->addArgument(
@@ -50,14 +57,14 @@ class ExportCommand extends Command
                 'f',
                 InputOption::VALUE_OPTIONAL,
                 'The file type (xml, t3d, t3d_compressed).',
-                Export::FILETYPE_XML
+                $export->getExportFileType()
             )
             ->addOption(
                 'pid',
                 'p',
                 InputOption::VALUE_OPTIONAL,
                 'The root page of the exported page tree.',
-                -1
+                $export->getPid()
             )
             ->addOption(
                 'levels',
@@ -75,7 +82,7 @@ class ExportCommand extends Command
                     Export::LEVELS_EXPANDED_TREE,
                     Export::LEVELS_INFINITE
                 ),
-                0
+                $export->getLevels()
             )
             ->addOption(
                 'table',
@@ -173,60 +180,27 @@ class ExportCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $export = $this->getExport();
+        $export->init();
 
         try {
-            $export->init();
-            if ($input->getOption('fileType') != $export->getExportFileType()) {
-                $export->setExportFileType((string)$input->getOption('fileType'));
-            }
-            if ($input->getArgument('file') != $export->getExportFileName()) {
-                $export->setExportFileName(PathUtility::basename($input->getArgument('file')));
-            }
-            if ($input->getOption('pid') != $export->getPid()) {
-                $export->setPid((int)$input->getOption('pid'));
-            }
-            if ($input->getOption('levels') != $export->getLevels()) {
-                $export->setLevels((int)$input->getOption('levels'));
-            }
-            if ($input->getOption('table') != $export->getTables()) {
-                $export->setTables($input->getOption('table'));
-            }
-            if ($input->getOption('record') != $export->getRecord()) {
-                $export->setRecord($input->getOption('record'));
-            }
-            if ($input->getOption('list') != $export->getList()) {
-                $export->setList($input->getOption('list'));
-            }
-            if ($input->getOption('relative') != $export->getRelOnlyTables()) {
-                $export->setRelOnlyTables($input->getOption('relative'));
-            }
-            if ($input->getOption('static') != $export->getRelStaticTables()) {
-                $export->setRelStaticTables($input->getOption('static'));
-            }
-            if ($input->getOption('exclude') != $export->getExcludeMap()) {
-                $export->setExcludeMap($input->getOption('exclude'));
-            }
-            if ($input->getOption('excludeDisabledRecords') != $export->isExcludeDisabledRecords()) {
-                $export->setExcludeDisabledRecords($input->getOption('excludeDisabledRecords'));
-            }
-            if (!$input->getOption('excludeHtmlCss') != $export->isIncludeExtFileResources()) {
-                $export->setIncludeExtFileResources(!$input->getOption('excludeHtmlCss'));
-            }
-            if ($input->getOption('title') != $export->getTitle()) {
-                $export->setTitle($input->getOption('title'));
-            }
-            if ($input->getOption('description') != $export->getDescription()) {
-                $export->setDescription($input->getOption('description'));
-            }
-            if ($input->getOption('notes') != $export->getNotes()) {
-                $export->setNotes($input->getOption('notes'));
-            }
-            if ($input->getOption('dependency') != $export->getExtensionDependencies()) {
-                $export->setExtensionDependencies($input->getOption('dependency'));
-            }
-            if ($input->getOption('saveFilesOutsideExportFile') != $export->isSaveFilesOutsideExportFile()) {
-                $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
-            }
+            $export->setExportFileName(PathUtility::basename((string)$input->getArgument('file')));
+            $export->setExportFileType((string)$input->getOption('fileType'));
+            $export->setPid((int)$input->getOption('pid'));
+            $export->setLevels((int)$input->getOption('levels'));
+            $export->setTables($input->getOption('table'));
+            $export->setRecord($input->getOption('record'));
+            $export->setList($input->getOption('list'));
+            $export->setRelOnlyTables($input->getOption('relative'));
+            $export->setRelStaticTables($input->getOption('static'));
+            $export->setExcludeMap($input->getOption('exclude'));
+            $export->setExcludeDisabledRecords($input->getOption('excludeDisabledRecords'));
+            $export->setIncludeExtFileResources(!$input->getOption('excludeHtmlCss'));
+            $export->setTitle((string)$input->getOption('title'));
+            $export->setDescription((string)$input->getOption('description'));
+            $export->setNotes((string)$input->getOption('notes'));
+            $export->setExtensionDependencies($input->getOption('dependency'));
+            $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
+
             $export->process();
             $saveFile = $export->saveToFile();
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');
@@ -246,6 +220,9 @@ class ExportCommand extends Command
      */
     protected function getExport(): Export
     {
-        return GeneralUtility::makeInstance(Export::class);
+        if (empty($this->export)) {
+            $this->export = GeneralUtility::makeInstance(Export::class);
+        }
+        return $this->export;
     }
 }

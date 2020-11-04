@@ -19,6 +19,7 @@ namespace TYPO3\CMS\Impexp\Tests\Functional\Command;
 
 use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Tester\CommandTester;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Command\ImportCommand;
 use TYPO3\CMS\Impexp\Import;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
@@ -36,14 +37,8 @@ class ImportCommandTest extends AbstractImportExportTestCase
         $this->expectException(\Symfony\Component\Console\Exception\RuntimeException::class);
         $this->expectExceptionMessage('Not enough arguments (missing: "file")');
 
-        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
-        $commandMock = $this->getAccessibleMock(ImportCommand::class, ['getImport']);
-        $commandMock->expects(self::any())->method('getImport')->willReturn($importMock);
-
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ImportCommand());
         $tester->execute([], []);
-
-        self::assertEquals(0, $tester->getStatusCode());
     }
 
     /**
@@ -53,11 +48,7 @@ class ImportCommandTest extends AbstractImportExportTestCase
     {
         $filePath = 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_language.xml';
 
-        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
-        $commandMock = $this->getAccessibleMock(ImportCommand::class, ['getImport']);
-        $commandMock->expects(self::any())->method('getImport')->willReturn($importMock);
-
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ImportCommand());
         $tester->execute(['file' => $filePath], []);
 
         self::assertEquals(0, $tester->getStatusCode());
@@ -80,8 +71,7 @@ class ImportCommandTest extends AbstractImportExportTestCase
         $importMock = $this->getAccessibleMock(Import::class, [
             'setPid', 'setUpdate', 'setGlobalIgnorePid', 'setForceAllUids', 'setEnableLogging', 'loadFile'
         ]);
-        $commandMock = $this->getAccessibleMock(ImportCommand::class, ['getImport']);
-        $commandMock->expects(self::any())->method('getImport')->willReturn($importMock);
+        GeneralUtility::addInstance(Import::class, $importMock);
 
         $importMock->expects(self::once())->method('setPid')->with(self::equalTo($input['pageId']));
         $importMock->expects(self::once())->method('setUpdate')->with(self::equalTo($input['--updateRecords']));
@@ -90,7 +80,7 @@ class ImportCommandTest extends AbstractImportExportTestCase
         $importMock->expects(self::once())->method('setEnableLogging')->with(self::equalTo($input['--enableLog']));
         $importMock->expects(self::once())->method('loadFile')->with(self::equalTo($input['file']));
 
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ImportCommand());
         $tester->execute($input);
     }
 
@@ -102,11 +92,7 @@ class ImportCommandTest extends AbstractImportExportTestCase
      */
     public function importCommandFails(string $filePath, string $expected): void
     {
-        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
-        $commandMock = $this->getAccessibleMock(ImportCommand::class, ['getImport']);
-        $commandMock->expects(self::any())->method('getImport')->willReturn($importMock);
-
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ImportCommand());
         $tester->execute(
             ['file' => $filePath, '--forceUid' => true],
             ['verbosity' => Output::VERBOSITY_VERBOSE]

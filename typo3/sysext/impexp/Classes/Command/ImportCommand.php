@@ -33,6 +33,11 @@ use TYPO3\CMS\Impexp\Import;
 class ImportCommand extends Command
 {
     /**
+     * @var Import
+     */
+    protected $import;
+
+    /**
      * Configure the command by defining the name, options and arguments
      */
     protected function configure(): void
@@ -91,14 +96,14 @@ class ImportCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $import = $this->getImport();
+        $import->init();
 
         try {
-            $import->init();
             $import->setPid((int)$input->getArgument('pageId'));
-            $import->setUpdate((bool)($input->hasOption('updateRecords') && $input->getOption('updateRecords')));
-            $import->setGlobalIgnorePid((bool)($input->hasOption('ignorePid') && $input->getOption('ignorePid')));
-            $import->setForceAllUids((bool)($input->hasOption('forceUid') && $input->getOption('forceUid')));
-            $import->setEnableLogging((bool)($input->hasOption('enableLog') && $input->getOption('enableLog')));
+            $import->setUpdate((bool)$input->getOption('updateRecords'));
+            $import->setGlobalIgnorePid((bool)$input->getOption('ignorePid'));
+            $import->setForceAllUids((bool)$input->getOption('forceUid'));
+            $import->setEnableLogging((bool)$input->getOption('enableLog'));
 
             $import->loadFile((string)$input->getArgument('file'), true);
             $import->checkImportPrerequisites();
@@ -121,6 +126,9 @@ class ImportCommand extends Command
      */
     protected function getImport(): Import
     {
-        return GeneralUtility::makeInstance(Import::class);
+        if (empty($this->import)) {
+            $this->import = GeneralUtility::makeInstance(Import::class);
+        }
+        return $this->import;
     }
 }
