@@ -19,6 +19,7 @@ namespace TYPO3\CMS\Impexp\Tests\Functional\Command;
 
 use Symfony\Component\Console\Tester\CommandTester;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Command\ExportCommand;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
@@ -34,10 +35,9 @@ class ExportCommandTest extends AbstractImportExportTestCase
     public function exportCommandRequiresNoArguments(): void
     {
         $exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
-        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+        GeneralUtility::addInstance(Export::class, $exportMock);
 
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ExportCommand());
         $tester->execute([], []);
 
         self::assertEquals(0, $tester->getStatusCode());
@@ -51,10 +51,9 @@ class ExportCommandTest extends AbstractImportExportTestCase
         $fileName = 'empty_export';
 
         $exportMock = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
-        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+        GeneralUtility::addInstance(Export::class, $exportMock);
 
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ExportCommand());
         $tester->execute(['file' => $fileName], []);
 
         preg_match('/([^\s]*importexport[^\s]*)/', $tester->getDisplay(), $display);
@@ -96,8 +95,7 @@ class ExportCommandTest extends AbstractImportExportTestCase
             'setIncludeExtFileResources', 'setTitle', 'setDescription', 'setNotes', 'setExtensionDependencies',
             'setSaveFilesOutsideExportFile'
         ]);
-        $commandMock = $this->getAccessibleMock(ExportCommand::class, ['getExport']);
-        $commandMock->expects(self::any())->method('getExport')->willReturn($exportMock);
+        GeneralUtility::addInstance(Export::class, $exportMock);
 
         $exportMock->expects(self::once())->method('setExportFileType')->with(self::equalTo($input['--fileType']));
         $exportMock->expects(self::once())->method('setExportFileName')->with(self::equalTo($input['file']));
@@ -117,7 +115,7 @@ class ExportCommandTest extends AbstractImportExportTestCase
         $exportMock->expects(self::once())->method('setExtensionDependencies')->with(self::equalTo($input['--dependency']));
         $exportMock->expects(self::once())->method('setSaveFilesOutsideExportFile')->with(self::equalTo($input['--saveFilesOutsideExportFile']));
 
-        $tester = new CommandTester($commandMock);
+        $tester = new CommandTester(new ExportCommand());
         $tester->execute($input);
     }
 }
