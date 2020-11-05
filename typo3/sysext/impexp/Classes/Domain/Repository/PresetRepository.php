@@ -20,6 +20,7 @@ namespace TYPO3\CMS\Impexp\Domain\Repository;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
@@ -43,9 +44,7 @@ class PresetRepository
      */
     public function getPresets(int $pageId): array
     {
-        $options = [''];
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable($this->table);
+        $queryBuilder = $this->createQueryBuilder();
 
         $queryBuilder->select('*')
             ->from($this->table)
@@ -78,6 +77,8 @@ class PresetRepository
         }
 
         $presets = $queryBuilder->execute();
+
+        $options = [''];
         while ($presetCfg = $presets->fetch()) {
             $options[$presetCfg['uid']] = $presetCfg['title'] . ' [' . $presetCfg['uid'] . ']'
                 . ($presetCfg['public'] ? ' [Public]' : '')
@@ -94,8 +95,7 @@ class PresetRepository
      */
     protected function getPreset(int $uid): ?array
     {
-        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable($this->table);
+        $queryBuilder = $this->createQueryBuilder();
 
         $preset = $queryBuilder->select('*')
             ->from($this->table)
@@ -111,6 +111,59 @@ class PresetRepository
         return $preset !== false ? $preset : null;
     }
 
+    protected function createPreset(array $data): void
+    {
+        $connection = $this->createConnection();
+        $connection->insert(
+            $this->table,
+            [
+                'user_uid' => $this->getBackendUser()->user['uid'],
+                'public' => $data['preset']['public'],
+                'title' => $data['preset']['title'],
+                'item_uid' => (int)$data['pagetree']['id'],
+                'preset_data' => serialize($data)
+            ],
+            ['preset_data' => Connection::PARAM_LOB]
+        );
+    }
+
+    protected function updatePreset(int $uid, array $data): void
+    {
+        $connection = $this->createConnection();
+        $connection->update(
+            $this->table,
+            [
+                'public' => $data['preset']['public'],
+                'title' => $data['preset']['title'],
+                'item_uid' => $data['pagetree']['id'],
+                'preset_data' => serialize($data)
+            ],
+            ['uid' => $uid],
+            ['preset_data' => Connection::PARAM_LOB]
+        );
+    }
+
+    protected function loadPreset(int $uid): ?array
+    {
+        $presetData = null;
+
+        $preset = $this->getPreset($uid);
+        if ($preset !== null) {
+            $presetData = unserialize($preset['preset_data'], ['allowed_classes' => false]);
+        }
+
+        return is_array($presetData) ? $presetData : null;
+    }
+
+    protected function deletePreset(int $uid): void
+    {
+        $connection = $this->createConnection();
+        $connection->delete(
+            $this->table,
+            ['uid' => $uid]
+        );
+    }
+
     /**
      * Manipulate presets
      *
@@ -118,31 +171,18 @@ class PresetRepository
      */
     public function processPresets(array &$inData): void
     {
-        $connection = GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
         $presetData = GeneralUtility::_GP('preset');
         $err = false;
         $msg = '';
         // Save preset
         $beUser = $this->getBackendUser();
-        // cast public checkbox to int, since this is an int field and NULL is not allowed
         $inData['preset']['public'] = (int)$inData['preset']['public'];
         if (isset($presetData['save'])) {
             $preset = $this->getPreset((int)$presetData['select']);
             // Update existing
             if (is_array($preset)) {
                 if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
-                    $connection->update(
-                        $this->table,
-                        [
-                            'public' => $inData['preset']['public'],
-                            'title' => $inData['preset']['title'],
-                            'item_uid' => $inData['pagetree']['id'],
-                            'preset_data' => serialize($inData)
-                        ],
-                        ['uid' => (int)$preset['uid']],
-                        ['preset_data' => Connection::PARAM_LOB]
-                    );
-
+                    $this->updatePreset((int)$preset['uid'], $inData);
                     $msg = 'Preset #' . $preset['uid'] . ' saved!';
                 } else {
                     $msg = 'ERROR: The preset was not saved because you were not the owner of it!';
@@ -150,18 +190,7 @@ class PresetRepository
                 }
             } else {
                 // Insert new:
-                $connection->insert(
-                    $this->table,
-                    [
-                        'user_uid' => $beUser->user['uid'],
-                        'public' => $inData['preset']['public'],
-                        'title' => $inData['preset']['title'],
-                        'item_uid' => (int)$inData['pagetree']['id'],
-                        'preset_data' => serialize($inData)
-                    ],
-                    ['preset_data' => Connection::PARAM_LOB]
-                );
-
+                $this->createPreset($inData);
                 $msg = 'New preset "' . htmlspecialchars($inData['preset']['title']) . '" is created';
             }
         }
@@ -169,13 +198,9 @@ class PresetRepository
         if (isset($presetData['delete'])) {
             $preset = $this->getPreset((int)$presetData['select']);
             if (is_array($preset)) {
-                // Update existing
+                // Delete existing
                 if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
-                    $connection->delete(
-                        $this->table,
-                        ['uid' => (int)$preset['uid']]
-                    );
-
+                    $this->deletePreset((int)$preset['uid']);
                     $msg = 'Preset #' . $preset['uid'] . ' deleted!';
                 } else {
                     $msg = 'ERROR: You were not the owner of the preset so you could not delete it.';
@@ -188,10 +213,9 @@ class PresetRepository
         }
         // Load preset
         if (isset($presetData['load']) || isset($presetData['merge'])) {
-            $preset = $this->getPreset((int)$presetData['select']);
-            if (is_array($preset)) {
-                // Update existing
-                $inData_temp = unserialize($preset['preset_data'], ['allowed_classes' => false]);
+            $presetUid = (int)$presetData['select'];
+            if ($presetUid > 0) {
+                $inData_temp = $this->loadPreset($presetUid);
                 if (is_array($inData_temp)) {
                     if (isset($presetData['merge'])) {
                         // Merge records in:
@@ -230,6 +254,22 @@ class PresetRepository
             $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
             $defaultFlashMessageQueue->enqueue($flashMessage);
         }
+    }
+
+    /**
+     * @return Connection
+     */
+    protected function createConnection(): Connection
+    {
+        return GeneralUtility::makeInstance(ConnectionPool::class)->getConnectionForTable($this->table);
+    }
+
+    /**
+     * @return QueryBuilder
+     */
+    protected function createQueryBuilder(): QueryBuilder
+    {
+        return GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this->table);
     }
 
     /**
