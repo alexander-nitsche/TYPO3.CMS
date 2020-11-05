@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Impexp\Exception;
 
 /**
- * Prerequisites are not met
+ * Export preset could not be found
  */
-class PrerequisitesNotMetException extends \RuntimeException
+class PresetNotFoundException extends \RuntimeException
 {
 }

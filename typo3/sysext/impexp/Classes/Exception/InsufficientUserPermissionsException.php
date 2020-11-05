@@ -18,8 +18,8 @@ declare(strict_types=1);
 namespace TYPO3\CMS\Impexp\Exception;
 
 /**
- * Prerequisites are not met
+ * Backend user is not allowed to perform import / export action
  */
-class PrerequisitesNotMetException extends \RuntimeException
+class InsufficientUserPermissionsException extends \RuntimeException
 {
 }

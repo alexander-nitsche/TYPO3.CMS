@@ -26,6 +26,9 @@ use TYPO3\CMS\Core\Messaging\FlashMessage;
 use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
 use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Impexp\Exception\InsufficientUserPermissionsException;
+use TYPO3\CMS\Impexp\Exception\MalformedPresetException;
+use TYPO3\CMS\Impexp\Exception\PresetNotFoundException;
 
 /**
  * Export preset repository
@@ -92,9 +95,10 @@ class PresetRepository
      * Get single preset record
      *
      * @param int $uid Preset record
-     * @return array Preset record, if any (otherwise FALSE)
+     * @throws PresetNotFoundException
+     * @return array Preset record
      */
-    protected function getPreset(int $uid): ?array
+    protected function getPreset(int $uid): array
     {
         $queryBuilder = $this->createQueryBuilder();
 
@@ -109,7 +113,14 @@ class PresetRepository
             ->execute()
             ->fetch();
 
-        return $preset !== false ? $preset : null;
+        if (!is_array($preset)) {
+            throw new PresetNotFoundException(
+                'ERROR: No valid preset #' . $uid . ' found.',
+                1604608843
+            );
+        }
+
+        return $preset;
     }
 
     protected function createPreset(array $data): void
@@ -132,8 +143,22 @@ class PresetRepository
         );
     }
 
+    /**
+     * @param int $uid
+     * @param array $data
+     * @throws InsufficientUserPermissionsException
+     */
     protected function updatePreset(int $uid, array $data): void
     {
+        $preset = $this->getPreset($uid);
+
+        if (!($this->getBackendUser()->isAdmin() || $preset['user_uid'] === $this->getBackendUser()->user['uid'])) {
+            throw new InsufficientUserPermissionsException(
+                'ERROR: You were not the owner of the preset so you could not delete it.',
+                1604584766
+            );
+        }
+
         $timestamp = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
 
         $connection = $this->createConnection();
@@ -151,20 +176,41 @@ class PresetRepository
         );
     }
 
-    protected function loadPreset(int $uid): ?array
+    /**
+     * @param int $uid
+     * @throws MalformedPresetException
+     * @return array
+     */
+    protected function loadPreset(int $uid): array
     {
-        $presetData = null;
-
         $preset = $this->getPreset($uid);
-        if ($preset !== null) {
-            $presetData = unserialize($preset['preset_data'], ['allowed_classes' => false]);
+
+        $presetData = unserialize($preset['preset_data'], ['allowed_classes' => false]);
+        if (!is_array($presetData)) {
+            throw new MalformedPresetException(
+                'ERROR: No configuration data found in preset record!',
+                1604608922
+            );
         }
 
-        return is_array($presetData) ? $presetData : null;
+        return $presetData;
     }
 
+    /**
+     * @param int $uid
+     * @throws InsufficientUserPermissionsException
+     */
     protected function deletePreset(int $uid): void
     {
+        $preset = $this->getPreset($uid);
+
+        if (!($this->getBackendUser()->isAdmin() || $preset['user_uid'] === $this->getBackendUser()->user['uid'])) {
+            throw new InsufficientUserPermissionsException(
+                'ERROR: You were not the owner of the preset so you could not delete it.',
+                1604564346
+            );
+        }
+
         $connection = $this->createConnection();
         $connection->delete(
             $this->table,
@@ -180,20 +226,25 @@ class PresetRepository
     public function processPresets(array &$inData): void
     {
         $presetData = GeneralUtility::_GP('preset');
+        $inData['preset']['public'] = (int)$inData['preset']['public'];
+
+        if (!is_array($presetData)) {
+            return;
+        }
+
         $err = false;
         $msg = '';
+        $presetUid = (int)$presetData['select'];
+
         // Save preset
-        $beUser = $this->getBackendUser();
-        $inData['preset']['public'] = (int)($inData['preset']['public'] ?? 0);
         if (isset($presetData['save'])) {
-            $preset = $this->getPreset((int)$presetData['select']);
             // Update existing
-            if (is_array($preset)) {
-                if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
-                    $this->updatePreset((int)$preset['uid'], $inData);
-                    $msg = 'Preset #' . $preset['uid'] . ' saved!';
-                } else {
-                    $msg = 'ERROR: The preset was not saved because you were not the owner of it!';
+            if ($presetUid > 0) {
+                try {
+                    $this->updatePreset($presetUid, $inData);
+                    $msg = 'Preset #' . $presetUid . ' saved!';
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
                     $err = true;
                 }
             } else {
@@ -204,14 +255,12 @@ class PresetRepository
         }
         // Delete preset:
         if (isset($presetData['delete'])) {
-            $preset = $this->getPreset((int)$presetData['select']);
-            if (is_array($preset)) {
-                // Delete existing
-                if ($beUser->isAdmin() || $preset['user_uid'] === $beUser->user['uid']) {
-                    $this->deletePreset((int)$preset['uid']);
-                    $msg = 'Preset #' . $preset['uid'] . ' deleted!';
-                } else {
-                    $msg = 'ERROR: You were not the owner of the preset so you could not delete it.';
+            if ($presetUid > 0) {
+                try {
+                    $this->deletePreset($presetUid);
+                    $msg = 'Preset #' . $presetUid . ' deleted!';
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
                     $err = true;
                 }
             } else {
@@ -221,10 +270,10 @@ class PresetRepository
         }
         // Load preset
         if (isset($presetData['load']) || isset($presetData['merge'])) {
-            $presetUid = (int)$presetData['select'];
             if ($presetUid > 0) {
-                $inData_temp = $this->loadPreset($presetUid);
-                if (is_array($inData_temp)) {
+                try {
+                    $inData_temp = $this->loadPreset($presetUid);
+                    $msg = 'Preset #' . $presetUid . ' loaded!';
                     if (isset($presetData['merge'])) {
                         // Merge records in:
                         if (is_array($inData_temp['record'])) {
@@ -235,11 +284,10 @@ class PresetRepository
                             $inData['list'] = array_merge((array)$inData['list'], $inData_temp['list']);
                         }
                     } else {
-                        $msg = 'Preset #' . $preset['uid'] . ' loaded!';
                         $inData = $inData_temp;
                     }
-                } else {
-                    $msg = 'ERROR: No configuration data found in preset record!';
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
                     $err = true;
                 }
             } else {
@@ -247,15 +295,14 @@ class PresetRepository
                 $err = true;
             }
         }
+
         // Show message:
         if ($msg !== '') {
             /** @var FlashMessage $flashMessage */
-            $flashMessage = GeneralUtility::makeInstance(
-                FlashMessage::class,
-                'Presets',
-                $msg,
-                $err ? FlashMessage::ERROR : FlashMessage::INFO
-            );
+            $flashMessage = GeneralUtility::makeInstance(FlashMessage::class);
+            $flashMessage->setTitle('Presets');
+            $flashMessage->setMessage($msg);
+            $flashMessage->setSeverity($err ? FlashMessage::ERROR : FlashMessage::INFO);
             /** @var FlashMessageService $flashMessageService */
             $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
             /** @var FlashMessageQueue $defaultFlashMessageQueue */

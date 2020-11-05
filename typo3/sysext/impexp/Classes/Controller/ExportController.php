@@ -116,7 +116,7 @@ class ExportController extends ImportExportController
      *
      * @param array $inData
      */
-    protected function processPresets(array &$inData): void
+    public function processPresets(array &$inData): void
     {
         // Flag doesn't exist initially; state is on by default
         if (!array_key_exists('excludeDisabled', $inData)) {
