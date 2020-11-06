@@ -61,11 +61,11 @@ class ExportPageTreeView extends BrowseTreeView
     }
 
     /**
-     * Wrapping Plus/Minus icon
+     * Remove link from Plus/Minus icon
      *
      * @param string $icon Icon HTML
-     * @param mixed $cmd (See parent class)
-     * @param mixed $bMark (See parent class)
+     * @param string $cmd
+     * @param string $bMark
      * @param bool $isOpen
      * @return string Icon HTML
      */
@@ -75,7 +75,7 @@ class ExportPageTreeView extends BrowseTreeView
     }
 
     /**
-     * Wrapping Icon
+     * Remove link from icon
      *
      * @param string $icon Icon HTML
      * @param array $row Record row (page)
@@ -93,7 +93,7 @@ class ExportPageTreeView extends BrowseTreeView
      * @param string $clause Additional where clause
      * @return array Array of tree elements
      */
-    public function ext_tree($pid, $clause = '')
+    public function ext_tree(int $pid, string $clause = '')
     {
         // Initialize:
         $this->init(' AND ' . $this->BE_USER->getPagePermsClause(Permission::PAGE_SHOW) . $clause);
@@ -109,17 +109,16 @@ class ExportPageTreeView extends BrowseTreeView
         $this->reset();
         $this->ids = $curIds;
         if ($pid > 0) {
-            $rootRec = BackendUtility::getRecordWSOL('pages', $pid);
-            $iconFactory = GeneralUtility::makeInstance(IconFactory::class);
-            $firstHtml = $iconFactory->getIconForRecord('pages', $rootRec, Icon::SIZE_SMALL)->render();
+            $rootRecord = BackendUtility::getRecordWSOL('pages', $pid);
+            $rootHtml = $this->getPageIcon($rootRecord);
         } else {
-            $rootRec = [
+            $rootRecord = [
                 'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'],
                 'uid' => 0
             ];
-            $firstHtml = $this->getRootIcon($rootRec);
+            $rootHtml = $this->getRootIcon($rootRecord);
         }
-        $this->tree[] = ['HTML' => $firstHtml, 'row' => $rootRec, 'hasSub' => $isOpen];
+        $this->tree[] = ['HTML' => $rootHtml, 'row' => $rootRecord, 'hasSub' => $isOpen];
         if ($isOpen) {
             // Set depth:
             if ($this->addSelfId) {
@@ -135,5 +134,17 @@ class ExportPageTreeView extends BrowseTreeView
         }
         // Add tree:
         return array_merge($treeArr, $this->tree);
+    }
+
+    /**
+     * Get page icon for the row.
+     *
+     * @param array $row
+     * @return string Icon image tag.
+     */
+    protected function getPageIcon(array $row): string
+    {
+        $iconFactory = GeneralUtility::makeInstance(IconFactory::class);
+        return $iconFactory->getIconForRecord($this->table, $row, Icon::SIZE_SMALL)->render();
     }
 }
