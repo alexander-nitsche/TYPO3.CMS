@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -32,7 +34,7 @@ class BackendControllerHook
      * @param array $configuration
      * @param BackendController $backendController
      */
-    public function addJavaScript(array $configuration, BackendController $backendController)
+    public function addJavaScript(array $configuration, BackendController $backendController): void
     {
         /** @var UriBuilder $uriBuilder */
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
@@ -43,7 +45,7 @@ class BackendControllerHook
     /**
      * @return PageRenderer
      */
-    protected function getPageRenderer()
+    protected function getPageRenderer(): PageRenderer
     {
         return GeneralUtility::makeInstance(PageRenderer::class);
     }
