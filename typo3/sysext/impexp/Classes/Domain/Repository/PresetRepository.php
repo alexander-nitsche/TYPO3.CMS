@@ -22,9 +22,6 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
-use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Messaging\FlashMessageQueue;
-use TYPO3\CMS\Core\Messaging\FlashMessageService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Exception\InsufficientUserPermissionsException;
 use TYPO3\CMS\Impexp\Exception\MalformedPresetException;
@@ -123,7 +120,7 @@ class PresetRepository
         return $preset;
     }
 
-    protected function createPreset(array $data): void
+    public function createPreset(array $data): void
     {
         $timestamp = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
 
@@ -148,7 +145,7 @@ class PresetRepository
      * @param array $data
      * @throws InsufficientUserPermissionsException
      */
-    protected function updatePreset(int $uid, array $data): void
+    public function updatePreset(int $uid, array $data): void
     {
         $preset = $this->getPreset($uid);
 
@@ -181,7 +178,7 @@ class PresetRepository
      * @throws MalformedPresetException
      * @return array
      */
-    protected function loadPreset(int $uid): array
+    public function loadPreset(int $uid): array
     {
         $preset = $this->getPreset($uid);
 
@@ -200,7 +197,7 @@ class PresetRepository
      * @param int $uid
      * @throws InsufficientUserPermissionsException
      */
-    protected function deletePreset(int $uid): void
+    public function deletePreset(int $uid): void
     {
         $preset = $this->getPreset($uid);
 
@@ -216,99 +213,6 @@ class PresetRepository
             $this->table,
             ['uid' => $uid]
         );
-    }
-
-    /**
-     * Manipulate presets
-     *
-     * @param array $inData In data array, passed by reference!
-     */
-    public function processPresets(array &$inData): void
-    {
-        $presetData = GeneralUtility::_GP('preset');
-        $inData['preset']['public'] = (int)$inData['preset']['public'];
-
-        if (!is_array($presetData)) {
-            return;
-        }
-
-        $err = false;
-        $msg = '';
-        $presetUid = (int)$presetData['select'];
-
-        // Save preset
-        if (isset($presetData['save'])) {
-            // Update existing
-            if ($presetUid > 0) {
-                try {
-                    $this->updatePreset($presetUid, $inData);
-                    $msg = 'Preset #' . $presetUid . ' saved!';
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
-                }
-            } else {
-                // Insert new:
-                $this->createPreset($inData);
-                $msg = 'New preset "' . htmlspecialchars($inData['preset']['title']) . '" is created';
-            }
-        }
-        // Delete preset:
-        if (isset($presetData['delete'])) {
-            if ($presetUid > 0) {
-                try {
-                    $this->deletePreset($presetUid);
-                    $msg = 'Preset #' . $presetUid . ' deleted!';
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
-                }
-            } else {
-                $msg = 'ERROR: No preset selected for deletion.';
-                $err = true;
-            }
-        }
-        // Load preset
-        if (isset($presetData['load']) || isset($presetData['merge'])) {
-            if ($presetUid > 0) {
-                try {
-                    $inData_temp = $this->loadPreset($presetUid);
-                    $msg = 'Preset #' . $presetUid . ' loaded!';
-                    if (isset($presetData['merge'])) {
-                        // Merge records in:
-                        if (is_array($inData_temp['record'])) {
-                            $inData['record'] = array_merge((array)$inData['record'], $inData_temp['record']);
-                        }
-                        // Merge lists in:
-                        if (is_array($inData_temp['list'])) {
-                            $inData['list'] = array_merge((array)$inData['list'], $inData_temp['list']);
-                        }
-                    } else {
-                        $inData = $inData_temp;
-                    }
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
-                }
-            } else {
-                $msg = 'ERROR: No preset selected for loading.';
-                $err = true;
-            }
-        }
-
-        // Show message:
-        if ($msg !== '') {
-            /** @var FlashMessage $flashMessage */
-            $flashMessage = GeneralUtility::makeInstance(FlashMessage::class);
-            $flashMessage->setTitle('Presets');
-            $flashMessage->setMessage($msg);
-            $flashMessage->setSeverity($err ? FlashMessage::ERROR : FlashMessage::INFO);
-            /** @var FlashMessageService $flashMessageService */
-            $flashMessageService = GeneralUtility::makeInstance(FlashMessageService::class);
-            /** @var FlashMessageQueue $defaultFlashMessageQueue */
-            $defaultFlashMessageQueue = $flashMessageService->getMessageQueueByIdentifier();
-            $defaultFlashMessageQueue->enqueue($flashMessage);
-        }
     }
 
     /**
