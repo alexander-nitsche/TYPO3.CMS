@@ -59,6 +59,13 @@ class ExportController extends ImportExportController
      */
     protected $presetRepository;
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
+    }
+
     /**
      * Incoming array has syntax:
      *
@@ -128,8 +135,6 @@ class ExportController extends ImportExportController
         if (empty($presetAction)) {
             return;
         }
-
-        $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
 
         $presetUid = (int)$presetAction['select'];
 
