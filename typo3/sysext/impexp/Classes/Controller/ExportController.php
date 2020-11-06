@@ -78,11 +78,11 @@ class ExportController extends ImportExportController
         parent::main($request);
 
         // Input data
-        $presetData = $request->getQueryParams()['preset'] ?? [];
+        $presetAction = $request->getQueryParams()['preset'] ?? [];
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
 
         // Perform export
-        $this->processPresets($presetData, $inData);
+        $this->processPresets($presetAction, $inData);
         $this->exportData($inData);
 
         // Prepare view
@@ -100,10 +100,10 @@ class ExportController extends ImportExportController
     /**
      * Process export preset
      *
-     * @param array $presetData
+     * @param array $presetAction
      * @param array $inData
      */
-    public function processPresets(array $presetData, array &$inData): void
+    public function processPresets(array $presetAction, array &$inData): void
     {
         // Flag doesn't exist initially; state is on by default
         if (!array_key_exists('excludeDisabled', $inData)) {
@@ -116,19 +116,19 @@ class ExportController extends ImportExportController
 
         $inData['preset']['public'] = (int)$inData['preset']['public'];
 
-        if (empty($presetData)) {
+        if (empty($presetAction)) {
             return;
         }
 
         $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
 
-        $presetUid = (int)$presetData['select'];
+        $presetUid = (int)$presetAction['select'];
 
         try {
             $info = null;
 
             // Save preset
-            if (isset($presetData['save'])) {
+            if (isset($presetAction['save'])) {
                 // Update existing
                 if ($presetUid > 0) {
                     $this->presetRepository->updatePreset($presetUid, $inData);
@@ -142,7 +142,7 @@ class ExportController extends ImportExportController
             }
 
             // Delete preset
-            if (isset($presetData['delete'])) {
+            if (isset($presetAction['delete'])) {
                 if ($presetUid > 0) {
                     $this->presetRepository->deletePreset($presetUid);
                     $info = 'Preset #' . $presetUid . ' deleted!';
@@ -152,22 +152,22 @@ class ExportController extends ImportExportController
                 }
             }
 
-            // Load preset
-            if (isset($presetData['load']) || isset($presetData['merge'])) {
+            // Load preset data
+            if (isset($presetAction['load']) || isset($presetAction['merge'])) {
                 if ($presetUid > 0) {
-                    $inData_temp = $this->presetRepository->loadPreset($presetUid);
+                    $presetData = $this->presetRepository->loadPreset($presetUid);
                     $info = 'Preset #' . $presetUid . ' loaded!';
-                    if (isset($presetData['merge'])) {
+                    if (isset($presetAction['merge'])) {
                         // Merge records in:
-                        if (is_array($inData_temp['record'])) {
-                            $inData['record'] = array_merge((array)$inData['record'], $inData_temp['record']);
+                        if (is_array($presetData['record'])) {
+                            $inData['record'] = array_merge((array)$inData['record'], $presetData['record']);
                         }
                         // Merge lists in:
-                        if (is_array($inData_temp['list'])) {
-                            $inData['list'] = array_merge((array)$inData['list'], $inData_temp['list']);
+                        if (is_array($presetData['list'])) {
+                            $inData['list'] = array_merge((array)$inData['list'], $presetData['list']);
                         }
                     } else {
-                        $inData = $inData_temp;
+                        $inData = $presetData;
                     }
                 } else {
                     $error = 'ERROR: No preset selected for loading.';
