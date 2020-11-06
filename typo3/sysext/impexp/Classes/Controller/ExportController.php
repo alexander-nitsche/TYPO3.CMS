@@ -85,6 +85,7 @@ class ExportController extends ImportExportController
         // Input data
         $presetAction = $request->getQueryParams()['preset'] ?? [];
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
+        $this->preprocessInputData($inData);
 
         // Perform export
         $this->processPresets($presetAction, $inData);
@@ -103,12 +104,9 @@ class ExportController extends ImportExportController
     }
 
     /**
-     * Process export preset
-     *
-     * @param array $presetAction
      * @param array $inData
      */
-    public function processPresets(array $presetAction, array &$inData): void
+    public function preprocessInputData(array &$inData): void
     {
         // Flag doesn't exist initially; state is on by default
         if (!array_key_exists('excludeDisabled', $inData)) {
@@ -117,7 +115,16 @@ class ExportController extends ImportExportController
         // Set exclude fields in export object:
         $inData['exclude'] ??= [];
         $inData['preset']['public'] = (int)$inData['preset']['public'];
+    }
 
+    /**
+     * Process export preset
+     *
+     * @param array $presetAction
+     * @param array $inData
+     */
+    public function processPresets(array $presetAction, array &$inData): void
+    {
         if (empty($presetAction)) {
             return;
         }

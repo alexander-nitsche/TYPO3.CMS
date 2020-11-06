@@ -98,6 +98,7 @@ class PresetsTest extends AbstractImportExportTestCase
 
         $subject = $this->getAccessibleMock(ExportController::class, ['addFlashMessage']);
         $subject->_set('moduleTemplate', $moduleTemplateMock);
+        $subject->preprocessInputData($inData);
         $subject->processPresets($presetAction, $inData);
     }
 }
