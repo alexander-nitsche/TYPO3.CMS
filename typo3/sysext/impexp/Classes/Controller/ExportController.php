@@ -54,13 +54,6 @@ class ExportController extends ImportExportController
      */
     protected $presetRepository;
 
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
-    }
-
     /**
      * Incoming array has syntax:
      *
@@ -85,10 +78,11 @@ class ExportController extends ImportExportController
         parent::main($request);
 
         // Input data
+        $presetData = $request->getQueryParams()['preset'] ?? [];
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
 
         // Perform export
-        $this->processPresets($inData);
+        $this->processPresets($presetData, $inData);
         $this->exportData($inData);
 
         // Prepare view
@@ -106,9 +100,10 @@ class ExportController extends ImportExportController
     /**
      * Process export preset
      *
+     * @param array $presetData
      * @param array $inData
      */
-    public function processPresets(array &$inData): void
+    public function processPresets(array $presetData, array &$inData): void
     {
         // Flag doesn't exist initially; state is on by default
         if (!array_key_exists('excludeDisabled', $inData)) {
@@ -118,8 +113,87 @@ class ExportController extends ImportExportController
         if (!is_array($inData['exclude'])) {
             $inData['exclude'] = [];
         }
-        // Saving / Loading / Deleting presets:
-        $this->presetRepository->processPresets($inData);
+
+        $inData['preset']['public'] = (int)$inData['preset']['public'];
+
+        if (empty($presetData)) {
+            return;
+        }
+
+        $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
+
+        $err = false;
+        $msg = '';
+        $presetUid = (int)$presetData['select'];
+
+        // Save preset
+        if (isset($presetData['save'])) {
+            // Update existing
+            if ($presetUid > 0) {
+                try {
+                    $this->presetRepository->updatePreset($presetUid, $inData);
+                    $msg = 'Preset #' . $presetUid . ' saved!';
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
+                    $err = true;
+                }
+            } else {
+                // Insert new:
+                $this->presetRepository->createPreset($inData);
+                $msg = 'New preset "' . htmlspecialchars($inData['preset']['title']) . '" is created';
+            }
+        }
+        // Delete preset:
+        if (isset($presetData['delete'])) {
+            if ($presetUid > 0) {
+                try {
+                    $this->presetRepository->deletePreset($presetUid);
+                    $msg = 'Preset #' . $presetUid . ' deleted!';
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
+                    $err = true;
+                }
+            } else {
+                $msg = 'ERROR: No preset selected for deletion.';
+                $err = true;
+            }
+        }
+        // Load preset
+        if (isset($presetData['load']) || isset($presetData['merge'])) {
+            if ($presetUid > 0) {
+                try {
+                    $inData_temp = $this->presetRepository->loadPreset($presetUid);
+                    $msg = 'Preset #' . $presetUid . ' loaded!';
+                    if (isset($presetData['merge'])) {
+                        // Merge records in:
+                        if (is_array($inData_temp['record'])) {
+                            $inData['record'] = array_merge((array)$inData['record'], $inData_temp['record']);
+                        }
+                        // Merge lists in:
+                        if (is_array($inData_temp['list'])) {
+                            $inData['list'] = array_merge((array)$inData['list'], $inData_temp['list']);
+                        }
+                    } else {
+                        $inData = $inData_temp;
+                    }
+                } catch (\Exception $e) {
+                    $msg = $e->getMessage();
+                    $err = true;
+                }
+            } else {
+                $msg = 'ERROR: No preset selected for loading.';
+                $err = true;
+            }
+        }
+
+        // Show message:
+        if ($msg !== '') {
+            $this->moduleTemplate->addFlashMessage(
+                $msg,
+                'Presets',
+                $err ? FlashMessage::ERROR : FlashMessage::INFO
+            );
+        }
     }
 
     /**

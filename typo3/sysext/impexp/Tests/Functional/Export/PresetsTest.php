@@ -17,8 +17,7 @@ declare(strict_types=1);
 
 namespace TYPO3\CMS\Impexp\Tests\Functional\Export;
 
-use TYPO3\CMS\Core\Messaging\FlashMessage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Impexp\Controller\ExportController;
 use TYPO3\CMS\Impexp\Tests\Functional\AbstractImportExportTestCase;
 
@@ -91,13 +90,11 @@ class PresetsTest extends AbstractImportExportTestCase
             'softrefCfg' => [],
         ];
 
-        $flashMessageMock = $this->getAccessibleMock(FlashMessage::class, ['setMessage'], [], '', false);
-        $flashMessageMock->expects(self::once())->method('setMessage')->with(self::equalTo($expected));
-        GeneralUtility::addInstance(FlashMessage::class, $flashMessageMock);
+        $moduleTemplateMock = $this->getAccessibleMock(ModuleTemplate::class, ['addFlashMessage'], [], '', false);
+        $moduleTemplateMock->expects(self::once())->method('addFlashMessage')->with(self::equalTo($expected));
 
-        $_GET = ['preset' => $presetAction];
-
-        $subject = new ExportController();
-        $subject->processPresets($inData);
+        $subject = $this->getAccessibleMock(ExportController::class, ['addFlashMessage']);
+        $subject->_set('moduleTemplate', $moduleTemplateMock);
+        $subject->processPresets($presetAction, $inData);
     }
 }
