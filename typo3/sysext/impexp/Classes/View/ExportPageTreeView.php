@@ -86,7 +86,7 @@ class ExportPageTreeView extends AbstractTreeView
      * @param string $clause Additional where clause
      * @return array Array of tree elements
      */
-    public function ext_tree($pid, $clause = '')
+    public function ext_tree(int $pid, string $clause = '')
     {
         // Initialize:
         $this->init(' AND ' . $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW) . $clause);
@@ -102,17 +102,16 @@ class ExportPageTreeView extends AbstractTreeView
         $this->reset();
         $this->ids = $curIds;
         if ($pid > 0) {
-            $rootRec = BackendUtility::getRecordWSOL('pages', $pid);
-            $iconFactory = GeneralUtility::makeInstance(IconFactory::class);
-            $firstHtml = $iconFactory->getIconForRecord('pages', $rootRec, Icon::SIZE_SMALL)->render();
+            $rootRecord = BackendUtility::getRecordWSOL('pages', $pid);
+            $rootHtml = $this->getPageIcon($rootRecord);
         } else {
-            $rootRec = [
+            $rootRecord = [
                 'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'],
                 'uid' => 0
             ];
-            $firstHtml = $this->getRootIcon($rootRec);
+            $rootHtml = $this->getRootIcon($rootRecord);
         }
-        $this->tree[] = ['HTML' => $firstHtml, 'row' => $rootRec, 'hasSub' => $isOpen];
+        $this->tree[] = ['HTML' => $rootHtml, 'row' => $rootRecord, 'hasSub' => $isOpen];
         if ($isOpen) {
             $this->getTree($pid, Export::LEVELS_INFINITE, '');
             $idH = [];
@@ -193,5 +192,17 @@ class ExportPageTreeView extends AbstractTreeView
     public function expandNext($id)
     {
         return !empty($this->stored[$this->bank][$id]);
+    }
+
+    /**
+     * Get page icon for the row.
+     *
+     * @param array $row
+     * @return string Icon image tag.
+     */
+    protected function getPageIcon(array $row): string
+    {
+        $iconFactory = GeneralUtility::makeInstance(IconFactory::class);
+        return $iconFactory->getIconForRecord($this->table, $row, Icon::SIZE_SMALL)->render();
     }
 }
