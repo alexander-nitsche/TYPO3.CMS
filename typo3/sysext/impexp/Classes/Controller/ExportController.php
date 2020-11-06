@@ -156,7 +156,6 @@ class ExportController extends ImportExportController
             if (isset($presetAction['load']) || isset($presetAction['merge'])) {
                 if ($presetUid > 0) {
                     $presetData = $this->presetRepository->loadPreset($presetUid);
-                    $info = 'Preset #' . $presetUid . ' loaded!';
                     if (isset($presetAction['merge'])) {
                         // Merge records in:
                         if (is_array($presetData['record'])) {
@@ -166,8 +165,10 @@ class ExportController extends ImportExportController
                         if (is_array($presetData['list'])) {
                             $inData['list'] = array_merge((array)$inData['list'], $presetData['list']);
                         }
+                        $info = 'Preset #' . $presetUid . ' merged!';
                     } else {
                         $inData = $presetData;
+                        $info = 'Preset #' . $presetUid . ' loaded!';
                     }
                 } else {
                     $error = 'ERROR: No preset selected for loading.';

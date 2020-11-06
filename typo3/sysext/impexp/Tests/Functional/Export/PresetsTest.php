@@ -33,12 +33,15 @@ class PresetsTest extends AbstractImportExportTestCase
     {
         $presetActions = [
             ['presetAction' => ['select' => '0', 'load' => '1'], 'expected' => 'ERROR: No preset selected for loading.'],
+            ['presetAction' => ['select' => '0', 'merge' => '1'], 'expected' => 'ERROR: No preset selected for loading.'],
             ['presetAction' => ['select' => '0', 'delete' => '1'], 'expected' => 'ERROR: No preset selected for deletion.'],
             ['presetAction' => ['select' => '0', 'save' => '1'], 'expected' => 'New preset "Test Preset" is created'],
             ['presetAction' => ['select' => '1', 'load' => '1'], 'expected' => 'Preset #1 loaded!'],
+            ['presetAction' => ['select' => '1', 'merge' => '1'], 'expected' => 'Preset #1 merged!'],
             ['presetAction' => ['select' => '1', 'save' => '1'], 'expected' => 'Preset #1 saved!'],
             ['presetAction' => ['select' => '1', 'delete' => '1'], 'expected' => 'Preset #1 deleted!'],
             ['presetAction' => ['select' => '1', 'load' => '1'], 'expected' => 'ERROR: No valid preset #1 found.'],
+            ['presetAction' => ['select' => '1', 'merge' => '1'], 'expected' => 'ERROR: No valid preset #1 found.'],
             ['presetAction' => ['select' => '1', 'save' => '1'], 'expected' => 'ERROR: No valid preset #1 found.'],
             ['presetAction' => ['select' => '1', 'delete' => '1'], 'expected' => 'ERROR: No valid preset #1 found.'],
         ];
