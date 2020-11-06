@@ -86,6 +86,7 @@ class ImportController extends ImportExportController
 
         // Input data
         $inData = $request->getParsedBody()['tx_impexp'] ?? $request->getQueryParams()['tx_impexp'] ?? [];
+        $this->preprocessInputData($inData);
 
         // Handle upload
         $this->handleUpload($request, $inData);
@@ -113,6 +114,16 @@ class ImportController extends ImportExportController
     {
         return $this->getBackendUser()->isAdmin()
             || (bool)($this->getBackendUser()->getTSConfig()['options.']['impexp.']['enableImportForNonAdminUser'] ?? false);
+    }
+
+    /**
+     * @param array $inData
+     */
+    protected function preprocessInputData(array &$inData): void
+    {
+        if ($inData['new_import']) {
+            unset($inData['import_mode']);
+        }
     }
 
     /**
@@ -178,10 +189,6 @@ class ImportController extends ImportExportController
      */
     protected function importData(array &$inData): void
     {
-        if ($inData['new_import']) {
-            unset($inData['import_mode']);
-        }
-
         // Create import object and configure it:
         $this->import = GeneralUtility::makeInstance(Import::class);
         $this->import->init();
