@@ -122,48 +122,41 @@ class ExportController extends ImportExportController
 
         $this->presetRepository = GeneralUtility::makeInstance(PresetRepository::class);
 
-        $err = false;
-        $msg = '';
         $presetUid = (int)$presetData['select'];
 
-        // Save preset
-        if (isset($presetData['save'])) {
-            // Update existing
-            if ($presetUid > 0) {
-                try {
+        try {
+            $info = null;
+
+            // Save preset
+            if (isset($presetData['save'])) {
+                // Update existing
+                if ($presetUid > 0) {
                     $this->presetRepository->updatePreset($presetUid, $inData);
-                    $msg = 'Preset #' . $presetUid . ' saved!';
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
+                    $info = 'Preset #' . $presetUid . ' saved!';
                 }
-            } else {
-                // Insert new:
-                $this->presetRepository->createPreset($inData);
-                $msg = 'New preset "' . htmlspecialchars($inData['preset']['title']) . '" is created';
+                // Insert new
+                else {
+                    $this->presetRepository->createPreset($inData);
+                    $info = 'New preset "' . htmlspecialchars($inData['preset']['title']) . '" is created';
+                }
             }
-        }
-        // Delete preset:
-        if (isset($presetData['delete'])) {
-            if ($presetUid > 0) {
-                try {
+
+            // Delete preset
+            if (isset($presetData['delete'])) {
+                if ($presetUid > 0) {
                     $this->presetRepository->deletePreset($presetUid);
-                    $msg = 'Preset #' . $presetUid . ' deleted!';
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
+                    $info = 'Preset #' . $presetUid . ' deleted!';
+                } else {
+                    $error = 'ERROR: No preset selected for deletion.';
+                    $this->moduleTemplate->addFlashMessage($error, 'Presets', FlashMessage::ERROR);
                 }
-            } else {
-                $msg = 'ERROR: No preset selected for deletion.';
-                $err = true;
             }
-        }
-        // Load preset
-        if (isset($presetData['load']) || isset($presetData['merge'])) {
-            if ($presetUid > 0) {
-                try {
+
+            // Load preset
+            if (isset($presetData['load']) || isset($presetData['merge'])) {
+                if ($presetUid > 0) {
                     $inData_temp = $this->presetRepository->loadPreset($presetUid);
-                    $msg = 'Preset #' . $presetUid . ' loaded!';
+                    $info = 'Preset #' . $presetUid . ' loaded!';
                     if (isset($presetData['merge'])) {
                         // Merge records in:
                         if (is_array($inData_temp['record'])) {
@@ -176,23 +169,17 @@ class ExportController extends ImportExportController
                     } else {
                         $inData = $inData_temp;
                     }
-                } catch (\Exception $e) {
-                    $msg = $e->getMessage();
-                    $err = true;
+                } else {
+                    $error = 'ERROR: No preset selected for loading.';
+                    $this->moduleTemplate->addFlashMessage($error, 'Presets', FlashMessage::ERROR);
                 }
-            } else {
-                $msg = 'ERROR: No preset selected for loading.';
-                $err = true;
             }
-        }
 
-        // Show message:
-        if ($msg !== '') {
-            $this->moduleTemplate->addFlashMessage(
-                $msg,
-                'Presets',
-                $err ? FlashMessage::ERROR : FlashMessage::INFO
-            );
+            if ($info !== null) {
+                $this->moduleTemplate->addFlashMessage($info, 'Presets', FlashMessage::INFO);
+            }
+        } catch (\Exception $e) {
+            $this->moduleTemplate->addFlashMessage($e->getMessage(), 'Presets', FlashMessage::ERROR);
         }
     }
 
