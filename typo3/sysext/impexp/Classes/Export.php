@@ -16,7 +16,6 @@
 namespace TYPO3\CMS\Impexp;
 
 use Doctrine\DBAL\Driver\Statement;
-use TYPO3\CMS\Backend\Tree\View\PageTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -26,13 +25,11 @@ use TYPO3\CMS\Core\Database\Query\Restriction\WorkspaceRestriction;
 use TYPO3\CMS\Core\Database\ReferenceIndex;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Html\HtmlParser;
-use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderWritePermissionsException;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
-use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Impexp\View\ExportPageTreeView;
@@ -234,53 +231,29 @@ class Export extends ImportExport
         }
         // Pagetree
         if ($this->pid !== -1) {
-            // Based on click-expandable tree
             $idH = null;
-            $pid = $this->pid;
-            $levels = $this->levels;
-            if ($levels === self::LEVELS_EXPANDED_TREE) {
+            if ($this->levels === self::LEVELS_EXPANDED_TREE) {
                 $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                $initClause = $this->filterPageIds($this->excludeMap);
                 if ($this->excludeDisabledRecords) {
-                    $pagetree->init(BackendUtility::BEenableFields('pages'));
+                    $initClause .= BackendUtility::BEenableFields('pages');
                 }
-                $tree = $pagetree->ext_tree($pid, $this->filterPageIds($this->excludeMap));
-                $this->treeHTML = $pagetree->printTree($tree);
+                $pagetree->init($initClause);
+                $pagetree->buildTreeByExpandedState($this->pid);
+                $this->treeHTML = $pagetree->printTree();
                 $idH = $pagetree->buffer_idH;
-            } elseif ($levels === self::LEVELS_RECORDS_ON_THIS_PAGE) {
-                $this->addRecordsForPid($pid, $this->tables);
+            } elseif ($this->levels === self::LEVELS_RECORDS_ON_THIS_PAGE) {
+                $this->addRecordsForPid($this->pid, $this->tables);
             } else {
-                // Based on depth
-                // Drawing tree:
-                // If the ID is zero, export root
-                if (!$this->pid && $beUser->isAdmin()) {
-                    $sPage = [
-                        'uid' => 0,
-                        'title' => 'ROOT'
-                    ];
-                } else {
-                    $sPage = BackendUtility::getRecordWSOL('pages', $pid, '*', ' AND ' . $this->permsClause);
+                $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                $initClause = $this->filterPageIds($this->excludeMap);
+                if ($this->excludeDisabledRecords) {
+                    $initClause .= BackendUtility::BEenableFields('pages');
                 }
-                if (is_array($sPage)) {
-                    $tree = GeneralUtility::makeInstance(PageTreeView::class);
-                    $initClause = 'AND ' . $this->permsClause . $this->filterPageIds($this->excludeMap);
-                    if ($this->excludeDisabledRecords) {
-                        $initClause .= BackendUtility::BEenableFields('pages');
-                    }
-                    $tree->init($initClause);
-                    $HTML = $this->iconFactory->getIconForRecord('pages', $sPage, Icon::SIZE_SMALL)->render();
-                    $tree->tree[] = ['row' => $sPage, 'HTML' => $HTML];
-                    $tree->buffer_idH = [];
-                    if ($levels > 0) {
-                        $tree->getTree($pid, $levels);
-                    }
-                    $idH = [];
-                    $idH[$pid]['uid'] = $pid;
-                    if (!empty($tree->buffer_idH)) {
-                        $idH[$pid]['subrow'] = $tree->buffer_idH;
-                    }
-                    $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
-                    $this->treeHTML = $pagetree->printTree($tree->tree);
-                }
+                $pagetree->init($initClause);
+                $pagetree->buildTreeByLevels($this->pid, $this->levels);
+                $this->treeHTML = $pagetree->printTree();
+                $idH = $pagetree->buffer_idH;
             }
             // In any case we should have a multi-level array, $idH, with the page structure
             // here (and the HTML-code loaded into memory for nice display...)

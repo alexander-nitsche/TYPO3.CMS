@@ -15,12 +15,12 @@
 
 namespace TYPO3\CMS\Impexp\View;
 
+use TYPO3\CMS\Backend\Configuration\BackendUserConfiguration;
 use TYPO3\CMS\Backend\Tree\View\BrowseTreeView;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Localization\LanguageService;
-use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Export;
 
@@ -87,53 +87,104 @@ class ExportPageTreeView extends BrowseTreeView
     }
 
     /**
-     * Tree rendering
+     * Construction of the tree structure with predefined depth.
      *
-     * @param int $pid PID value
-     * @param string $clause Additional where clause
-     * @return array Array of tree elements
+     * @param int $pid Page ID
+     * @param int $levels Page tree levels
      */
-    public function ext_tree(int $pid, string $clause = '')
+    public function buildTreeByLevels(int $pid, int $levels): void
     {
-        // Initialize:
-        $this->init(' AND ' . $this->BE_USER->getPagePermsClause(Permission::PAGE_SHOW) . $clause);
-        // Get stored tree structure:
-        $this->stored = json_decode($this->BE_USER->uc['browseTrees']['browsePages'], true);
-        $treeArr = [];
-        $idx = 0;
-        // Set first:
-        $this->bank = $idx;
-        $isOpen = $this->stored[$idx][$pid] || $this->expandFirst;
-        // save ids
-        $curIds = $this->ids;
+        $this->expandAll = true;
+        $checkSub = $levels > 0;
+
+        $this->buildTree($pid, $levels, $checkSub);
+    }
+
+    /**
+     * Construction of the tree structure according to the state of folding of the page tree module.
+     *
+     * @param int $pid Page ID
+     */
+    public function buildTreeByExpandedState(int $pid): void
+    {
+        $this->syncPageTreeState();
+
+        $this->expandAll = false;
+        if ($pid > 0) {
+            $checkSub = (bool)($this->stored[$this->bank][$pid] ?? false);
+        } else {
+            $checkSub = true;
+        }
+
+        $this->buildTree($pid, Export::LEVELS_INFINITE, $checkSub);
+    }
+
+    /**
+     * Creation of a tree structure with predefined depth to prepare the export.
+     *
+     * @param int $pid Page ID
+     * @param int $levels Page tree levels
+     * @param bool $checkSub Should root page be checked for sub pages?
+     */
+    protected function buildTree(int $pid, int $levels, bool $checkSub): void
+    {
         $this->reset();
-        $this->ids = $curIds;
+
+        // Root page
         if ($pid > 0) {
             $rootRecord = BackendUtility::getRecordWSOL('pages', $pid);
             $rootHtml = $this->getPageIcon($rootRecord);
         } else {
             $rootRecord = [
                 'title' => $GLOBALS['TYPO3_CONF_VARS']['SYS']['sitename'],
-                'uid' => 0
+                'uid' => 0,
             ];
             $rootHtml = $this->getRootIcon($rootRecord);
         }
-        $this->tree[] = ['HTML' => $rootHtml, 'row' => $rootRecord, 'hasSub' => $isOpen];
-        if ($isOpen) {
-            // Set depth:
-            if ($this->addSelfId) {
-                $this->ids[] = $pid;
-            }
-            $this->getTree($pid, Export::LEVELS_INFINITE, '');
-            $idH = [];
-            $idH[$pid]['uid'] = $pid;
-            if (!empty($this->buffer_idH)) {
-                $idH[$pid]['subrow'] = $this->buffer_idH;
-            }
-            $this->buffer_idH = $idH;
+
+        $this->tree[] = [
+            'HTML' => $rootHtml,
+            'row' => $rootRecord,
+            'hasSub' => $checkSub,
+            'bank' => $this->bank,
+        ];
+
+        // Subtree
+        if ($checkSub) {
+            $this->getTree($pid, $levels);
         }
-        // Add tree:
-        return array_merge($treeArr, $this->tree);
+
+        $idH = [];
+        $idH[$pid]['uid'] = $pid;
+        if (!empty($this->buffer_idH)) {
+            $idH[$pid]['subrow'] = $this->buffer_idH;
+        }
+        $this->buffer_idH = $idH;
+
+        // Check if root page has subtree
+        if (empty($this->buffer_idH)) {
+            $this->tree[0]['hasSub'] = false;
+        }
+    }
+
+    /**
+     * Sync folding state of EXT:impexp page tree with the official page tree module
+     */
+    protected function syncPageTreeState(): void
+    {
+        $backendUserConfiguration = GeneralUtility::makeInstance(BackendUserConfiguration::class);
+        $pageTreeState = $backendUserConfiguration->get('BackendComponents.States.Pagetree');
+        if (is_object($pageTreeState) && is_object($pageTreeState->stateHash)) {
+            $pageTreeState = (array)$pageTreeState->stateHash;
+        } else {
+            $pageTreeState = $pageTreeState['stateHash'] ?: [];
+        }
+
+        $this->stored = [];
+        foreach ($pageTreeState as $identifier => $isExpanded) {
+            list($bank, $pageId) = explode('_', $identifier);
+            $this->stored[$bank][$pageId] = $isExpanded;
+        }
     }
 
     /**
