@@ -315,9 +315,6 @@
 			<trans-unit id="importdata_email" resname="importdata_email">
 				<source>Email</source>
 			</trans-unit>
-			<trans-unit id="importdata_icon" resname="importdata_icon">
-				<source>Icon</source>
-			</trans-unit>
 			<trans-unit id="importdata_metaData_1387" resname="importdata_metaData_1387">
 				<source>Meta data</source>
 			</trans-unit>
