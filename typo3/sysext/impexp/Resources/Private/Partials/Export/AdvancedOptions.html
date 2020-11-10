@@ -5,13 +5,13 @@
     <f:translate key="makeadvanc_softReferences"/>
 </h4>
 <div class="form-group">
-    <f:be.buttons.csh table="xMOD_tx_impexp" field="htmlCssResources">
-        <f:translate key="makeadvanc_excludeHtmlCssFile"/>
-    </f:be.buttons.csh>
     <label for="checkExcludeHTMLfileResources">
         <f:form.checkbox name="tx_impexp[excludeHTMLfileResources]" id="checkExcludeHTMLfileResources" value="1"
                          checked="{inData.excludeHTMLfileResources} == 1"/>
     </label>
+    <f:be.buttons.csh table="xMOD_tx_impexp" field="htmlCssResources">
+        <strong><f:translate key="makeadvanc_excludeHtmlCssFile"/></strong>
+    </f:be.buttons.csh>
 </div>
 
 <h4>
