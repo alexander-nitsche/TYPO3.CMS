@@ -261,9 +261,6 @@
 			<trans-unit id="importdata_import" resname="importdata_import">
 				<source>Import</source>
 			</trans-unit>
-			<trans-unit id="importdata_areYouSure" resname="importdata_areYouSure">
-				<source>Are you sure?</source>
-			</trans-unit>
 			<trans-unit id="importdata_newImport" resname="importdata_newImport">
 				<source>New import</source>
 			</trans-unit>
