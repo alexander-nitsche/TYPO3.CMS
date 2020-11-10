@@ -249,9 +249,6 @@
 			<trans-unit id="importdata_greenValuesAreFrom" resname="importdata_greenValuesAreFrom">
 				<source>Green values are from the import file, red values from the current database record and black values are similar in both versions.</source>
 			</trans-unit>
-			<trans-unit id="importdata_allowToWriteBanned" resname="importdata_allowToWriteBanned">
-				<source>Allow to write banned file extensions (eg. PHP scripts), if any</source>
-			</trans-unit>
 			<trans-unit id="importdata_action" resname="importdata_action">
 				<source>Action</source>
 			</trans-unit>
