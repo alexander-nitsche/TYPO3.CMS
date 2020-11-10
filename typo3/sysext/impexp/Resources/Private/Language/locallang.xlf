@@ -324,9 +324,6 @@
 			<trans-unit id="importdata_structureHasBeenImported" resname="importdata_structureHasBeenImported">
 				<source>Structure has been imported, here is the result</source>
 			</trans-unit>
-			<trans-unit id="importdata_no_accessible_file_mount" resname="importdata_no_accessible_file_mount">
-				<source>No accessible filemount</source>
-			</trans-unit>
 			<trans-unit id="importdata_no_default_upload_folder" resname="importdata_no_default_upload_folder">
 				<source>No default upload folder</source>
 			</trans-unit>
