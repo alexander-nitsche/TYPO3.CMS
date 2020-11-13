@@ -34,38 +34,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
- * EXAMPLE for using the impexp-class for exporting stuff:
- *
- * Create and initialize:
- * $this->export = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Impexp\ImportExport::class);
- * $this->export->init();
- * Set which tables relations we will allow:
- * $this->export->relOnlyTables[]="tt_news";	// exclusively includes. See comment in the class
- *
- * Adding records:
- * $this->export->exportAddRecord("pages", $this->pageInfo);
- * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 38));
- * $this->export->exportAddRecord("pages", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("pages", 39));
- * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 12));
- * $this->export->exportAddRecord("tt_content", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("tt_content", 74));
- * $this->export->exportAddRecord("sys_template", \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord("sys_template", 20));
- *
- * Adding all the relations (recursively in 5 levels so relations has THEIR relations registered as well)
- * for($a=0;$a<5;$a++) {
- * $addR = $this->export->exportAddDbRelations($a);
- * if (empty($addR)) break;
- * }
- *
- * Finally load all the files.
- * $this->export->exportAddFilesFromRelations();	// MUST be after the DBrelations are set so that file from ALL added records are included!
- *
- * Write export
- * $out = $this->export->render();
- * @internal this is not part of TYPO3's Core API.
- */
-
-/**
  * T3D file Import/Export library (TYPO3 Record Document)
+ *
+ * @internal this is not part of TYPO3's Core API.
  */
 abstract class ImportExport
 {
