@@ -37,7 +37,7 @@ use TYPO3\CMS\Impexp\View\ExportPageTreeView;
 /**
  * T3D file Export library (TYPO3 Record Document)
  *
- * @internal this is not part of TYPO3's Core API.
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class Export extends ImportExport
 {

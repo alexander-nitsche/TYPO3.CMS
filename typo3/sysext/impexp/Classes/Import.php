@@ -40,7 +40,8 @@ use TYPO3\CMS\Impexp\Exception\PrerequisitesNotMetException;
 
 /**
  * T3D file Import library (TYPO3 Record Document)
- * @internal this is not part of TYPO3's Core API.
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class Import extends ImportExport
 {

@@ -25,7 +25,8 @@ use TYPO3\CMS\Impexp\Export;
 
 /**
  * Extension of the page tree class. Used to get the tree of pages to export.
- * @internal
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class ExportPageTreeView extends AbstractTreeView
 {
