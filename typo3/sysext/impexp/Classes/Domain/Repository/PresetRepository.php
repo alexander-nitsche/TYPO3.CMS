@@ -29,7 +29,7 @@ use TYPO3\CMS\Impexp\Exception\PresetNotFoundException;
 /**
  * Export preset repository
  *
- * @internal This class is a specific repository implementation and is not considered part of the Public TYPO3 API.
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class PresetRepository
 {

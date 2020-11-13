@@ -35,7 +35,7 @@ use TYPO3\CMS\Impexp\Import;
 /**
  * Main script class for the Import facility
  *
- * @internal this is a TYPO3 Backend controller implementation and not part of TYPO3's Core API.
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class ImportController extends ImportExportController
 {

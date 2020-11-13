@@ -26,7 +26,8 @@ use TYPO3\CMS\Impexp\Export;
 
 /**
  * Extension of the page tree class. Used to get the tree of pages to export.
- * @internal
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class ExportPageTreeView extends BrowseTreeView
 {
@@ -53,7 +54,6 @@ class ExportPageTreeView extends BrowseTreeView
      * @param string $row Item record
      * @param int $bank Bank pointer (which mount point number)
      * @return string Wrapped title
-     * @internal
      */
     public function wrapTitle($title, $row, $bank = 0)
     {

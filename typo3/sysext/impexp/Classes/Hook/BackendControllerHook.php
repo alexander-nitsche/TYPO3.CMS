@@ -24,7 +24,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * This class adds import export related JavaScript to the backend
- * @internal this is an internal TYPO3 hook implementation and solely used for EXT:impexp and not part of TYPO3's Core API.
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class BackendControllerHook
 {

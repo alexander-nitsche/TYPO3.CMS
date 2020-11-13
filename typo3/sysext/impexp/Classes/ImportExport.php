@@ -34,9 +34,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
- * T3D file Import/Export library (TYPO3 Record Document)
+ * T3D file Import / Export library (TYPO3 Record Document)
  *
- * @internal this is not part of TYPO3's Core API.
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 abstract class ImportExport
 {

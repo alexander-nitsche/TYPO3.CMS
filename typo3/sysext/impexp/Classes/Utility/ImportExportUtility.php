@@ -25,8 +25,9 @@ use TYPO3\CMS\Impexp\Import;
 
 /**
  * Utility for import / export
- * Can be used for API access for simple importing of files
- * @internal
+ * Can be used for API access for simple importing of files.
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class ImportExportUtility
 {

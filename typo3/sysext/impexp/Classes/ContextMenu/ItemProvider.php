@@ -21,7 +21,8 @@ use TYPO3\CMS\Backend\ContextMenu\ItemProviders\AbstractProvider;
 
 /**
  * Context menu item provider adding export and import items
- * @internal this is an internal TYPO3 hook implementation and solely used for EXT:impexp and not part of TYPO3's Core API.
+ *
+ * @internal This class is not considered part of the public TYPO3 API.
  */
 class ItemProvider extends AbstractProvider
 {
