@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -26,9 +28,7 @@ use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\Security\FileNameValidator;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
-use TYPO3\CMS\Core\Utility\DebugUtility;
 use TYPO3\CMS\Core\Utility\DiffUtility;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\File\ExtendedFileUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
@@ -252,7 +252,7 @@ abstract class ImportExport
     /**
      * Init the object, both import and export
      */
-    public function init()
+    public function init(): void
     {
         $this->fileadminFolderName = !empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']) ? rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') : 'fileadmin';
     }
@@ -266,7 +266,7 @@ abstract class ImportExport
      *
      * @return array The view data
      */
-    public function displayContentOverview()
+    public function displayContentOverview(): array
     {
         if (!isset($this->dat['header'])) {
             return [];
@@ -323,7 +323,7 @@ abstract class ImportExport
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param string $preCode Pre-HTML code
      */
-    protected function traversePageTree($pT, &$lines, $preCode = '')
+    protected function traversePageTree(array $pT, array &$lines, string $preCode = ''): void
     {
         foreach ($pT as $k => $v) {
             if ($this->excludeDisabledRecords === true && !$this->isActive('pages', $k)) {
@@ -359,7 +359,7 @@ abstract class ImportExport
      * @param int $uid Database uid of the record
      * @return bool true if the record is active, false otherwise
      */
-    protected function isActive($table, $uid)
+    protected function isActive(string $table, int $uid): bool
     {
         return
             !isset($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'])
@@ -374,7 +374,7 @@ abstract class ImportExport
      * @param int $pageUid Uid of the page to exclude
      * @param array $pageTree Page tree array with uid/subrow (from ->dat[header][pagetree]
      */
-    protected function excludePageAndRecords($pageUid, $pageTree)
+    protected function excludePageAndRecords(int $pageUid, array $pageTree): void
     {
         // Prevent having this page appear in "remaining records" table
         unset($this->remainHeader['records']['pages'][$pageUid]);
@@ -401,10 +401,10 @@ abstract class ImportExport
     /**
      * Go through remaining pages (not in tree)
      *
-     * @param array<int, array> $pT Page tree array with uid/subrow (from ->dat[header][pagetree]
+     * @param array<int, array> $pT Page tree array with uid/subrow (from ->dat[header][pagetree])
      * @param array $lines Output lines array (is passed by reference and modified)
      */
-    protected function traversePageRecords($pT, &$lines)
+    protected function traversePageRecords(array $pT, array &$lines): void
     {
         foreach ($pT as $k => $rHeader) {
             $this->singleRecordLines('pages', (int)$k, $lines, '', true);
@@ -425,10 +425,10 @@ abstract class ImportExport
     /**
      * Go through ALL records (if the pages are displayed first, those will not be among these!)
      *
-     * @param array $pT Page tree array with uid/subrow (from ->dat[header][pagetree]
+     * @param array $pT Page tree array with uid/subrow (from ->dat[header][pagetree])
      * @param array $lines Output lines array (is passed by reference and modified)
      */
-    protected function traverseAllRecords($pT, &$lines)
+    protected function traverseAllRecords(array $pT, array &$lines): void
     {
         foreach ($pT as $t => $recUidArr) {
             $this->addGeneralErrorsByTable($t);
@@ -446,7 +446,7 @@ abstract class ImportExport
      *
      * @param string $table database table name
      */
-    protected function addGeneralErrorsByTable($table)
+    protected function addGeneralErrorsByTable(string $table): void
     {
         if ($this->update && $table === 'sys_file') {
             $this->addError('Updating sys_file records is not supported! They will be imported as new records!');
@@ -465,7 +465,7 @@ abstract class ImportExport
      * @param string $preCode Pre-HTML code
      * @param bool $checkImportInPidRecord If you want import validation, you can set this so it checks if the import can take place on the specified page.
      */
-    protected function singleRecordLines($table, $uid, &$lines, $preCode, $checkImportInPidRecord = false)
+    protected function singleRecordLines(string $table, int $uid, array &$lines, string $preCode, bool $checkImportInPidRecord = false): void
     {
         // Get record:
         $record = $this->dat['header']['records'][$table][$uid];
@@ -484,7 +484,7 @@ abstract class ImportExport
             // Unknown table name:
             $pInfo['preCode'] = $preCode;
             $pInfo['msg'] = 'UNKNOWN TABLE \'' . $pInfo['ref'] . '\'';
-            $pInfo['title'] = '<em>' . htmlspecialchars($record['title']) . '</em>';
+            $pInfo['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
         } else {
             // prepare data attribute telling whether the record is active or hidden, allowing frontend bulk selection
             $pInfo['active'] = $this->isActive($table, $uid) ? 'active' : 'hidden';
@@ -522,7 +522,7 @@ abstract class ImportExport
                     // In case of update-PREVIEW we swap the diff-sources.
                     $diffInverse = true;
                     $recInf = $this->doesRecordExist($table, $uid, $this->showDiff ? '*' : '');
-                    $pInfo['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath($recInf['pid'])) : '<strong>NEW!</strong>';
+                    $pInfo['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath((int)$recInf['pid'])) : '<strong>NEW!</strong>';
                     // Mode selector:
                     $optValues = [];
                     $optValues[] = $recInf ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
@@ -554,15 +554,18 @@ abstract class ImportExport
                         $recInf = $this->doesRecordExist($table, $newUid, '*');
                         BackendUtility::workspaceOL($table, $recInf);
                     }
-                    if (is_array($recInf)) {
-                        $pInfo['showDiffContent'] = $this->compareRecords($recInf, $this->dat['records'][$table . ':' . $uid]['data'], $table, $diffInverse);
+                    $importRecord = $this->dat['records'][$table . ':' . $uid]['data'] ?? null;
+                    if (is_array($recInf) && is_array($importRecord)) {
+                        $pInfo['showDiffContent'] = $this->compareRecords($recInf, $importRecord, $table, $diffInverse);
+                    } else {
+                        $pInfo['showDiffContent'] = 'ERROR: One of the inputs were not an array!';
                     }
                 }
             }
             $pInfo['preCode'] = $preCode . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
                 . $this->iconFactory->getIconForRecord($table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL)->render()
                 . '</span>';
-            $pInfo['title'] = htmlspecialchars($record['title']);
+            $pInfo['title'] = htmlspecialchars((string)$record['title']);
             // View page:
             if ($table === 'pages') {
                 $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
@@ -628,10 +631,10 @@ abstract class ImportExport
      * @param string $preCode Pre-HTML code
      * @param array $recurCheck Recursivity check stack
      * @param string $htmlColorClass Alternative HTML color class to use.
-     * @internal
+     *
      * @see singleRecordLines()
      */
-    protected function addRelations($rels, &$lines, $preCode, $recurCheck = [], $htmlColorClass = '')
+    protected function addRelations(array $rels, array &$lines, string $preCode, array $recurCheck = [], string $htmlColorClass = ''): void
     {
         foreach ($rels as $dat) {
             $table = $dat['table'];
@@ -648,13 +651,13 @@ abstract class ImportExport
             if ($uid > 0) {
                 $record = $this->dat['header']['records'][$table][$uid];
                 if (!is_array($record)) {
-                    if ($this->isTableStatic($table) || $this->isExcluded($table, $uid) || $dat['tokenID'] && !$this->includeSoftref($dat['tokenID'])) {
+                    if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid) || $dat['tokenID'] && !$this->includeSoftref($dat['tokenID'])) {
                         $pInfo['title'] = htmlspecialchars('STATIC: ' . $pInfo['ref']);
                         $iconClass = 'text-info';
                         $staticFixed = true;
                     } else {
-                        $doesRE = $this->doesRecordExist($table, $uid);
-                        $lostPath = $this->getRecordPath($table === 'pages' ? $doesRE['uid'] : $doesRE['pid']);
+                        $doesRE = $this->doesRecordExist($table, (int)$uid);
+                        $lostPath = $this->getRecordPath($table === 'pages' ? (int)$doesRE['uid'] : (int)$doesRE['pid']);
                         $pInfo['title'] = htmlspecialchars($pInfo['ref']);
                         $pInfo['title'] = '<span title="' . htmlspecialchars($lostPath) . '">' . $pInfo['title'] . '</span>';
                         $pInfo['msg'] = 'LOST RELATION' . (!$doesRE ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
@@ -662,8 +665,8 @@ abstract class ImportExport
                         $iconName = 'status-dialog-warning';
                     }
                 } else {
-                    $pInfo['title'] = htmlspecialchars($record['title']);
-                    $pInfo['title'] = '<span title="' . htmlspecialchars($this->getRecordPath(($table === 'pages' ? $record['uid'] : $record['pid']))) . '">' . $pInfo['title'] . '</span>';
+                    $pInfo['title'] = htmlspecialchars((string)$record['title']);
+                    $pInfo['title'] = '<span title="' . htmlspecialchars($this->getRecordPath(($table === 'pages' ? (int)$record['uid'] : (int)$record['pid']))) . '">' . $pInfo['title'] . '</span>';
                 }
             } else {
                 // Negative values in relation fields. This is typically sys_language fields, fe_users fields etc. They are static values. They CAN theoretically be negative pointers to uids in other tables but this is so rarely used that it is not supported
@@ -692,10 +695,10 @@ abstract class ImportExport
      * @param string $preCode Pre-HTML code
      * @param string $htmlColorClass Alternative HTML color class to use.
      * @param string $tokenID Token ID if this is a softreference (in which case it only makes sense with a single element in the $rels array!)
-     * @internal
+     *
      * @see singleRecordLines()
      */
-    protected function addFiles($rels, &$lines, $preCode, $htmlColorClass = '', $tokenID = '')
+    protected function addFiles(array $rels, array &$lines, string $preCode, string $htmlColorClass = '', string $tokenID = ''): void
     {
         foreach ($rels as $ID) {
             // Process file:
@@ -795,7 +798,7 @@ abstract class ImportExport
      * @param int $doktype doktype value.
      * @return bool TRUE if OK
      */
-    protected function checkDokType($checkTable, $doktype)
+    protected function checkDokType(string $checkTable, int $doktype): bool
     {
         $allowedTableList = $GLOBALS['PAGES_TYPES'][$doktype]['allowedTables'] ?? $GLOBALS['PAGES_TYPES']['default']['allowedTables'];
         $allowedArray = GeneralUtility::trimExplode(',', $allowedTableList, true);
@@ -812,7 +815,7 @@ abstract class ImportExport
      * @param array $r Configuration for element
      * @return string HTML
      */
-    protected function renderControls($r)
+    protected function renderControls(array $r): string
     {
         if ($this->mode === 'export') {
             if ($r['type'] === 'record') {
@@ -826,7 +829,7 @@ abstract class ImportExport
             $tokenID = $r['_softRefInfo']['subst']['tokenID'];
             $cfg = $this->softrefCfg[$tokenID];
             if ($cfg['mode'] === 'editable') {
-                return (strlen($cfg['title']) ? '<strong>' . htmlspecialchars($cfg['title']) . '</strong><br/>' : '') . htmlspecialchars($cfg['description']) . '<br/>
+                return (strlen($cfg['title']) ? '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>' : '') . htmlspecialchars($cfg['description']) . '<br/>
 						<input type="text" name="tx_impexp[softrefInputValues][' . $tokenID . ']" value="' . htmlspecialchars($this->softrefInputValues[$tokenID] ?? $cfg['defValue']) . '" />';
             }
         }
@@ -840,7 +843,7 @@ abstract class ImportExport
      * @param array $cfg Softref configuration array. An export box is shown only if a substitution scheme is found for the soft reference.
      * @return string Selector box HTML
      */
-    protected function softrefSelector($cfg)
+    protected function softrefSelector(array $cfg): string
     {
         // Looking for file ID if any:
         $fI = $cfg['file_ID'] ? $this->dat['header']['files'][$cfg['file_ID']] : [];
@@ -860,8 +863,8 @@ abstract class ImportExport
                 // Title:
                 if (strlen($cfg['subst']['title'])) {
                     $descriptionField .= '
-					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][title]" value="' . htmlspecialchars($cfg['subst']['title']) . '" />
-					<strong>' . htmlspecialchars($cfg['subst']['title']) . '</strong><br/>';
+					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][title]" value="' . htmlspecialchars((string)$cfg['subst']['title']) . '" />
+					<strong>' . htmlspecialchars((string)$cfg['subst']['title']) . '</strong><br/>';
                 }
                 // Description:
                 if (!strlen($cfg['subst']['description'])) {
@@ -889,9 +892,10 @@ abstract class ImportExport
      *
      * @param string $dirPrefix Path relative to public web path
      * @param bool $noAlternative If set, Do not look for alternative path! Just return FALSE
-     * @return string|bool If a path is available that will be returned, otherwise FALSE.
+     * @return string If a path is available that will be returned, otherwise NULL.
+     * @throws \Exception
      */
-    protected function verifyFolderAccess($dirPrefix, $noAlternative = false)
+    protected function verifyFolderAccess(string $dirPrefix, bool $noAlternative = false): ?string
     {
         // Check the absolute path for public web path, if the user has access - no problem
         try {
@@ -910,7 +914,7 @@ abstract class ImportExport
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /*****************************
@@ -1014,7 +1018,7 @@ abstract class ImportExport
      * @return array Array with uid-uid pairs for all pages in the page tree.
      * @see Import::flatInversePageTreePid()
      */
-    protected function flatInversePageTree($idH, $a = [])
+    protected function flatInversePageTree(array $idH, array $a = []): array
     {
         if (is_array($idH)) {
             $idH = array_reverse($idH);
@@ -1034,7 +1038,7 @@ abstract class ImportExport
      * @param string $table Table name
      * @return bool TRUE, if table is marked static
      */
-    protected function isTableStatic($table)
+    protected function isTableStatic(string $table): bool
     {
         if (is_array($GLOBALS['TCA'][$table])) {
             return $GLOBALS['TCA'][$table]['ctrl']['is_static'] || in_array($table, $this->relStaticTables) || in_array('_ALL', $this->relStaticTables);
@@ -1049,7 +1053,7 @@ abstract class ImportExport
      * @param int $uid UID value
      * @return bool TRUE, if table is marked static
      */
-    protected function isExcluded($table, $uid)
+    protected function isExcluded(string $table, int $uid): bool
     {
         return (bool)$this->excludeMap[$table . ':' . $uid];
     }
@@ -1060,7 +1064,7 @@ abstract class ImportExport
      * @param string $tokenID Token ID for soft reference
      * @return bool TRUE if softreference media should be included
      */
-    protected function includeSoftref($tokenID)
+    protected function includeSoftref(string $tokenID): bool
     {
         $mode = $this->softrefCfg[$tokenID]['mode'];
         return $tokenID && $mode !== 'exclude' && $mode !== 'editable';
@@ -1071,10 +1075,10 @@ abstract class ImportExport
      *
      * @param string $table Table name
      * @param int $uid UID of record
-     * @param string $fields Field list to select. Default is "uid,pid
-     * @return array Result of \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord() which means the record if found, otherwise FALSE
+     * @param string $fields Field list to select. Default is "uid,pid"
+     * @return array|null Result of \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord() which means the record if found, otherwise NULL
      */
-    protected function doesRecordExist($table, $uid, $fields = '')
+    protected function doesRecordExist(string $table, int $uid, string $fields = ''): ?array
     {
         return BackendUtility::getRecord($table, $uid, $fields ?: 'uid,pid');
     }
@@ -1085,7 +1089,7 @@ abstract class ImportExport
      * @param int $pid Record PID to check
      * @return string The path for the input PID
      */
-    protected function getRecordPath($pid)
+    protected function getRecordPath(int $pid): string
     {
         if (!isset($this->cacheGetRecordPath[$pid])) {
             $clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
@@ -1102,7 +1106,7 @@ abstract class ImportExport
      * @param array $optValues Options to display (key/value pairs)
      * @return string HTML select element
      */
-    protected function renderSelectBox($prefix, $value, $optValues)
+    protected function renderSelectBox(string $prefix, string $value, array $optValues): string
     {
         $opt = [];
         $isSelFlag = 0;
@@ -1111,10 +1115,10 @@ abstract class ImportExport
             if ($sel) {
                 $isSelFlag++;
             }
-            $opt[] = '<option value="' . htmlspecialchars($k) . '"' . $sel . '>' . htmlspecialchars($v) . '</option>';
+            $opt[] = '<option value="' . htmlspecialchars((string)$k) . '"' . $sel . '>' . htmlspecialchars((string)$v) . '</option>';
         }
         if (!$isSelFlag && (string)$value !== '') {
-            $opt[] = '<option value="' . htmlspecialchars($value) . '" selected="selected">' . htmlspecialchars('[\'' . $value . '\']') . '</option>';
+            $opt[] = '<option value="' . htmlspecialchars((string)$value) . '" selected="selected">' . htmlspecialchars('[\'' . (string)$value . '\']') . '</option>';
         }
         return '<select name="' . $prefix . '">' . implode('', $opt) . '</select>';
     }
@@ -1124,54 +1128,50 @@ abstract class ImportExport
      * Will return HTML code to show any differences between them!
      *
      * @param array $databaseRecord Database record, all fields (new values)
-     * @param array|null $importRecord Import memory records for the same table/uid, all fields (old values)
+     * @param array $importRecord Import memory records for the same table/uid, all fields (old values)
      * @param string $table The table name of the record
      * @param bool $inverseDiff Inverse the diff view (switch red/green, needed for pre-update difference view)
      * @return string HTML
      */
-    protected function compareRecords($databaseRecord, $importRecord, $table, $inverseDiff = false)
+    protected function compareRecords(array $databaseRecord, array $importRecord, string $table, bool $inverseDiff = false): string
     {
         // Initialize:
         $output = [];
         $diffUtility = GeneralUtility::makeInstance(DiffUtility::class);
-        // Check if both inputs are records:
-        if (is_array($databaseRecord) && is_array($importRecord)) {
-            // Traverse based on database record
-            foreach ($databaseRecord as $fN => $value) {
-                if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
-                    if (isset($importRecord[$fN])) {
-                        if (trim($databaseRecord[$fN]) !== trim($importRecord[$fN])) {
-                            // Create diff-result:
-                            $output[$fN] = $diffUtility->makeDiffDisplay(BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $importRecord[$fN] : $databaseRecord[$fN], 0, true, true), BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $databaseRecord[$fN] : $importRecord[$fN], 0, true, true));
-                        }
-                        unset($importRecord[$fN]);
+        // Traverse based on database record
+        foreach ($databaseRecord as $fN => $value) {
+            if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
+                if (isset($importRecord[$fN])) {
+                    if (trim((string)$databaseRecord[$fN]) !== trim((string)$importRecord[$fN])) {
+                        // Create diff-result:
+                        $output[$fN] = $diffUtility->makeDiffDisplay(BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $importRecord[$fN] : $databaseRecord[$fN], 0, true, true), BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $databaseRecord[$fN] : $importRecord[$fN], 0, true, true));
                     }
+                    unset($importRecord[$fN]);
                 }
             }
-            // Traverse remaining in import record:
-            foreach ($importRecord as $fN => $value) {
-                if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
-                    $output[$fN] = '<strong>Field missing</strong> in database';
-                }
-            }
-            // Create output:
-            if (!empty($output)) {
-                $tRows = [];
-                foreach ($output as $fN => $state) {
-                    $tRows[] = '
-						<tr>
-							<td>' . htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label'])) . ' (' . htmlspecialchars((string)$fN) . ')</td>
-							<td>' . $state . '</td>
-						</tr>
-					';
-                }
-                $output = '<table class="table table-striped table-hover">' . implode('', $tRows) . '</table>';
-            } else {
-                $output = 'Match';
-            }
-            return '<strong class="text-nowrap">[' . htmlspecialchars($table . ':' . $importRecord['uid'] . ' => ' . $databaseRecord['uid']) . ']:</strong> ' . $output;
         }
-        return 'ERROR: One of the inputs were not an array!';
+        // Traverse remaining in import record:
+        foreach ($importRecord as $fN => $value) {
+            if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
+                $output[$fN] = '<strong>Field missing</strong> in database';
+            }
+        }
+        // Create output:
+        if (!empty($output)) {
+            $tRows = [];
+            foreach ($output as $fN => $state) {
+                $tRows[] = '
+                    <tr>
+                        <td>' . htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label'])) . ' (' . htmlspecialchars((string)$fN) . ')</td>
+                        <td>' . $state . '</td>
+                    </tr>
+                ';
+            }
+            $output = '<table class="table table-striped table-hover">' . implode('', $tRows) . '</table>';
+        } else {
+            $output = 'Match';
+        }
+        return '<strong class="text-nowrap">[' . htmlspecialchars($table . ':' . $importRecord['uid'] . ' => ' . $databaseRecord['uid']) . ']:</strong> ' . $output;
     }
 
     /**
@@ -1179,7 +1179,7 @@ abstract class ImportExport
      *
      * @return ExtendedFileUtility File processor object
      */
-    protected function getFileProcObj()
+    protected function getFileProcObj(): ExtendedFileUtility
     {
         if ($this->fileProcObj === null) {
             $this->fileProcObj = GeneralUtility::makeInstance(ExtendedFileUtility::class);
@@ -1210,7 +1210,7 @@ abstract class ImportExport
     /**
      * @return BackendUserAuthentication
      */
-    protected function getBackendUser()
+    protected function getBackendUser(): BackendUserAuthentication
     {
         return $GLOBALS['BE_USER'];
     }
@@ -1218,7 +1218,7 @@ abstract class ImportExport
     /**
      * @return LanguageService
      */
-    protected function getLanguageService()
+    protected function getLanguageService(): LanguageService
     {
         return $GLOBALS['LANG'];
     }

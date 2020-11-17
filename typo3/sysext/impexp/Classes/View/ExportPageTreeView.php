@@ -57,7 +57,7 @@ class ExportPageTreeView extends BrowseTreeView
      */
     public function wrapTitle($title, $row, $bank = 0)
     {
-        return trim($title) === '' ? '<em>[' . htmlspecialchars($this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.no_title')) . ']</em>' : htmlspecialchars($title);
+        return trim((string)$title) === '' ? '<em>[' . htmlspecialchars($this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.no_title')) . ']</em>' : htmlspecialchars((string)$title);
     }
 
     /**
