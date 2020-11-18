@@ -114,8 +114,10 @@ class Export extends ImportExport
     protected $extFileResourceExtensions = 'html,htm,css';
 
     /**
-     * Keys are [recordname], values are an array of fields to be included
-     * in the export
+     * The key is the record type (e.g. 'be_users'),
+     * the value is an array of fields to be included in the export.
+     *
+     * Used in tests only.
      *
      * @var array
      */
@@ -341,9 +343,11 @@ class Export extends ImportExport
      *************************/
 
     /**
-     * Sets the fields of record types to be included in the export
+     * Sets the fields of record types to be included in the export.
+     * Used in tests only.
      *
-     * @param array $recordTypesIncludeFields Keys are [recordname], values are an array of fields to be included in the export
+     * @param array $recordTypesIncludeFields The key is the record type,
+     *                                          the value is an array of fields to be included in the export.
      * @throws Exception if an array value is not type of array
      */
     public function setRecordTypesIncludeFields(array $recordTypesIncludeFields): void
@@ -357,7 +361,8 @@ class Export extends ImportExport
     }
 
     /**
-     * Sets the fields of a record type to be included in the export
+     * Sets the fields of a record type to be included in the export.
+     * Used in tests only.
      *
      * @param string $table The record type
      * @param array $fields The fields to be included
