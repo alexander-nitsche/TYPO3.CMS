@@ -235,7 +235,7 @@ class Export extends ImportExport
             // In most cases, we should have a multi-level array, $idH, with the page tree
             // structure here (and the HTML code loaded into memory for a nice display...)
             if (is_array($idH)) {
-                $this->unsetExcludedSections($idH);
+                $this->removeExcludedPagesFromPageTree($idH);
                 $this->setPageTree($idH);
                 $flatList = $this->flatInversePageTree($idH);
                 foreach ($flatList as $pid => $value) {
@@ -324,16 +324,14 @@ class Export extends ImportExport
      * Removes entries in the page tree which are found in ->excludeMap[]
      *
      * @param array $idH Hierarchy of ids, the page tree
-     *
-     * @see setPageTree()
      */
-    protected function unsetExcludedSections(array &$idH): void
+    protected function removeExcludedPagesFromPageTree(array &$idH): void
     {
-        foreach ($idH as $k => $v) {
-            if ($this->excludeMap['pages:' . $idH[$k]['uid']]) {
-                unset($idH[$k]);
-            } elseif (is_array($idH[$k]['subrow'])) {
-                $this->unsetExcludedSections($idH[$k]['subrow']);
+        foreach ($idH as $pid => $value) {
+            if ($this->isExcluded('pages', (int)$idH[$pid]['uid'])) {
+                unset($idH[$pid]);
+            } elseif (is_array($idH[$pid]['subrow'])) {
+                $this->removeExcludedPagesFromPageTree($idH[$pid]['subrow']);
             }
         }
     }
