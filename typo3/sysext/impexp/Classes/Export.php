@@ -288,16 +288,6 @@ class Export extends ImportExport
     }
 
     /**
-     * Set charset
-     *
-     * @param string $charset Charset for the content in the export. During import the character set will be converted if the target system uses another charset.
-     */
-    public function setCharset(string $charset): void
-    {
-        $this->dat['header']['charset'] = $charset;
-    }
-
-    /**
      * Sets meta data
      */
     protected function setMetaData(): void
