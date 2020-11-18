@@ -238,12 +238,12 @@ class Export extends ImportExport
                 $this->unsetExcludedSections($idH);
                 $this->setPageTree($idH);
                 $flatList = $this->flatInversePageTree($idH);
-                foreach ($flatList as $k => $value) {
-                    $record = BackendUtility::getRecord('pages', $k);
+                foreach ($flatList as $pid => $value) {
+                    $record = BackendUtility::getRecord('pages', $pid);
                     if (is_array($record)) {
                         $this->exportAddRecord('pages', $record);
                     }
-                    $this->addRecordsForPid((int)$k, $this->tables);
+                    $this->addRecordsForPid((int)$pid, $this->tables);
                 }
             }
         }
@@ -397,10 +397,10 @@ class Export extends ImportExport
     /**
      * Adds records to the export object for a specific page id.
      *
-     * @param int $k Page id for which to select records to add
+     * @param int $pid Page id for which to select records to add
      * @param array $tables Array of table names to select from
      */
-    protected function addRecordsForPid(int $k, array $tables): void
+    protected function addRecordsForPid(int $pid, array $tables): void
     {
         foreach ($GLOBALS['TCA'] as $table => $value) {
             if ($table !== 'pages'
@@ -408,7 +408,7 @@ class Export extends ImportExport
                 && $this->getBackendUser()->check('tables_select', $table)
                 && !$GLOBALS['TCA'][$table]['ctrl']['is_static']
             ) {
-                $statement = $this->execListQueryPid($table, $k);
+                $statement = $this->execListQueryPid($table, $pid);
                 while ($record = $statement->fetch()) {
                     if (is_array($record)) {
                         $this->exportAddRecord($table, $record);
