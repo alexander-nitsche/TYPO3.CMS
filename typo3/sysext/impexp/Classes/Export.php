@@ -211,7 +211,7 @@ class Export extends ImportExport
             $idH = null;
             if ($this->levels === self::LEVELS_EXPANDED_TREE) {
                 $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
-                $initClause = $this->filterPageIds($this->excludeMap);
+                $initClause = $this->getExcludePagesClause();
                 if ($this->excludeDisabledRecords) {
                     $initClause .= BackendUtility::BEenableFields('pages');
                 }
@@ -223,7 +223,7 @@ class Export extends ImportExport
                 $this->addRecordsForPid($this->pid, $this->tables);
             } else {
                 $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
-                $initClause = $this->filterPageIds($this->excludeMap);
+                $initClause = $this->getExcludePagesClause();
                 if ($this->excludeDisabledRecords) {
                     $initClause .= BackendUtility::BEenableFields('pages');
                 }
@@ -373,25 +373,21 @@ class Export extends ImportExport
     }
 
     /**
-     * Filter page IDs by traversing exclude array, finding all
+     * Filter page IDs by traversing the exclude map, finding all
      * excluded pages (if any) and making an AND NOT IN statement for the select clause.
      *
-     * @param array $exclude Exclude array from import/export object.
      * @return string AND where clause part to filter out page uids.
      */
-    protected function filterPageIds(array $exclude): string
+    protected function getExcludePagesClause(): string
     {
-        // Get keys:
-        $exclude = array_keys($exclude);
-        // Traverse
         $pageIds = [];
-        foreach ($exclude as $element) {
-            [$table, $uid] = explode(':', $element);
+
+        foreach ($this->excludeMap as $tableAndUid => $isExcluded) {
+            [$table, $uid] = explode(':', $tableAndUid);
             if ($table === 'pages') {
                 $pageIds[] = (int)$uid;
             }
         }
-        // Add to clause:
         if (!empty($pageIds)) {
             return ' AND uid NOT IN (' . implode(',', $pageIds) . ')';
         }
