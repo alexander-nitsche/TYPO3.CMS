@@ -593,10 +593,10 @@ abstract class ImportExport
                 $pInfo['preCode'] = $preCode_A . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
                 $pInfo['title'] = '<em>' . $info['field'] . ', "' . $info['spKey'] . '" </em>: <span title="' . htmlspecialchars($info['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['matchString'], 60)) . '</span>';
                 if ($info['subst']['type']) {
-                    if (strlen($info['subst']['title'])) {
+                    if (strlen((string)$info['subst']['title'])) {
                         $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
                     }
-                    if (strlen($info['subst']['description'])) {
+                    if (strlen((string)$info['subst']['description'])) {
                         $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
                     }
                     $pInfo['title'] .= '<br/>' . $preCode_B . ($info['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
@@ -829,7 +829,7 @@ abstract class ImportExport
             $tokenID = $r['_softRefInfo']['subst']['tokenID'];
             $cfg = $this->softrefCfg[$tokenID];
             if ($cfg['mode'] === 'editable') {
-                return (strlen($cfg['title']) ? '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>' : '') . htmlspecialchars($cfg['description']) . '<br/>
+                return (strlen((string)$cfg['title']) ? '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>' : '') . htmlspecialchars((string)$cfg['description']) . '<br/>
 						<input type="text" name="tx_impexp[softrefInputValues][' . $tokenID . ']" value="' . htmlspecialchars($this->softrefInputValues[$tokenID] ?? $cfg['defValue']) . '" />';
             }
         }
@@ -861,20 +861,20 @@ abstract class ImportExport
             if ($value === 'editable') {
                 $descriptionField = '';
                 // Title:
-                if (strlen($cfg['subst']['title'])) {
+                if (strlen((string)$cfg['subst']['title'])) {
                     $descriptionField .= '
 					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][title]" value="' . htmlspecialchars((string)$cfg['subst']['title']) . '" />
 					<strong>' . htmlspecialchars((string)$cfg['subst']['title']) . '</strong><br/>';
                 }
                 // Description:
-                if (!strlen($cfg['subst']['description'])) {
+                if (!strlen((string)$cfg['subst']['description'])) {
                     $descriptionField .= '
 					' . htmlspecialchars($this->lang->getLL('impexpcore_printerror_description')) . '<br/>
-					<input type="text" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars($this->softrefCfg[$cfg['subst']['tokenID']]['description']) . '" />';
+					<input type="text" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars((string)$this->softrefCfg[$cfg['subst']['tokenID']]['description']) . '" />';
                 } else {
                     $descriptionField .= '
 
-					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars($cfg['subst']['description']) . '" />' . htmlspecialchars($cfg['subst']['description']);
+					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars((string)$cfg['subst']['description']) . '" />' . htmlspecialchars((string)$cfg['subst']['description']);
                 }
                 // Default Value:
                 $descriptionField .= '<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][defValue]" value="' . htmlspecialchars($cfg['subst']['tokenValue']) . '" />';
