@@ -178,38 +178,33 @@ class Export extends ImportExport
     public function process(): void
     {
         $this->setHeaderBasics();
-
-        // Meta data setting:
-        $beUser = $this->getBackendUser();
         $this->setMetaData();
 
         // Configure which records to export
-        if (is_array($this->record)) {
-            foreach ($this->record as $ref) {
-                $rParts = explode(':', $ref);
-                $table = $rParts[0];
-                $record = BackendUtility::getRecord($rParts[0], (int)$rParts[1]);
-                if (is_array($record)) {
-                    $this->exportAddRecord($table, $record);
-                }
+        foreach ($this->record as $ref) {
+            $rParts = explode(':', $ref);
+            $table = $rParts[0];
+            $record = BackendUtility::getRecord($rParts[0], (int)$rParts[1]);
+            if (is_array($record)) {
+                $this->exportAddRecord($table, $record);
             }
         }
+
         // Configure which tables to export
-        if (is_array($this->list)) {
-            foreach ($this->list as $ref) {
-                $rParts = explode(':', $ref);
-                $table = $rParts[0];
-                if ($beUser->check('tables_select', $table)) {
-                    $statement = $this->execListQueryPid($table, (int)$rParts[1]);
-                    while ($record = $statement->fetch()) {
-                        if (is_array($record)) {
-                            $this->exportAddRecord($table, $record);
-                        }
+        foreach ($this->list as $ref) {
+            $rParts = explode(':', $ref);
+            $table = $rParts[0];
+            if ($this->getBackendUser()->check('tables_select', $table)) {
+                $statement = $this->execListQueryPid($table, (int)$rParts[1]);
+                while ($record = $statement->fetch()) {
+                    if (is_array($record)) {
+                        $this->exportAddRecord($table, $record);
                     }
                 }
             }
         }
-        // Pagetree
+
+        // Configure which page tree to export
         if ($this->pid !== -1) {
             $idH = null;
             if ($this->levels === self::LEVELS_EXPANDED_TREE) {
@@ -235,11 +230,12 @@ class Export extends ImportExport
                 $this->treeHTML = $pagetree->printTree();
                 $idH = $pagetree->buffer_idH;
             }
-            // In any case we should have a multi-level array, $idH, with the page structure
-            // here (and the HTML-code loaded into memory for nice display...)
+            // In most cases, we should have a multi-level array, $idH, with the page tree
+            // structure here (and the HTML code loaded into memory for a nice display...)
             if (is_array($idH)) {
-                // Sets the pagetree and gets a 1-dim array in return with the pages (in correct submission order BTW...)
-                $flatList = $this->setPageTree($idH);
+                $this->unsetExcludedSections($idH);
+                $this->setPageTree($idH);
+                $flatList = $this->flatInversePageTree($idH);
                 foreach ($flatList as $k => $value) {
                     $record = BackendUtility::getRecord('pages', $k);
                     if (is_array($record)) {
@@ -249,17 +245,18 @@ class Export extends ImportExport
                 }
             }
         }
-        // After adding ALL records we set relations:
+
+        // After adding ALL records we set database relations
         for ($a = 0; $a < 10; $a++) {
             $addR = $this->exportAddDbRelations($a);
             if (empty($addR)) {
                 break;
             }
         }
-        // Finally files are added:
-        // MUST be after the DBrelations are set so that files from ALL added records are included!
-        $this->exportAddFilesFromRelations();
 
+        // Files must be added after the database relations are added,
+        // so that files from ALL added records are included!
+        $this->exportAddFilesFromRelations();
         $this->exportAddFilesFromSysFilesRecords();
     }
 
@@ -324,35 +321,31 @@ class Export extends ImportExport
      *************************/
 
     /**
-     * Sets the page-tree array in the export header and returns the array in a flattened version
+     * Sets the page-tree array in the export header
      *
      * @param array $idH Hierarchy of ids, the page tree: array([uid] => array("uid" => [uid], "subrow" => array(.....)), [uid] => ....)
-     * @return array The hierarchical page tree converted to a one-dimensional list of pages
      */
-    public function setPageTree(array $idH): array
+    public function setPageTree(array $idH): void
     {
-        $this->dat['header']['pagetree'] = $this->unsetExcludedSections($idH);
-        return $this->flatInversePageTree($this->dat['header']['pagetree']);
+        $this->dat['header']['pagetree'] = $idH;
     }
 
     /**
      * Removes entries in the page tree which are found in ->excludeMap[]
      *
-     * @param array $idH Page uid hierarchy
-     * @return array Modified input array
+     * @param array $idH Hierarchy of ids, the page tree
      *
      * @see setPageTree()
      */
-    protected function unsetExcludedSections(array $idH): array
+    protected function unsetExcludedSections(array &$idH): void
     {
         foreach ($idH as $k => $v) {
             if ($this->excludeMap['pages:' . $idH[$k]['uid']]) {
                 unset($idH[$k]);
             } elseif (is_array($idH[$k]['subrow'])) {
-                $idH[$k]['subrow'] = $this->unsetExcludedSections($idH[$k]['subrow']);
+                $this->unsetExcludedSections($idH[$k]['subrow']);
             }
         }
-        return $idH;
     }
 
     /**************************

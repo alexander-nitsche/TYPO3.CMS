@@ -1011,22 +1011,20 @@ abstract class ImportExport
     }
 
     /**
-     * Recursively flattening the idH array
+     * Recursively flattening the page tree array to a one-dimensional array.
      *
-     * @param array $idH Page uid hierarchy
-     * @param array $a Accumulation array of pages (internal, don't set from outside)
-     * @return array Array with uid-uid pairs for all pages in the page tree.
+     * @param array $idH Page tree array
+     * @param array $a Flat array of pages (internal, don't set from outside)
+     * @return array Flat array with uid-uid pairs for all pages in the page tree.
      * @see Import::flatInversePageTreePid()
      */
     protected function flatInversePageTree(array $idH, array $a = []): array
     {
-        if (is_array($idH)) {
-            $idH = array_reverse($idH);
-            foreach ($idH as $k => $v) {
-                $a[$v['uid']] = $v['uid'];
-                if (is_array($v['subrow'])) {
-                    $a = $this->flatInversePageTree($v['subrow'], $a);
-                }
+        $idH = array_reverse($idH);
+        foreach ($idH as $k => $v) {
+            $a[$v['uid']] = $v['uid'];
+            if (is_array($v['subrow'])) {
+                $a = $this->flatInversePageTree($v['subrow'], $a);
             }
         }
         return $a;
