@@ -266,11 +266,9 @@ class Export extends ImportExport
     protected function setHeaderBasics(): void
     {
         // Initializing:
-        if (is_array($this->softrefCfg)) {
-            foreach ($this->softrefCfg as $key => $value) {
-                if (!strlen($value['mode'])) {
-                    unset($this->softrefCfg[$key]);
-                }
+        foreach ($this->softrefCfg as $key => $value) {
+            if (!strlen($value['mode'])) {
+                unset($this->softrefCfg[$key]);
             }
         }
         // Setting in header memory:
