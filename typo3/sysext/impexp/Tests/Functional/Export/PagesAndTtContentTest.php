@@ -39,6 +39,43 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
             'typo3/sysext/impexp/Tests/Functional/Fixtures/Extensions/template_extension'
     ];
 
+    /**
+     * @var array
+     */
+    protected $recordTypesIncludeFields =
+        [
+            'pages' => [
+                'title',
+                'deleted',
+                'doktype',
+                'hidden',
+                'perms_everybody'
+            ],
+            'tt_content' => [
+                'CType',
+                'header',
+                'header_link',
+                'deleted',
+                'hidden',
+                't3ver_oid'
+            ],
+            'sys_file' => [
+                'storage',
+                'type',
+                'metadata',
+                'identifier',
+                'identifier_hash',
+                'folder_hash',
+                'mime_type',
+                'name',
+                'sha1',
+                'size',
+                'creation_date',
+                'modification_date',
+            ],
+        ]
+    ;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -54,40 +91,6 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
      */
     public function exportPagesAndRelatedTtContent()
     {
-        $recordTypesIncludeFields =
-            [
-                'pages' => [
-                    'title',
-                    'deleted',
-                    'doktype',
-                    'hidden',
-                    'perms_everybody'
-                ],
-                'tt_content' => [
-                    'CType',
-                    'header',
-                    'header_link',
-                    'deleted',
-                    'hidden',
-                    't3ver_oid'
-                ],
-                'sys_file' => [
-                    'storage',
-                    'type',
-                    'metadata',
-                    'identifier',
-                    'identifier_hash',
-                    'folder_hash',
-                    'mime_type',
-                    'name',
-                    'sha1',
-                    'size',
-                    'creation_date',
-                    'modification_date',
-                ],
-            ]
-        ;
-
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
         $subject->init();
@@ -95,13 +98,37 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
         $subject->setLevels(1);
         $subject->setTables(['_ALL']);
         $subject->setRelOnlyTables(['sys_file']);
-        $subject->setRecordTypesIncludeFields($recordTypesIncludeFields);
+        $subject->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
         $subject->process();
 
         $out = $subject->render();
 
         self::assertXmlStringEqualsXmlFile(
             __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent.xml',
+            $out
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function exportPagesAndRelatedTtContentWithComplexConfiguration()
+    {
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->init();
+        $subject->setPid(1);
+        $subject->setExcludeMap(['pages:2' => 1]);
+        $subject->setLevels(1);
+        $subject->setTables(['_ALL']);
+        $subject->setRelOnlyTables(['sys_file']);
+        $subject->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $subject->process();
+
+        $out = $subject->render();
+
+        self::assertXmlStringEqualsXmlFile(
+            __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent-complex.xml',
             $out
         );
     }

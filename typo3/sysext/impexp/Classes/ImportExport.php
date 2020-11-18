@@ -148,7 +148,7 @@ abstract class ImportExport
     protected $relStaticTables = [];
 
     /**
-     * Exclude map. Keys are table:uid  pairs and if set, records are not added to the export.
+     * Exclude map. Keys are table:uid pairs and if set, records are not added to the export.
      *
      * @var array
      */
