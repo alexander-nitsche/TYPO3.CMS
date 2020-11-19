@@ -468,45 +468,47 @@ class Export extends ImportExport
     public function exportAddRecord(string $table, array $row, int $relationLevel = 0): void
     {
         BackendUtility::workspaceOL($table, $row);
-        if ($this->excludeDisabledRecords && $this->isRecordDisabled($table, (int)$row['uid'])) {
+
+        if ($table === '' || (int)$row['uid'] === 0
+            || $this->isExcluded($table, (int)$row['uid'])
+            || $this->excludeDisabledRecords && $this->isRecordDisabled($table, (int)$row['uid'])) {
             return;
         }
-        if ((string)$table !== '' && is_array($row) && $row['uid'] > 0 && !$this->excludeMap[$table . ':' . $row['uid']]) {
-            if ($this->checkPid($table === 'pages' ? (int)$row['uid'] : (int)$row['pid'])) {
-                if (!isset($this->dat['records'][$table . ':' . $row['uid']])) {
-                    // Prepare header info:
-                    $row = $this->filterRecordFields($table, $row);
-                    $headerInfo = [];
-                    $headerInfo['uid'] = $row['uid'];
-                    $headerInfo['pid'] = $row['pid'];
-                    $headerInfo['title'] = GeneralUtility::fixed_lgd_cs(BackendUtility::getRecordTitle($table, $row), 40);
-                    if ($relationLevel) {
-                        $headerInfo['relationLevel'] = $relationLevel;
-                    }
-                    // Set the header summary:
-                    $this->dat['header']['records'][$table][$row['uid']] = $headerInfo;
-                    // Create entry in the PID lookup:
-                    $this->dat['header']['pid_lookup'][$row['pid']][$table][$row['uid']] = 1;
-                    // Initialize reference index object:
-                    $refIndexObj = GeneralUtility::makeInstance(ReferenceIndex::class);
-                    $refIndexObj->enableRuntimeCache();
-                    $relations = $refIndexObj->getRelations($table, $row);
-                    $relations = $this->fixFileIDsInRelations($relations);
-                    $relations = $this->removeSoftrefsHavingTheSameDatabaseRelation($relations);
-                    // Data:
-                    $this->dat['records'][$table . ':' . $row['uid']] = [];
-                    $this->dat['records'][$table . ':' . $row['uid']]['data'] = $row;
-                    $this->dat['records'][$table . ':' . $row['uid']]['rels'] = $relations;
-                    // Add information about the relations in the record in the header:
-                    $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDbRels($this->dat['records'][$table . ':' . $row['uid']]['rels']);
-                    // Add information about the softrefs to header:
-                    $this->dat['header']['records'][$table][$row['uid']]['softrefs'] = $this->flatSoftRefs($this->dat['records'][$table . ':' . $row['uid']]['rels']);
-                } else {
-                    $this->addError('Record ' . $table . ':' . $row['uid'] . ' already added.');
+
+        if ($this->checkPid($table === 'pages' ? (int)$row['uid'] : (int)$row['pid'])) {
+            if (!isset($this->dat['records'][$table . ':' . $row['uid']])) {
+                // Prepare header info:
+                $row = $this->filterRecordFields($table, $row);
+                $headerInfo = [];
+                $headerInfo['uid'] = $row['uid'];
+                $headerInfo['pid'] = $row['pid'];
+                $headerInfo['title'] = GeneralUtility::fixed_lgd_cs(BackendUtility::getRecordTitle($table, $row), 40);
+                if ($relationLevel) {
+                    $headerInfo['relationLevel'] = $relationLevel;
                 }
+                // Set the header summary:
+                $this->dat['header']['records'][$table][$row['uid']] = $headerInfo;
+                // Create entry in the PID lookup:
+                $this->dat['header']['pid_lookup'][$row['pid']][$table][$row['uid']] = 1;
+                // Initialize reference index object:
+                $refIndexObj = GeneralUtility::makeInstance(ReferenceIndex::class);
+                $refIndexObj->enableRuntimeCache();
+                $relations = $refIndexObj->getRelations($table, $row);
+                $relations = $this->fixFileIDsInRelations($relations);
+                $relations = $this->removeSoftrefsHavingTheSameDatabaseRelation($relations);
+                // Data:
+                $this->dat['records'][$table . ':' . $row['uid']] = [];
+                $this->dat['records'][$table . ':' . $row['uid']]['data'] = $row;
+                $this->dat['records'][$table . ':' . $row['uid']]['rels'] = $relations;
+                // Add information about the relations in the record in the header:
+                $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDbRels($this->dat['records'][$table . ':' . $row['uid']]['rels']);
+                // Add information about the softrefs to header:
+                $this->dat['header']['records'][$table][$row['uid']]['softrefs'] = $this->flatSoftRefs($this->dat['records'][$table . ':' . $row['uid']]['rels']);
             } else {
-                $this->addError('Record ' . $table . ':' . $row['uid'] . ' was outside your DB mounts!');
+                $this->addError('Record ' . $table . ':' . $row['uid'] . ' already added.');
             }
+        } else {
+            $this->addError('Record ' . $table . ':' . $row['uid'] . ' was outside your DB mounts!');
         }
     }
 
