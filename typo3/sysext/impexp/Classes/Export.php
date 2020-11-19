@@ -196,8 +196,9 @@ class Export extends ImportExport
         foreach ($this->list as $ref) {
             $rParts = explode(':', $ref);
             $table = $rParts[0];
+            $pid = (int)$rParts[1];
             if ($this->getBackendUser()->check('tables_select', $table)) {
-                $statement = $this->execListQueryPid($table, (int)$rParts[1]);
+                $statement = $this->execListQueryPid($pid, $table);
                 while ($record = $statement->fetch()) {
                     if (is_array($record)) {
                         $this->exportAddRecord($table, $record);
@@ -406,7 +407,7 @@ class Export extends ImportExport
                 && $this->getBackendUser()->check('tables_select', $table)
                 && !$GLOBALS['TCA'][$table]['ctrl']['is_static']
             ) {
-                $statement = $this->execListQueryPid($table, $pid);
+                $statement = $this->execListQueryPid($pid, $table);
                 while ($record = $statement->fetch()) {
                     if (is_array($record)) {
                         $this->exportAddRecord($table, $record);
@@ -419,21 +420,23 @@ class Export extends ImportExport
     /**
      * Selects records from table / pid
      *
-     * @param string $table Table to select from
      * @param int $pid Page ID to select from
+     * @param string $table Table to select from
      * @return Statement Query statement
      */
-    protected function execListQueryPid(string $table, int $pid): Statement
+    protected function execListQueryPid(int $pid, string $table): Statement
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($table);
 
         $orderBy = $GLOBALS['TCA'][$table]['ctrl']['sortby'] ?: $GLOBALS['TCA'][$table]['ctrl']['default_sortby'];
-        $queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, 0));
 
         if ($this->excludeDisabledRecords === false) {
             $queryBuilder->getRestrictions()
                 ->removeAll()
                 ->add(GeneralUtility::makeInstance(DeletedRestriction::class))
+                ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, 0));
+        } else {
+            $queryBuilder->getRestrictions()
                 ->add(GeneralUtility::makeInstance(WorkspaceRestriction::class, 0));
         }
 

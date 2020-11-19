@@ -123,6 +123,7 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
         $subject->setTables(['_ALL']);
         $subject->setRelOnlyTables(['sys_file']);
         $subject->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $subject->setExcludeDisabledRecords(true);
         $subject->process();
 
         $out = $subject->render();
