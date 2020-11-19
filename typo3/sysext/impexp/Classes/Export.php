@@ -468,7 +468,7 @@ class Export extends ImportExport
     public function exportAddRecord(string $table, array $row, int $relationLevel = 0): void
     {
         BackendUtility::workspaceOL($table, $row);
-        if ($this->excludeDisabledRecords && !$this->isActive($table, (int)$row['uid'])) {
+        if ($this->excludeDisabledRecords && $this->isRecordDisabled($table, (int)$row['uid'])) {
             return;
         }
         if ((string)$table !== '' && is_array($row) && $row['uid'] > 0 && !$this->excludeMap[$table . ':' . $row['uid']]) {

@@ -326,7 +326,7 @@ abstract class ImportExport
     protected function traversePageTree(array $pT, array &$lines, string $preCode = ''): void
     {
         foreach ($pT as $k => $v) {
-            if ($this->excludeDisabledRecords === true && !$this->isActive('pages', $k)) {
+            if ($this->excludeDisabledRecords === true && $this->isRecordDisabled('pages', $k)) {
                 $this->excludePageAndRecords($k, $v);
                 continue;
             }
@@ -353,17 +353,17 @@ abstract class ImportExport
     }
 
     /**
-     * Test whether a record is active (i.e. not hidden)
+     * Test whether a record is disabled (i.e. hidden)
      *
      * @param string $table Name of the records' database table
      * @param int $uid Database uid of the record
-     * @return bool true if the record is active, false otherwise
+     * @return bool true if the record is disabled, false otherwise
      */
-    protected function isActive(string $table, int $uid): bool
+    protected function isRecordDisabled(string $table, int $uid): bool
     {
         return
-            !isset($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'])
-            || !(bool)$this->dat['records'][$table . ':' . $uid]['data'][
+            isset($GLOBALS['TCA'][$table]['ctrl']['enablecolumns']['disabled'])
+            && (bool)$this->dat['records'][$table . ':' . $uid]['data'][
                 $GLOBALS['TCA']['pages']['ctrl']['enablecolumns']['disabled']
             ];
     }
@@ -487,7 +487,7 @@ abstract class ImportExport
             $pInfo['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
         } else {
             // prepare data attribute telling whether the record is active or hidden, allowing frontend bulk selection
-            $pInfo['active'] = $this->isActive($table, $uid) ? 'active' : 'hidden';
+            $pInfo['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
 
             // Otherwise, set table icon and title.
             // Import validation will show messages if import is not possible of various items.
