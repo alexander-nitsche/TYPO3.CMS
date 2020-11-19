@@ -15,8 +15,10 @@
 
 namespace TYPO3\CMS\Impexp\Tests\Functional;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Impexp\Export;
+use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 
 /**
  * Test case
