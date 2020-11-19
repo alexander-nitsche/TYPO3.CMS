@@ -494,7 +494,7 @@ class Export extends ImportExport
                 $refIndexObj = GeneralUtility::makeInstance(ReferenceIndex::class);
                 $refIndexObj->enableRuntimeCache();
                 $relations = $refIndexObj->getRelations($table, $row);
-                $relations = $this->fixFileIDsInRelations($relations);
+                $this->fixFileIdInRelations($relations);
                 $relations = $this->removeSoftrefsHavingTheSameDatabaseRelation($relations);
                 // Data:
                 $this->dat['records'][$table . ':' . $row['uid']] = [];
@@ -530,36 +530,37 @@ class Export extends ImportExport
      * This changes the file reference ID from a hash based on the absolute file path
      * (coming from ReferenceIndex) to a hash based on the relative file path.
      *
+     * Public access for testing purpose only.
+     *
      * @param array $relations
-     * @return array
      */
-    protected function fixFileIDsInRelations(array $relations): array
+    public function fixFileIdInRelations(array &$relations): void
     {
-        foreach ($relations as $field => $relation) {
+        foreach ($relations as $field => &$relation) {
             if (isset($relation['type']) && $relation['type'] === 'file') {
-                foreach ($relation['newValueFiles'] as $key => $fileRelationData) {
+                foreach ($relation['newValueFiles'] as $key => &$fileRelationData) {
                     $absoluteFilePath = $fileRelationData['ID_absFile'];
                     if (GeneralUtility::isFirstPartOfStr($absoluteFilePath, Environment::getPublicPath())) {
                         $relatedFilePath = PathUtility::stripPathSitePrefix($absoluteFilePath);
-                        $relations[$field]['newValueFiles'][$key]['ID'] = md5($relatedFilePath);
+                        $fileRelationData['ID'] = md5($relatedFilePath);
                     }
                 }
+                unset($fileRelationData);
             }
-            if ($relation['type'] === 'flex') {
+            if (isset($relation['type']) && $relation['type'] === 'flex') {
                 if (is_array($relation['flexFormRels']['file'])) {
-                    foreach ($relation['flexFormRels']['file'] as $key => $subList) {
-                        foreach ($subList as $subKey => $fileRelationData) {
+                    foreach ($relation['flexFormRels']['file'] as $key => &$subList) {
+                        foreach ($subList as $subKey => &$fileRelationData) {
                             $absoluteFilePath = $fileRelationData['ID_absFile'];
                             if (GeneralUtility::isFirstPartOfStr($absoluteFilePath, Environment::getPublicPath())) {
                                 $relatedFilePath = PathUtility::stripPathSitePrefix($absoluteFilePath);
-                                $relations[$field]['flexFormRels']['file'][$key][$subKey]['ID'] = md5($relatedFilePath);
+                                $fileRelationData['ID'] = md5($relatedFilePath);
                             }
                         }
                     }
                 }
             }
         }
-        return $relations;
     }
 
     /**

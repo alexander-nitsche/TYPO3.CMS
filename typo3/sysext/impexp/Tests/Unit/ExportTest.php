@@ -15,7 +15,10 @@
 
 namespace TYPO3\CMS\Impexp\Tests\Unit;
 
+use PHPUnit\Framework\MockObject\MockObject;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Impexp\Export;
+use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -121,5 +124,34 @@ class ExportTest extends UnitTestCase
     {
         $this->expectException(\Exception::class);
         $this->exportMock->setExportFileType('json');
+    }
+
+    /**
+     * @test
+     */
+    public function fixFileIdInRelationsProcessesOriginalRelationsArray(): void
+    {
+        $relations = [
+            ['type' => 'file', 'newValueFiles' => [[
+                'ID_absFile' => Environment::getPublicPath() . '/fileRelation.png'
+            ]]],
+            ['type' => 'flex', 'flexFormRels' => ['file' => [[[
+                'ID_absFile' => Environment::getPublicPath() . '/fileRelationInFlexForm.png'
+            ]]]]],
+        ];
+
+        $expected = [
+            ['type' => 'file', 'newValueFiles' => [[
+                'ID_absFile' => Environment::getPublicPath() . '/fileRelation.png',
+                'ID' => '987eaa6ab0a50497101d373cfc983400',
+            ]]],
+            ['type' => 'flex', 'flexFormRels' => ['file' => [[[
+                'ID_absFile' => Environment::getPublicPath() . '/fileRelationInFlexForm.png',
+                'ID' => '4cd9d9637e042ebff3568ad4e0266e77',
+            ]]]]],
+        ];
+
+        $this->exportMock->fixFileIdInRelations($relations);
+        self::assertEquals($expected, $relations);
     }
 }
