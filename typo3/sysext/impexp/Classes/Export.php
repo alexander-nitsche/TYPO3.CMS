@@ -151,11 +151,11 @@ class Export extends ImportExport
     protected $supportedFileTypes = [];
 
     /**
-     * Cache of checkPid values.
+     * Cache for checks if page is in user web mounts.
      *
      * @var array
      */
-    protected $checkPidCache = [];
+    protected $pageInWebMountCache = [];
 
     /**************************
      * Initialize
@@ -475,7 +475,7 @@ class Export extends ImportExport
             return;
         }
 
-        if ($this->checkPid($table === 'pages' ? (int)$row['uid'] : (int)$row['pid'])) {
+        if ($this->isPageInWebMount($table === 'pages' ? (int)$row['uid'] : (int)$row['pid'])) {
             if (!isset($this->dat['records'][$table . ':' . $row['uid']])) {
                 // Prepare header info:
                 $row = $this->filterRecordFields($table, $row);
@@ -513,17 +513,17 @@ class Export extends ImportExport
     }
 
     /**
-     * Checking if a PID is in the webmounts of the user
+     * Checking if a page is in the web mounts of the user
      *
      * @param int $pid Page ID to check
      * @return bool TRUE if OK
      */
-    protected function checkPid(int $pid): bool
+    protected function isPageInWebMount(int $pid): bool
     {
-        if (!isset($this->checkPidCache[$pid])) {
-            $this->checkPidCache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
+        if (!isset($this->pageInWebMountCache[$pid])) {
+            $this->pageInWebMountCache[$pid] = (bool)$this->getBackendUser()->isInWebMount($pid);
         }
-        return $this->checkPidCache[$pid];
+        return $this->pageInWebMountCache[$pid];
     }
 
     /**
