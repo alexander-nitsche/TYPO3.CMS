@@ -17,6 +17,9 @@ namespace TYPO3\CMS\Impexp\Tests\Unit;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Resource\File;
+use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -26,6 +29,11 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 class ExportTest extends UnitTestCase
 {
+    /**
+     * @var bool Reset singletons created by subject
+     */
+    protected $resetSingletonInstances = true;
+
     /**
      * @var Export|MockObject|AccessibleObjectInterface
      */
@@ -153,5 +161,74 @@ class ExportTest extends UnitTestCase
 
         $this->exportMock->fixFileIdInRelations($relations);
         self::assertEquals($expected, $relations);
+    }
+
+    /**
+     * @test
+     * @dataProvider removeRedundantSoftRefsInRelationsProcessesOriginalRelationsArrayDataProvider
+     * @param array $relations
+     * @param array $expected
+     */
+    public function removeRedundantSoftRefsInRelationsProcessesOriginalRelationsArray(array $relations, array $expected): void
+    {
+        $resourceFactoryMock = $this->getAccessibleMock(
+            ResourceFactory::class, ['retrieveFileOrFolderObject'],
+            [], '', false
+        );
+        $resourceFactoryMock->expects(self::any())->method('retrieveFileOrFolderObject')
+            ->willReturnCallback(function($relFileName) {
+                $fakeFileUidDerivedFromFileName = hexdec(substr(md5($relFileName), 0,6));
+                $fileMock = $this->getAccessibleMock(
+                    File::class, ['dummy'],
+                    [], '', false
+                );
+                $fileMock->_set('properties', ['uid' => $fakeFileUidDerivedFromFileName]);
+                return $fileMock;
+            });
+        GeneralUtility::setSingletonInstance(ResourceFactory::class, $resourceFactoryMock);
+
+        $this->exportMock->removeRedundantSoftRefsInRelations($relations);
+        self::assertEquals($expected, $relations);
+    }
+
+    public function removeRedundantSoftRefsInRelationsProcessesOriginalRelationsArrayDataProvider(): array
+    {
+        return [
+            'Remove one typolink entry from relation' => [
+                'relations' => [
+                    ['type' => 'db', 'itemArray' => [[
+                        'id' => hexdec(substr(md5('fileRelation.png'), 0,6)),
+                        'table' => 'sys_file',
+                    ]], 'softrefs' => ['keys' => ['typolink' => [
+                        0 => ['subst' => ['type' => 'file', 'relFileName' => 'fileRelation.png']],
+                        1 => ['subst' => ['type' => 'file', 'relFileName' => 'fileRelation2.png']],
+                    ]]]],
+                ],
+                'expected' => [
+                    ['type' => 'db', 'itemArray' => [[
+                        'id' => hexdec(substr(md5('fileRelation.png'), 0,6)),
+                        'table' => 'sys_file',
+                    ]], 'softrefs' => ['keys' => ['typolink' => [
+                        1 => ['subst' => ['type' => 'file', 'relFileName' => 'fileRelation2.png']],
+                    ]]]],
+                ]
+            ],
+            'Remove whole softrefs array from relation' => [
+                'relations' => [
+                    ['type' => 'db', 'itemArray' => [[
+                        'id' => hexdec(substr(md5('fileRelation2.png'), 0,6)),
+                        'table' => 'sys_file',
+                    ]], 'softrefs' => ['keys' => ['typolink' => [
+                        0 => ['subst' => ['type' => 'file', 'relFileName' => 'fileRelation2.png']],
+                    ]]]],
+                ],
+                'expected' => [
+                    ['type' => 'db', 'itemArray' => [[
+                        'id' => hexdec(substr(md5('fileRelation2.png'), 0,6)),
+                        'table' => 'sys_file',
+                    ]]],
+                ]
+            ]
+        ];
     }
 }

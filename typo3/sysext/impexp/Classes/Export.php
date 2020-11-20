@@ -495,7 +495,7 @@ class Export extends ImportExport
                 $refIndexObj->enableRuntimeCache();
                 $relations = $refIndexObj->getRelations($table, $row);
                 $this->fixFileIdInRelations($relations);
-                $relations = $this->removeSoftrefsHavingTheSameDatabaseRelation($relations);
+                $this->removeRedundantSoftRefsInRelations($relations);
                 // Data:
                 $this->dat['records'][$table . ':' . $row['uid']] = [];
                 $this->dat['records'][$table . ':' . $row['uid']]['data'] = $row;
@@ -565,42 +565,40 @@ class Export extends ImportExport
 
     /**
      * Relations could contain db relations to sys_file records. Some configuration combinations of TCA and
-     * SoftReferenceIndex create also softref relation entries for the identical file. This results
+     * SoftReferenceIndex create also soft reference relation entries for the identical file. This results
      * in double included files, one in array "files" and one in array "file_fal".
-     * This function checks the relations for this double inclusions and removes the redundant softref relation.
+     * This function checks the relations for this double inclusions and removes the redundant soft reference
+     * relation.
+     *
+     * Public access for testing purpose only.
      *
      * @param array $relations
-     * @return array
      */
-    protected function removeSoftrefsHavingTheSameDatabaseRelation(array $relations): array
+    public function removeRedundantSoftRefsInRelations(array &$relations): void
     {
-        $fixedRelations = [];
-        foreach ($relations as $field => $relation) {
-            $newRelation = $relation;
-            if (isset($newRelation['type']) && $newRelation['type'] === 'db') {
-                foreach ($newRelation['itemArray'] as $key => $dbRelationData) {
+        foreach ($relations as $field => &$relation) {
+            if (isset($relation['type']) && $relation['type'] === 'db') {
+                foreach ($relation['itemArray'] as $key => &$dbRelationData) {
                     if ($dbRelationData['table'] === 'sys_file') {
-                        if (isset($newRelation['softrefs']['keys']['typolink'])) {
-                            foreach ($newRelation['softrefs']['keys']['typolink'] as $softrefKey => $softRefData) {
+                        if (isset($relation['softrefs']['keys']['typolink'])) {
+                            foreach ($relation['softrefs']['keys']['typolink'] as $softrefKey => &$softRefData) {
                                 if ($softRefData['subst']['type'] === 'file') {
                                     $file = GeneralUtility::makeInstance(ResourceFactory::class)->retrieveFileOrFolderObject($softRefData['subst']['relFileName']);
                                     if ($file instanceof File) {
                                         if ($file->getUid() == $dbRelationData['id']) {
-                                            unset($newRelation['softrefs']['keys']['typolink'][$softrefKey]);
+                                            unset($relation['softrefs']['keys']['typolink'][$softrefKey]);
                                         }
                                     }
                                 }
                             }
-                            if (empty($newRelation['softrefs']['keys']['typolink'])) {
-                                unset($newRelation['softrefs']);
+                            if (empty($relation['softrefs']['keys']['typolink'])) {
+                                unset($relation['softrefs']);
                             }
                         }
                     }
                 }
             }
-            $fixedRelations[$field] = $newRelation;
         }
-        return $fixedRelations;
     }
 
     /**
