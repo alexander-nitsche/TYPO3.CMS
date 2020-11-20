@@ -249,10 +249,9 @@ class Export extends ImportExport
             }
         }
 
-        // After adding ALL records we set database relations
-        for ($a = 0; $a < 10; $a++) {
-            $addR = $this->exportAddDbRelations($a);
-            if (empty($addR)) {
+        // After adding ALL records we add records from database relations
+        for ($l = 0; $l < 10; $l++) {
+            if ($this->exportAddRecordsFromRelations($l) === 0) {
                 break;
             }
         }
@@ -602,130 +601,132 @@ class Export extends ImportExport
     }
 
     /**
-     * This analyzes the existing added records, finds all database relations to records and adds these records to the export file.
-     * This function can be called repeatedly until it returns an empty array.
-     * In principle it should not allow to infinite recursivity, but you better set a limit...
-     * Call this BEFORE the ext_addFilesFromRelations (so files from added relations are also included of course)
+     * This analyzes the existing added records, finds all database relations to records and adds these records to the
+     * export file.
+     * This function can be called repeatedly until it returns zero added records.
+     * In principle it should not allow to infinite recursion, but you better set a limit...
+     * Call this BEFORE the exportAddFilesFromRelations (so files from added relations are also included of course)
      *
      * @param int $relationLevel Recursion level
-     * @return array overview of relations found and added: Keys [table]:[uid], values array with table and id
+     * @return int number of records from relations found and added
      * @see exportAddFilesFromRelations()
      */
-    protected function exportAddDbRelations(int $relationLevel = 0): array
+    protected function exportAddRecordsFromRelations(int $relationLevel = 0): int
     {
-        // Traverse all "rels" registered for "records"
         if (!is_array($this->dat['records'])) {
             $this->addError('There were no records available.');
-            return [];
+            return 0;
         }
-        $addR = [];
-        foreach ($this->dat['records'] as $k => $value) {
-            if (!is_array($this->dat['records'][$k])) {
+
+        $addRecords = [];
+
+        foreach ($this->dat['records'] as &$record) {
+            if (!is_array($record)) {
                 continue;
             }
-            foreach ($this->dat['records'][$k]['rels'] as $fieldname => $vR) {
-                // For all DB types of relations:
-                if ($vR['type'] === 'db') {
-                    foreach ($vR['itemArray'] as $fI) {
-                        $this->exportAddDbRelationsRegisterRelation($fI, $addR);
+            foreach ($record['rels'] as &$relation) {
+                if ($relation['type'] === 'db') {
+                    foreach ($relation['itemArray'] as &$dbRelationData) {
+                        $this->exportAddRecordsFromRelationsPushRelation($dbRelationData, $addRecords);
                     }
+                    unset($dbRelationData);
                 }
-                // For all flex/db types of relations:
-                if ($vR['type'] === 'flex') {
+                if ($relation['type'] === 'flex') {
                     // DB relations in flex form fields:
-                    if (is_array($vR['flexFormRels']['db'])) {
-                        foreach ($vR['flexFormRels']['db'] as $subList) {
-                            foreach ($subList as $fI) {
-                                $this->exportAddDbRelationsRegisterRelation($fI, $addR);
+                    if (is_array($relation['flexFormRels']['db'])) {
+                        foreach ($relation['flexFormRels']['db'] as &$subList) {
+                            foreach ($subList as &$dbRelationData) {
+                                $this->exportAddRecordsFromRelationsPushRelation($dbRelationData, $addRecords);
                             }
                         }
                     }
+                    unset($subList, $dbRelationData);
+
                     // DB oriented soft references in flex form fields:
-                    if (is_array($vR['flexFormRels']['softrefs'])) {
-                        foreach ($vR['flexFormRels']['softrefs'] as $subList) {
-                            foreach ($subList['keys'] as $spKey => $elements) {
-                                foreach ($elements as $el) {
+                    if (is_array($relation['flexFormRels']['softrefs'])) {
+                        foreach ($relation['flexFormRels']['softrefs'] as &$subList) {
+                            foreach ($subList['keys'] as &$elements) {
+                                foreach ($elements as &$el) {
                                     if ($el['subst']['type'] === 'db' && $this->includeSoftref($el['subst']['tokenID'])) {
-                                        [$tempTable, $tempUid] = explode(':', $el['subst']['recordRef']);
-                                        $fI = [
-                                            'table' => $tempTable,
-                                            'id' => $tempUid
+                                        [$referencedTable, $referencedUid] = explode(':', $el['subst']['recordRef']);
+                                        $dbRelationData = [
+                                            'table' => $referencedTable,
+                                            'id' => $referencedUid
                                         ];
-                                        $this->exportAddDbRelationsRegisterRelation($fI, $addR, $el['subst']['tokenID']);
+                                        $this->exportAddRecordsFromRelationsPushRelation($dbRelationData, $addRecords, $el['subst']['tokenID']);
                                     }
                                 }
                             }
                         }
                     }
+                    unset($subList, $elements, $el);
                 }
                 // In any case, if there are soft refs:
-                if (is_array($vR['softrefs']['keys'])) {
-                    foreach ($vR['softrefs']['keys'] as $spKey => $elements) {
-                        foreach ($elements as $el) {
+                if (is_array($relation['softrefs']['keys'])) {
+                    foreach ($relation['softrefs']['keys'] as &$elements) {
+                        foreach ($elements as &$el) {
                             if ($el['subst']['type'] === 'db' && $this->includeSoftref($el['subst']['tokenID'])) {
-                                [$tempTable, $tempUid] = explode(':', $el['subst']['recordRef']);
-                                $fI = [
-                                    'table' => $tempTable,
-                                    'id' => $tempUid
+                                [$referencedTable, $referencedUid] = explode(':', $el['subst']['recordRef']);
+                                $dbRelationData = [
+                                    'table' => $referencedTable,
+                                    'id' => $referencedUid
                                 ];
-                                $this->exportAddDbRelationsRegisterRelation($fI, $addR, $el['subst']['tokenID']);
+                                $this->exportAddRecordsFromRelationsPushRelation($dbRelationData, $addRecords, $el['subst']['tokenID']);
                             }
                         }
                     }
+                    unset($elements, $el);
                 }
             }
         }
+        unset($record);
 
-        // Now, if there were new records to add, do so:
-        if (!empty($addR)) {
-            foreach ($addR as $fI) {
-                // Get and set record:
-                $record = BackendUtility::getRecord($fI['table'], $fI['id']);
+        if (!empty($addRecords)) {
+            foreach ($addRecords as &$recordData) {
+                $record = BackendUtility::getRecord($recordData['table'], $recordData['id']);
 
                 if (is_array($record)) {
                     // Depending on db driver, int fields may or may not be returned as integer or as string. The
                     // loop aligns that detail and forces strings for everything to have exports more db agnostic.
-                    foreach ($record as $fieldName => $value) {
-                        // Keep null but force everything else to string
-                        $record[$fieldName] = $value === null ? $value : (string)$value;
+                    foreach ($record as $fieldName => &$fieldValue) {
+                        $record[$fieldName] = $fieldValue === null ? $fieldValue : (string)$fieldValue;
                     }
-                    $this->exportAddRecord($fI['table'], $record, $relationLevel + 1);
+                    $this->exportAddRecord($recordData['table'], $record, $relationLevel + 1);
                 }
                 // Set status message
                 // Relation pointers always larger than zero except certain "select" types with
                 // negative values pointing to uids - but that is not supported here.
-                if ($fI['id'] > 0) {
-                    $rId = $fI['table'] . ':' . $fI['id'];
-                    if (!isset($this->dat['records'][$rId])) {
-                        $this->dat['records'][$rId] = 'NOT_FOUND';
-                        $this->addError('Relation record ' . $rId . ' was not found!');
+                if ($recordData['id'] > 0) {
+                    $recordRef = $recordData['table'] . ':' . $recordData['id'];
+                    if (!isset($this->dat['records'][$recordRef])) {
+                        $this->dat['records'][$recordRef] = 'NOT_FOUND';
+                        $this->addError('Relation record ' . $recordRef . ' was not found!');
                     }
                 }
             }
         }
-        // Return overview of relations found and added
-        return $addR;
+
+        return count($addRecords);
     }
 
     /**
-     * Helper function for exportAddDbRelations()
+     * Helper function for exportAddRecordsFromRelations()
      *
-     * @param array $fI Array with table/id keys to add
-     * @param array $addR Add array, passed by reference to be modified
-     * @param string $tokenID Softref Token ID, if applicable.
-     * @see exportAddDbRelations()
+     * @param array $recordData Record of relation with table/id key to add to $addRecords
+     * @param array $addRecords Records of relations which are already marked as to be added to the export
+     * @param string $tokenID Soft reference token ID, if applicable.
+     * @see exportAddRecordsFromRelations()
      */
-    protected function exportAddDbRelationsRegisterRelation(array $fI, array &$addR, string $tokenID = ''): void
+    protected function exportAddRecordsFromRelationsPushRelation(array $recordData, array &$addRecords, string $tokenID = ''): void
     {
-        $rId = $fI['table'] . ':' . $fI['id'];
+        $recordRef = $recordData['table'] . ':' . $recordData['id'];
         if (
-            isset($GLOBALS['TCA'][$fI['table']]) && !$this->isTableStatic($fI['table']) && !$this->isExcluded($fI['table'], (int)$fI['id'])
-            && (!$tokenID || $this->includeSoftref($tokenID)) && $this->inclRelation($fI['table'])
+            isset($GLOBALS['TCA'][$recordData['table']]) && !$this->isTableStatic($recordData['table'])
+            && !$this->isExcluded($recordData['table'], (int)$recordData['id'])
+            && (!$tokenID || $this->includeSoftref($tokenID)) && $this->inclRelation($recordData['table'])
+            && !isset($this->dat['records'][$recordRef])
         ) {
-            if (!isset($this->dat['records'][$rId])) {
-                // Set this record to be included since it is not already.
-                $addR[$rId] = $fI;
-            }
+            $addRecords[$recordRef] = $recordData;
         }
     }
 
@@ -746,7 +747,7 @@ class Export extends ImportExport
      * This adds all files in relations.
      * Call this method AFTER adding all records including relations.
      *
-     * @see exportAddDbRelations()
+     * @see exportAddRecordsFromRelations()
      */
     protected function exportAddFilesFromRelations(): void
     {

@@ -52,7 +52,7 @@ class ExportPageTreeViewTest extends AbstractImportExportTestCase
 
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, [
-            'setMetaData', 'exportAddDbRelations', 'exportAddFilesFromRelations', 'exportAddFilesFromSysFilesRecords'
+            'setMetaData', 'exportAddRecordsFromRelations', 'exportAddFilesFromRelations', 'exportAddFilesFromSysFilesRecords'
         ]);
         $subject->init();
         $subject->setPid($pid);
