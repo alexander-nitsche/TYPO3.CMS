@@ -613,7 +613,7 @@ class Export extends ImportExport
      */
     protected function exportAddRecordsFromRelations(int $relationLevel = 0): int
     {
-        if (!is_array($this->dat['records'])) {
+        if (!isset($this->dat['records'])) {
             $this->addError('There were no records available.');
             return 0;
         }
