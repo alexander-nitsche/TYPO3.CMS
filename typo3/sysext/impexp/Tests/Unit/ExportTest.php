@@ -231,4 +231,146 @@ class ExportTest extends UnitTestCase
             ]
         ];
     }
+
+    /**
+     * Temporary test until there is a complex functional test which tests exportAddFilesFromRelations() implicitly.
+     *
+     * @test
+     * @dataProvider exportAddFilesFromRelationsSucceedsDataProvider
+     * @param array $dat
+     * @param array $expected
+     */
+    public function exportAddFilesFromRelationsSucceeds(array $dat, array $expected): void
+    {
+        $exportMock = $this->getAccessibleMock(
+            Export::class,
+            ['addError', 'exportAddFile', 'includeSoftref'],
+            [], '', false
+        );
+        $exportMock->expects(self::any())->method('includeSoftref')->willReturn(true);
+
+        $exportMock->_set('dat', $dat);
+        $exportMock->_call('exportAddFilesFromRelations');
+        self::assertEquals($expected, $exportMock->_get('dat'));
+    }
+
+    public function exportAddFilesFromRelationsSucceedsDataProvider(): array
+    {
+        $oneDat = [
+            'files' => [
+                'e580c5887dcea669332e96e25900b20b' => []
+            ],
+            'records' => [
+                'tt_content:8' => [
+                    'data' => [],
+                    'rels' => [
+                        'pi_flexform' => [
+                            'type' => 'flex',
+                            'flexFormRels' => [
+                                'file' => [
+                                    [
+                                        [
+                                            'filename' => 'filenameFlex',
+                                            'ID_absFile' => 'ID_absFileFlex',
+                                            'ID' => 'IDFlex',
+                                            'relFileName' => 'relFileNameFlex',
+                                        ],
+                                    ]
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ]
+        ];
+        $oneExpected = $oneDat;
+        unset($oneExpected['records']['tt_content:8']['rels']['pi_flexform']['flexFormRels']['file'][0][0]['ID_absFile']);
+
+        $fullDat = [
+            'files' => [
+                'e580c5887dcea669332e96e25900b20b' => []
+            ],
+            'records' => [
+                'tt_content:8' => [
+                    'data' => [],
+                    'rels' => [
+                        'pi_flexform' => [
+                            'type' => 'flex',
+                            'flexFormRels' => [
+                                'file' => [
+                                    [
+                                        [
+                                            'filename' => 'filenameFlex',
+                                            'ID_absFile' => 'ID_absFileFlex',
+                                            'ID' => 'IDFlex',
+                                            'relFileName' => 'relFileNameFlex',
+                                        ],
+                                    ]
+                                ],
+                                'softrefs' => [
+                                    [
+                                        'keys' => [
+                                            [
+                                                [
+                                                    'subst' => [
+                                                        'type' => 'file',
+                                                        'tokenID' => 'tokenID',
+                                                        'relFileName' => 'relFileNameSoftrefs',
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                ],
+                            ],
+                            'softrefs' => [
+                                'keys' => [
+                                    [
+                                        [
+                                            'subst' => [
+                                                'type' => 'fileSoftrefs',
+                                                'tokenID' => 'tokenIDSoftrefs',
+                                                'relFileName' => 'relFileNameSoftrefsSoftrefs',
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'tx_bootstrappackage_carousel_item' => [
+                            'type' => 'db',
+                            'itemArray' => [
+                                0 => [
+                                    'id' => 2,
+                                    'table' => 'tx_bootstrappackage_carousel_item',
+                                ],
+                            ],
+                        ],
+                        'background_image_options' => [
+                            'type' => 'file',
+                            'newValueFiles' => [
+                                [
+                                    'filename' => 'filenameFile',
+                                    'ID_absFile' => 'ID_absFileFile',
+                                    'ID' => 'IDFile',
+                                    'relFileName' => 'relFileNameFile',
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ]
+        ];
+        $fullExpected = $fullDat;
+        $fullExpected['records']['tt_content:8']['rels']['pi_flexform']['flexFormRels']['softrefs'][0]['keys'][0][0]['file_ID'] = 'e580c5887dcea669332e96e25900b20b';
+        unset($fullExpected['records']['tt_content:8']['rels']['pi_flexform']['flexFormRels']['file'][0][0]['ID_absFile']);
+        unset($fullExpected['records']['tt_content:8']['rels']['background_image_options']['newValueFiles'][0]['ID_absFile']);
+
+        return [
+            'Empty $this->dat' => ['dat' => [], 'expected' => []],
+            'Empty $this->dat[\'records\']' => ['dat' => ['records' => []], 'expected' => ['records' => []]],
+            'One record example' => ['dat' => $oneDat, 'expected' => $oneExpected],
+            'Full example' => ['dat' => $fullDat, 'expected' => $fullExpected],
+        ];
+    }
 }

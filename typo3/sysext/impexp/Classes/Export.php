@@ -751,81 +751,84 @@ class Export extends ImportExport
      */
     protected function exportAddFilesFromRelations(): void
     {
-        // Traverse all "rels" registered for "records"
-        if (!is_array($this->dat['records'])) {
+        if (!isset($this->dat['records'])) {
             $this->addError('There were no records available.');
             return;
         }
-        foreach ($this->dat['records'] as $k => $value) {
-            if (!isset($this->dat['records'][$k]['rels']) || !is_array($this->dat['records'][$k]['rels'])) {
+
+        foreach ($this->dat['records'] as $recordRef => &$record) {
+            if (!is_array($record)) {
                 continue;
             }
-            foreach ($this->dat['records'][$k]['rels'] as $fieldname => $vR) {
+            foreach ($record['rels'] as $fieldName => &$relation) {
                 // For all file type relations:
-                if ($vR['type'] === 'file') {
-                    foreach ($vR['newValueFiles'] as $key => $fI) {
-                        $this->exportAddFile($fI, $k, $fieldname);
+                if (isset($relation['type']) && $relation['type'] === 'file') {
+                    foreach ($relation['newValueFiles'] as $key => &$fileRelationData) {
+                        $this->exportAddFile($fileRelationData, $recordRef, $fieldName);
                         // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
-                        unset($this->dat['records'][$k]['rels'][$fieldname]['newValueFiles'][$key]['ID_absFile']);
+                        unset($fileRelationData['ID_absFile']);
                     }
+                    unset($fileRelationData);
                 }
                 // For all flex type relations:
-                if ($vR['type'] === 'flex') {
-                    if (is_array($vR['flexFormRels']['file'])) {
-                        foreach ($vR['flexFormRels']['file'] as $key => $subList) {
-                            foreach ($subList as $subKey => $fI) {
-                                $this->exportAddFile($fI, $k, $fieldname);
+                if (isset($relation['type']) && $relation['type'] === 'flex') {
+                    if (isset($relation['flexFormRels']['file'])) {
+                        foreach ($relation['flexFormRels']['file'] as $key => &$subList) {
+                            foreach ($subList as $subKey => &$fileRelationData) {
+                                $this->exportAddFile($fileRelationData, $recordRef, $fieldName);
                                 // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
-                                unset($this->dat['records'][$k]['rels'][$fieldname]['flexFormRels']['file'][$key][$subKey]['ID_absFile']);
+                                unset($fileRelationData['ID_absFile']);
                             }
                         }
+                        unset($subList, $fileRelationData);
                     }
                     // DB oriented soft references in flex form fields:
-                    if (is_array($vR['flexFormRels']['softrefs'])) {
-                        foreach ($vR['flexFormRels']['softrefs'] as $key => $subList) {
-                            foreach ($subList['keys'] as $spKey => $elements) {
-                                foreach ($elements as $subKey => $el) {
+                    if (isset($relation['flexFormRels']['softrefs'])) {
+                        foreach ($relation['flexFormRels']['softrefs'] as &$subList) {
+                            foreach ($subList['keys'] as &$elements) {
+                                foreach ($elements as &$el) {
                                     if ($el['subst']['type'] === 'file' && $this->includeSoftref($el['subst']['tokenID'])) {
                                         // Create abs path and ID for file:
                                         $ID_absFile = GeneralUtility::getFileAbsFileName(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
                                         $ID = md5($el['subst']['relFileName']);
                                         if ($ID_absFile) {
                                             if (!$this->dat['files'][$ID]) {
-                                                $fI = [
+                                                $fileRelationData = [
                                                     'filename' => PathUtility::basename($ID_absFile),
                                                     'ID_absFile' => $ID_absFile,
                                                     'ID' => $ID,
                                                     'relFileName' => $el['subst']['relFileName']
                                                 ];
-                                                $this->exportAddFile($fI, '_SOFTREF_');
+                                                $this->exportAddFile($fileRelationData, '_SOFTREF_');
                                             }
-                                            $this->dat['records'][$k]['rels'][$fieldname]['flexFormRels']['softrefs'][$key]['keys'][$spKey][$subKey]['file_ID'] = $ID;
+                                            $el['file_ID'] = $ID;
                                         }
                                     }
                                 }
                             }
                         }
+                        unset($subList, $elements, $el);
                     }
                 }
                 // In any case, if there are soft refs:
-                if (is_array($vR['softrefs']['keys'])) {
-                    foreach ($vR['softrefs']['keys'] as $spKey => $elements) {
-                        foreach ($elements as $subKey => $el) {
+                if (isset($relation['softrefs']['keys'])) {
+                    foreach ($relation['softrefs']['keys'] as &$elements) {
+                        foreach ($elements as &$el) {
                             if ($el['subst']['type'] === 'file' && $this->includeSoftref($el['subst']['tokenID'])) {
                                 // Create abs path and ID for file:
                                 $ID_absFile = GeneralUtility::getFileAbsFileName(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
                                 $ID = md5($el['subst']['relFileName']);
                                 if ($ID_absFile) {
                                     if (!$this->dat['files'][$ID]) {
-                                        $fI = [
+                                        $fileRelationData = [
                                             'filename' => PathUtility::basename($ID_absFile),
                                             'ID_absFile' => $ID_absFile,
                                             'ID' => $ID,
                                             'relFileName' => $el['subst']['relFileName']
                                         ];
-                                        $this->exportAddFile($fI, '_SOFTREF_');
+                                        $this->exportAddFile($fileRelationData, '_SOFTREF_');
                                     }
-                                    $this->dat['records'][$k]['rels'][$fieldname]['softrefs']['keys'][$spKey][$subKey]['file_ID'] = $ID;
+                                    $el['file_ID'] = $ID;
                                 }
                             }
                         }
