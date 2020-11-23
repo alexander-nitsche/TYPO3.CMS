@@ -115,6 +115,39 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
     }
 
     /**
+     * @test
+     */
+    public function exportPagesAndRelatedTtContentWithImagesButNotIncludedAndInvalidHash()
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_invalid_hash.xml');
+
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->init();
+        $subject->setSaveFilesOutsideExportFile(true);
+        $this->compileExportPagesAndRelatedTtContentWithImages($subject);
+        $out = $subject->render();
+
+        $expectedErrors = [
+            'The SHA-1 file hash of 1:/user_upload/typo3_image2.jpg is not up-to-date in the index! ' .
+            'The file was added based on the current file hash.'
+        ];
+        $errors = $subject->getErrorLog();
+        self::assertSame($expectedErrors, $errors);
+
+        self::assertXmlStringEqualsXmlFile(
+            __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent-with-image-but-not-included.xml',
+            $out
+        );
+
+        $temporaryFilesDirectory = $subject->getOrCreateTemporaryFolderName();
+        self::assertFileEquals(
+            __DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg',
+            $temporaryFilesDirectory . '/' . 'da9acdf1e105784a57bbffec9520969578287797'
+        );
+    }
+
+    /**
      * Add default set of records to export
      *
      * @param $subject Export
