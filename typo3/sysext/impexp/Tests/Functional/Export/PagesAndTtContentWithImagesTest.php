@@ -79,7 +79,8 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
         $out = $subject->render();
 
         $expectedErrors = [
-            'File sha1 hash of 1:/user_upload/typo3_image2.jpg is not up-to-date in index! File added on current sha1.'
+            'The SHA-1 file hash of 1:/user_upload/typo3_image2.jpg is not up-to-date in the index! ' .
+            'The file was added based on the current file hash.'
         ];
         $errors = $subject->getErrorLog();
         self::assertSame($expectedErrors, $errors);
