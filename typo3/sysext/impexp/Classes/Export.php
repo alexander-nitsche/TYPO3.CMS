@@ -893,7 +893,7 @@ class Export extends ImportExport
         } else {
             GeneralUtility::upload_copy_move(
                 $file->getForLocalProcessing(false),
-                $this->getOrCreateTemporaryFolderName() . '/' . $file->getProperty('sha1')
+                $this->getOrCreateTemporaryFolderName() . '/' . $fileSha1
             );
         }
         $fileRecord['content_sha1'] = $fileSha1;
