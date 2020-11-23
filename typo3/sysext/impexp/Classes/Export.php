@@ -846,57 +846,58 @@ class Export extends ImportExport
         if (!isset($this->dat['header']['records']['sys_file']) || !is_array($this->dat['header']['records']['sys_file'])) {
             return;
         }
-        foreach ($this->dat['header']['records']['sys_file'] as $sysFileUid => $_) {
-            $recordData = $this->dat['records']['sys_file:' . $sysFileUid]['data'];
-            $file = GeneralUtility::makeInstance(ResourceFactory::class)->createFileObject($recordData);
-            $this->exportAddSysFile($file);
+        foreach ($this->dat['header']['records']['sys_file'] as $sysFileUid => &$_) {
+            $fileData = $this->dat['records']['sys_file:' . $sysFileUid]['data'];
+            $this->exportAddSysFile($fileData);
         }
     }
 
     /**
-     * Adds a files content from a sys file record to the export memory
+     * This adds the file from a sys_file record to the export
+     * - either as content or external file
      *
-     * @param File $file
+     * @param array $fileData
+     * @throws \TYPO3\CMS\Core\Resource\Exception\InvalidHashException
      */
-    protected function exportAddSysFile(File $file): void
+    protected function exportAddSysFile(array $fileData): void
     {
-        $fileContent = '';
         try {
-            if (!$this->saveFilesOutsideExportFile) {
-                $fileContent = $file->getContents();
-            } else {
-                $file->checkActionPermission('read');
-            }
+            $file = GeneralUtility::makeInstance(ResourceFactory::class)->createFileObject($fileData);
+            $file->checkActionPermission('read');
         } catch (\Exception $e) {
-            $this->addError('Error when trying to add file ' . $file->getCombinedIdentifier() . ': ' . $e->getMessage());
+            $this->addError('Error when trying to add file ' . $fileData['title'] . ': ' . $e->getMessage());
             return;
         }
+
         $fileUid = $file->getUid();
         $fileSha1 = $file->getStorage()->hashFile($file, 'sha1');
         if ($fileSha1 !== $file->getProperty('sha1')) {
-            $this->addError('File sha1 hash of ' . $file->getCombinedIdentifier() . ' is not up-to-date in index! File added on current sha1.');
             $this->dat['records']['sys_file:' . $fileUid]['data']['sha1'] = $fileSha1;
+            $this->addError(
+                'The SHA-1 file hash of ' . $file->getCombinedIdentifier() . ' is not up-to-date in the index! ' .
+                'The file was added based on the current file hash.'
+            );
         }
-
-        $fileRec = [];
-        $fileRec['filename'] = $file->getProperty('name');
-        $fileRec['filemtime'] = $file->getProperty('modification_date');
-
-        // build unique id based on the storage and the file identifier
+        // Build unique id based on the storage and the file identifier
         $fileId = md5($file->getStorage()->getUid() . ':' . $file->getProperty('identifier_hash'));
 
+        $fileRecord = [];
+        $fileRecord['filename'] = $file->getProperty('name');
+        $fileRecord['filemtime'] = $file->getProperty('modification_date');
+
         // Setting this data in the header
-        $this->dat['header']['files_fal'][$fileId] = $fileRec;
+        $this->dat['header']['files_fal'][$fileId] = $fileRecord;
 
         if (!$this->saveFilesOutsideExportFile) {
-            // ... and finally add the heavy stuff:
-            $fileRec['content'] = $fileContent;
+            $fileRecord['content'] = $file->getContents();
         } else {
-            GeneralUtility::upload_copy_move($file->getForLocalProcessing(false), $this->getOrCreateTemporaryFolderName() . '/' . $file->getProperty('sha1'));
+            GeneralUtility::upload_copy_move(
+                $file->getForLocalProcessing(false),
+                $this->getOrCreateTemporaryFolderName() . '/' . $file->getProperty('sha1')
+            );
         }
-        $fileRec['content_sha1'] = $fileSha1;
-
-        $this->dat['files_fal'][$fileId] = $fileRec;
+        $fileRecord['content_sha1'] = $fileSha1;
+        $this->dat['files_fal'][$fileId] = $fileRecord;
     }
 
     /**
