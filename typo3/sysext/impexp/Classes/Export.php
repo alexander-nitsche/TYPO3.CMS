@@ -500,7 +500,7 @@ class Export extends ImportExport
                 $this->dat['records'][$table . ':' . $row['uid']]['data'] = $row;
                 $this->dat['records'][$table . ':' . $row['uid']]['rels'] = $relations;
                 // Add information about the relations in the record in the header:
-                $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDbRels($this->dat['records'][$table . ':' . $row['uid']]['rels']);
+                $this->dat['header']['records'][$table][$row['uid']]['rels'] = $this->flatDbRelations($this->dat['records'][$table . ':' . $row['uid']]['rels']);
                 // Add information about the softrefs to header:
                 $this->dat['header']['records'][$table][$row['uid']]['softrefs'] = $this->flatSoftRefs($this->dat['records'][$table . ':' . $row['uid']]['rels']);
             } else {
@@ -1023,25 +1023,25 @@ class Export extends ImportExport
     }
 
     /**
-     * DB relations flattened to 1-dim array.
+     * Database relations flattened to 1-dimensional array.
      * The list will be unique, no table/uid combination will appear twice.
      *
-     * @param array $dbrels 2-dim Array of database relations organized by table key
-     * @return array 1-dim array where entries are table:uid and keys are array with table/id
+     * @param array $relations 2-dimensional array of database relations organized by table key
+     * @return array 1-dimensional array where entries are table:uid and keys are array with table/id
      */
-    protected function flatDbRels(array $dbrels): array
+    protected function flatDbRelations(array &$relations): array
     {
         $list = [];
-        foreach ($dbrels as $dat) {
-            if ($dat['type'] === 'db') {
-                foreach ($dat['itemArray'] as $i) {
-                    $list[$i['table'] . ':' . $i['id']] = $i;
+        foreach ($relations as &$relation) {
+            if ($relation['type'] === 'db') {
+                foreach ($relation['itemArray'] as &$dbRelationData) {
+                    $list[$dbRelationData['table'] . ':' . $dbRelationData['id']] = $dbRelationData;
                 }
             }
-            if ($dat['type'] === 'flex' && is_array($dat['flexFormRels']['db'])) {
-                foreach ($dat['flexFormRels']['db'] as $subList) {
-                    foreach ($subList as $i) {
-                        $list[$i['table'] . ':' . $i['id']] = $i;
+            elseif ($relation['type'] === 'flex' && is_array($relation['flexFormRels']['db'])) {
+                foreach ($relation['flexFormRels']['db'] as &$subList) {
+                    foreach ($subList as &$dbRelationData) {
+                        $list[$dbRelationData['table'] . ':' . $dbRelationData['id']] = $dbRelationData;
                     }
                 }
             }
@@ -1050,42 +1050,40 @@ class Export extends ImportExport
     }
 
     /**
-     * Soft References flattened to 1-dim array.
+     * Soft references flattened to 1-dimensional array.
      *
-     * @param array $dbrels 2-dim Array of database relations organized by table key
-     * @return array 1-dim array where entries are arrays with properties of the soft link found and keys are a unique combination of field, spKey, structure path if applicable and token ID
+     * @param array $relations 2-dimensional array of database relations organized by table key
+     * @return array 1-dimensional array where entries are arrays with properties of the soft link found and
+     *                  keys are a unique combination of field, spKey, structure path if applicable and token ID
      */
-    protected function flatSoftRefs(array $dbrels): array
+    protected function flatSoftRefs(array &$relations): array
     {
         $list = [];
-        foreach ($dbrels as $field => $dat) {
-            if (is_array($dat['softrefs']['keys'])) {
-                foreach ($dat['softrefs']['keys'] as $spKey => $elements) {
-                    if (is_array($elements)) {
-                        foreach ($elements as $subKey => $el) {
-                            $lKey = $field . ':' . $spKey . ':' . $subKey;
-                            $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey], $el);
+        foreach ($relations as $field => &$relation) {
+            if (is_array($relation['softrefs']['keys'])) {
+                foreach ($relation['softrefs']['keys'] as $spKey => &$elements) {
+                    foreach ($elements as $subKey => &$el) {
+                        $lKey = $field . ':' . $spKey . ':' . $subKey;
+                        $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey], $el);
+                        // Add file_ID key to header - slightly "risky" way of doing this because if the calculation
+                        // changes for the same value in $this->records[...] this will not work anymore!
+                        if ($el['subst'] && $el['subst']['relFileName']) {
+                            $list[$lKey]['file_ID'] = md5(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
+                        }
+                    }
+                }
+                unset($elements, $el);
+            }
+            if ($relation['type'] === 'flex' && is_array($relation['flexFormRels']['softrefs'])) {
+                foreach ($relation['flexFormRels']['softrefs'] as $structurePath => &$subList) {
+                    foreach ($subList['keys'] ?? [] as $spKey => &$elements) {
+                        foreach ($elements as $subKey => &$el) {
+                            $lKey = $field . ':' . $structurePath . ':' . $spKey . ':' . $subKey;
+                            $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey, 'structurePath' => $structurePath], $el);
                             // Add file_ID key to header - slightly "risky" way of doing this because if the calculation
                             // changes for the same value in $this->records[...] this will not work anymore!
                             if ($el['subst'] && $el['subst']['relFileName']) {
                                 $list[$lKey]['file_ID'] = md5(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
-                            }
-                        }
-                    }
-                }
-            }
-            if ($dat['type'] === 'flex' && is_array($dat['flexFormRels']['softrefs'])) {
-                foreach ($dat['flexFormRels']['softrefs'] as $structurePath => $subSoftrefs) {
-                    if (is_array($subSoftrefs['keys'])) {
-                        foreach ($subSoftrefs['keys'] as $spKey => $elements) {
-                            foreach ($elements as $subKey => $el) {
-                                $lKey = $field . ':' . $structurePath . ':' . $spKey . ':' . $subKey;
-                                $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey, 'structurePath' => $structurePath], $el);
-                                // Add file_ID key to header - slightly "risky" way of doing this because if the calculation
-                                // changes for the same value in $this->records[...] this will not work anymore!
-                                if ($el['subst'] && $el['subst']['relFileName']) {
-                                    $list[$lKey]['file_ID'] = md5(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
-                                }
                             }
                         }
                     }
