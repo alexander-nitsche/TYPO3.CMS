@@ -526,6 +526,34 @@ class Export extends ImportExport
     }
 
     /**
+     * If include fields for a specific record type are set, the data
+     * are filtered out with fields are not included in the fields.
+     * Used in tests only.
+     *
+     * @param string $table The record type to be filtered
+     * @param array $row The data to be filtered
+     * @return array The filtered record row
+     */
+    protected function filterRecordFields(string $table, array $row): array
+    {
+        if (isset($this->recordTypesIncludeFields[$table])) {
+            $includeFields = array_unique(array_merge(
+                $this->recordTypesIncludeFields[$table],
+                $this->defaultRecordIncludeFields
+            ));
+            $newRow = [];
+            foreach ($row as $key => $value) {
+                if (in_array($key, $includeFields)) {
+                    $newRow[$key] = $value;
+                }
+            }
+        } else {
+            $newRow = $row;
+        }
+        return $newRow;
+    }
+
+    /**
      * This changes the file reference ID from a hash based on the absolute file path
      * (coming from ReferenceIndex) to a hash based on the relative file path.
      *
@@ -1091,33 +1119,6 @@ class Export extends ImportExport
         }
         $fileRecord['content_sha1'] = $fileSha1;
         $this->dat['files_fal'][$fileId] = $fileRecord;
-    }
-
-    /**
-     * If include fields for a specific record type are set, the data
-     * are filtered out with fields are not included in the fields.
-     *
-     * @param string $table The record type to be filtered
-     * @param array $row The data to be filtered
-     * @return array The filtered record row
-     */
-    protected function filterRecordFields(string $table, array $row): array
-    {
-        if (isset($this->recordTypesIncludeFields[$table])) {
-            $includeFields = array_unique(array_merge(
-                $this->recordTypesIncludeFields[$table],
-                $this->defaultRecordIncludeFields
-            ));
-            $newRow = [];
-            foreach ($row as $key => $value) {
-                if (in_array($key, $includeFields)) {
-                    $newRow[$key] = $value;
-                }
-            }
-        } else {
-            $newRow = $row;
-        }
-        return $newRow;
     }
 
     /**************************
