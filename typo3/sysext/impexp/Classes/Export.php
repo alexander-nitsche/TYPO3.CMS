@@ -901,94 +901,122 @@ class Export extends ImportExport
     }
 
     /**
-     * Adds a files content to the export memory
+     * This adds the file to the export
+     * - either as content or external file
      *
-     * @param array $fI File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile". "relFileName" is optional for files attached to records, but mandatory for soft referenced files (since the relFileName determines where such a file should be stored!)
-     * @param string $recordRef If the file is related to a record, this is the id on the form [table]:[id]. Information purposes only.
-     * @param string $fieldname If the file is related to a record, this is the field name it was related to. Information purposes only.
+     * @param array $fileData File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile". "relFileName" is optional for files attached to records, but mandatory for soft referenced files (since the relFileName determines where such a file should be stored!)
+     * @param string $recordRef If the file is related to a record, this is the id of the form [table]:[id]. Information purposes only.
+     * @param string $fieldName If the file is related to a record, this is the field name it was related to. Information purposes only.
      */
-    protected function exportAddFile(array $fI, string $recordRef = '', string $fieldname = ''): void
+    protected function exportAddFile(array $fileData, string $recordRef = '', string $fieldName = ''): void
     {
-        if (!@is_file($fI['ID_absFile'])) {
-            $this->addError($fI['ID_absFile'] . ' was not a file! Skipping.');
+        if (!@is_file($fileData['ID_absFile'])) {
+            $this->addError($fileData['ID_absFile'] . ' was not a file! Skipping.');
             return;
         }
-        $fileInfo = stat($fI['ID_absFile']);
-        $fileRec = [];
-        $fileRec['filename'] = PathUtility::basename($fI['ID_absFile']);
-        $fileRec['filemtime'] = $fileInfo['mtime'];
-        //for internal type file_reference
-        $fileRec['relFileRef'] = PathUtility::stripPathSitePrefix($fI['ID_absFile']);
+
+        $fileInfo = stat($fileData['ID_absFile']);
+        $fileMd5 = md5_file($fileData['ID_absFile']);
+        $pathInfo = pathinfo(PathUtility::basename($fileData['ID_absFile']));
+
+        $fileRecord = [];
+        $fileRecord['filename'] = PathUtility::basename($fileData['ID_absFile']);
+        $fileRecord['filemtime'] = $fileInfo['mtime'];
+        $fileRecord['relFileRef'] = PathUtility::stripPathSitePrefix($fileData['ID_absFile']);
         if ($recordRef) {
-            $fileRec['record_ref'] = $recordRef . '/' . $fieldname;
+            $fileRecord['record_ref'] = $recordRef . '/' . $fieldName;
         }
-        if ($fI['relFileName']) {
-            $fileRec['relFileName'] = $fI['relFileName'];
+        if ($fileData['relFileName']) {
+            $fileRecord['relFileName'] = $fileData['relFileName'];
         }
+
         // Setting this data in the header
-        $this->dat['header']['files'][$fI['ID']] = $fileRec;
-        // ... and for the recordlisting, why not let us know WHICH relations there was...
-        if ($recordRef && $recordRef !== '_SOFTREF_') {
-            $refParts = explode(':', $recordRef, 2);
-            if (!is_array($this->dat['header']['records'][$refParts[0]][$refParts[1]]['filerefs'])) {
-                $this->dat['header']['records'][$refParts[0]][$refParts[1]]['filerefs'] = [];
-            }
-            $this->dat['header']['records'][$refParts[0]][$refParts[1]]['filerefs'][] = $fI['ID'];
-        }
-        $fileMd5 = md5_file($fI['ID_absFile']);
+        $this->dat['header']['files'][$fileData['ID']] = $fileRecord;
+
         if (!$this->saveFilesOutsideExportFile) {
-            // ... and finally add the heavy stuff:
-            $fileRec['content'] = (string)file_get_contents($fI['ID_absFile']);
+            $fileRecord['content'] = (string)file_get_contents($fileData['ID_absFile']);
         } else {
-            GeneralUtility::upload_copy_move($fI['ID_absFile'], $this->getOrCreateTemporaryFolderName() . '/' . $fileMd5);
+            GeneralUtility::upload_copy_move(
+                $fileData['ID_absFile'],
+                $this->getOrCreateTemporaryFolderName() . '/' . $fileMd5
+            );
         }
-        $fileRec['content_md5'] = $fileMd5;
-        $this->dat['files'][$fI['ID']] = $fileRec;
+        $fileRecord['content_md5'] = $fileMd5;
+        $this->dat['files'][$fileData['ID']] = $fileRecord;
+
+        // ... and for the recordlisting, why not let us know WHICH relations there was...
+        if ($recordRef !== '' && $recordRef !== '_SOFTREF_') {
+            [$referencedTable, $referencedUid] = explode(':', $recordRef, 2);
+            if (!is_array($this->dat['header']['records'][$referencedTable][$referencedUid]['filerefs'])) {
+                $this->dat['header']['records'][$referencedTable][$referencedUid]['filerefs'] = [];
+            }
+            $this->dat['header']['records'][$referencedTable][$referencedUid]['filerefs'][] = $fileData['ID'];
+        }
+
         // For soft references, do further processing:
         if ($recordRef === '_SOFTREF_') {
             // Files with external media?
-            // This is only done with files grabbed by a softreference parser since it is deemed improbable that hard-referenced files should undergo this treatment.
-            $html_fI = pathinfo(PathUtility::basename($fI['ID_absFile']));
-            if ($this->includeExtFileResources && GeneralUtility::inList($this->extFileResourceExtensions, strtolower($html_fI['extension']))) {
-                $uniquePrefix = '###' . md5($GLOBALS['EXEC_TIME']) . '###';
-                if (strtolower($html_fI['extension']) === 'css') {
-                    $prefixedMedias = explode($uniquePrefix, (string)preg_replace('/(url[[:space:]]*\\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\\))/i', '\\1' . $uniquePrefix . '\\2' . $uniquePrefix . '\\3', $fileRec['content']));
+            // This is only done with files grabbed by a soft reference parser since it is deemed improbable
+            // that hard-referenced files should undergo this treatment.
+            if ($this->includeExtFileResources
+                && GeneralUtility::inList($this->extFileResourceExtensions, strtolower($pathInfo['extension']))
+            ) {
+                $uniqueDelimiter = '###' . md5($GLOBALS['EXEC_TIME']) . '###';
+                if (strtolower($pathInfo['extension']) === 'css') {
+                    $fileContentParts = explode(
+                        $uniqueDelimiter,
+                        (string)preg_replace(
+                            '/(url[[:space:]]*\\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\\))/i',
+                            '\\1' . $uniqueDelimiter . '\\2' . $uniqueDelimiter . '\\3',
+                            $fileRecord['content']
+                        )
+                    );
                 } else {
                     // html, htm:
                     $htmlParser = GeneralUtility::makeInstance(HtmlParser::class);
-                    $prefixedMedias = explode($uniquePrefix, $htmlParser->prefixResourcePath($uniquePrefix, $fileRec['content'], [], $uniquePrefix));
+                    $fileContentParts = explode(
+                        $uniqueDelimiter,
+                        $htmlParser->prefixResourcePath(
+                            $uniqueDelimiter,
+                            $fileRecord['content'],
+                            [],
+                            $uniqueDelimiter
+                        )
+                    );
                 }
-                $htmlResourceCaptured = false;
-                foreach ($prefixedMedias as $k => $v) {
-                    if ($k % 2) {
-                        $EXTres_absPath = GeneralUtility::resolveBackPath(PathUtility::dirname($fI['ID_absFile']) . '/' . $v);
-                        $EXTres_absPath = GeneralUtility::getFileAbsFileName($EXTres_absPath);
-                        if ($EXTres_absPath && GeneralUtility::isFirstPartOfStr($EXTres_absPath, Environment::getPublicPath() . '/' . $this->fileadminFolderName . '/') && @is_file($EXTres_absPath)) {
-                            $htmlResourceCaptured = true;
-                            $EXTres_ID = md5($EXTres_absPath);
-                            $this->dat['header']['files'][$fI['ID']]['EXT_RES_ID'][] = $EXTres_ID;
-                            $prefixedMedias[$k] = '{EXT_RES_ID:' . $EXTres_ID . '}';
+                $resourceCaptured = false;
+                foreach ($fileContentParts as $index => &$fileContentPart) {
+                    if ($index % 2) {
+                        $resRelativePath = &$fileContentPart;
+                        $resAbsolutePath = GeneralUtility::resolveBackPath(PathUtility::dirname($fileData['ID_absFile']) . '/' . $resRelativePath);
+                        $resAbsolutePath = GeneralUtility::getFileAbsFileName($resAbsolutePath);
+                        if ($resAbsolutePath !== ''
+                            && GeneralUtility::isFirstPartOfStr($resAbsolutePath, Environment::getPublicPath() . '/' . $this->fileadminFolderName . '/')
+                            && @is_file($resAbsolutePath)
+                        ) {
+                            $resourceCaptured = true;
+                            $resourceId = md5($resAbsolutePath);
+                            $this->dat['header']['files'][$fileData['ID']]['EXT_RES_ID'][] = $resourceId;
+                            $fileContentParts[$index] = '{EXT_RES_ID:' . $resourceId . '}';
                             // Add file to memory if it is not set already:
-                            if (!isset($this->dat['header']['files'][$EXTres_ID])) {
-                                $fileInfo = stat($EXTres_absPath);
-                                $fileRec = [];
-                                $fileRec['filename'] = PathUtility::basename($EXTres_absPath);
-                                $fileRec['filemtime'] = $fileInfo['mtime'];
-                                $fileRec['record_ref'] = '_EXT_PARENT_:' . $fI['ID'];
-                                // Media relative to the HTML file.
-                                $fileRec['parentRelFileName'] = $v;
+                            if (!isset($this->dat['header']['files'][$resourceId])) {
+                                $fileInfo = stat($resAbsolutePath);
+                                $fileRecord = [];
+                                $fileRecord['filename'] = PathUtility::basename($resAbsolutePath);
+                                $fileRecord['filemtime'] = $fileInfo['mtime'];
+                                $fileRecord['record_ref'] = '_EXT_PARENT_:' . $fileData['ID'];
+                                $fileRecord['parentRelFileName'] = $resRelativePath;
                                 // Setting this data in the header
-                                $this->dat['header']['files'][$EXTres_ID] = $fileRec;
-                                // ... and finally add the heavy stuff:
-                                $fileRec['content'] = (string)file_get_contents($EXTres_absPath);
-                                $fileRec['content_md5'] = md5($fileRec['content']);
-                                $this->dat['files'][$EXTres_ID] = $fileRec;
+                                $this->dat['header']['files'][$resourceId] = $fileRecord;
+                                $fileRecord['content'] = (string)file_get_contents($resAbsolutePath);
+                                $fileRecord['content_md5'] = md5($fileRecord['content']);
+                                $this->dat['files'][$resourceId] = $fileRecord;
                             }
                         }
                     }
                 }
-                if ($htmlResourceCaptured) {
-                    $this->dat['files'][$fI['ID']]['tokenizedContent'] = implode('', $prefixedMedias);
+                if ($resourceCaptured) {
+                    $this->dat['files'][$fileData['ID']]['tokenizedContent'] = implode('', $fileContentParts);
                 }
             }
         }
