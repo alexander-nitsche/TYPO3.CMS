@@ -681,14 +681,16 @@ class Export extends ImportExport
             }
             if ($relation['type'] === 'flex' && is_array($relation['flexFormRels']['softrefs'])) {
                 foreach ($relation['flexFormRels']['softrefs'] as $structurePath => &$subList) {
-                    foreach ($subList['keys'] ?? [] as $spKey => &$elements) {
-                        foreach ($elements as $subKey => &$el) {
-                            $lKey = $field . ':' . $structurePath . ':' . $spKey . ':' . $subKey;
-                            $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey, 'structurePath' => $structurePath], $el);
-                            // Add file_ID key to header - slightly "risky" way of doing this because if the calculation
-                            // changes for the same value in $this->records[...] this will not work anymore!
-                            if ($el['subst'] && $el['subst']['relFileName']) {
-                                $list[$lKey]['file_ID'] = md5(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
+                    if (isset($subList['keys'])) {
+                        foreach ($subList['keys'] as $spKey => &$elements) {
+                            foreach ($elements as $subKey => &$el) {
+                                $lKey = $field . ':' . $structurePath . ':' . $spKey . ':' . $subKey;
+                                $list[$lKey] = array_merge(['field' => $field, 'spKey' => $spKey, 'structurePath' => $structurePath], $el);
+                                // Add file_ID key to header - slightly "risky" way of doing this because if the calculation
+                                // changes for the same value in $this->records[...] this will not work anymore!
+                                if ($el['subst'] && $el['subst']['relFileName']) {
+                                    $list[$lKey]['file_ID'] = md5(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
+                                }
                             }
                         }
                     }
