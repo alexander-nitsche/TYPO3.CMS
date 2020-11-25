@@ -69,13 +69,6 @@ abstract class ImportExport
     protected $showStaticRelations = false;
 
     /**
-     * Name of the "fileadmin" folder where files for export/import should be located
-     *
-     * @var string
-     */
-    protected $fileadminFolderName = '';
-
-    /**
      * Whether "import" or "export" mode of object. Set through init() function
      *
      * @var string
@@ -218,6 +211,13 @@ abstract class ImportExport
     protected $iconFactory;
 
     /**
+     * Name of the "fileadmin" folder where files for export/import should be located
+     *
+     * @var string
+     */
+    protected $fileadminFolderName = '';
+
+    /**
      * @var string
      */
     protected $temporaryFolderName;
@@ -243,18 +243,6 @@ abstract class ImportExport
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->lang = $this->getLanguageService();
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
-    }
-
-    /**************************
-     * Initialize
-     *************************/
-
-    /**
-     * Init the object, both import and export
-     */
-    public function init(): void
-    {
-        $this->fileadminFolderName = !empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir']) ? rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/') : 'fileadmin';
     }
 
     /********************************************************
@@ -920,6 +908,21 @@ abstract class ImportExport
     /*****************************
      * Helper functions of kinds
      *****************************/
+
+    /**
+     * @return string
+     */
+    public function getFileadminFolderName(): string
+    {
+        if (empty($this->fileadminFolderName)) {
+            if (!empty($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'])) {
+                $this->fileadminFolderName = rtrim($GLOBALS['TYPO3_CONF_VARS']['BE']['fileadminDir'], '/');
+            } else {
+                $this->fileadminFolderName = 'fileadmin';
+            }
+        }
+        return $this->fileadminFolderName;
+    }
 
     /**
      * @return string|null

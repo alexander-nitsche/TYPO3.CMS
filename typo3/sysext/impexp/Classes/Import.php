@@ -123,7 +123,6 @@ class Import extends ImportExport
      */
     public function init(): void
     {
-        parent::init();
         $this->mode = 'import';
         $this->compress = function_exists('gzcompress');
     }
@@ -1455,7 +1454,7 @@ class Import extends ImportExport
         if ($this->dat['header']['files'][$cfg['file_ID']]) {
             // Initialize; Get directory prefix for file and find possible RTE filename
             $dirPrefix = PathUtility::dirname($relFileName) . '/';
-            if (GeneralUtility::isFirstPartOfStr($dirPrefix, $this->fileadminFolderName . '/')) {
+            if (GeneralUtility::isFirstPartOfStr($dirPrefix, $this->getFileadminFolderName() . '/')) {
                 // File in fileadmin/ folder:
                 // Create file (and possible resources)
                 $newFileName = $this->processSoftReferencesSaveFileCreateRelFile($dirPrefix, PathUtility::basename($relFileName), $cfg['file_ID'], $table, $uid) ?: '';
@@ -1520,7 +1519,7 @@ class Import extends ImportExport
                                 $relResourceFileName = $this->dat['files'][$res_fileID]['parentRelFileName'];
                                 $absResourceFileName = GeneralUtility::resolveBackPath(Environment::getPublicPath() . '/' . $origDirPrefix . $relResourceFileName);
                                 $absResourceFileName = GeneralUtility::getFileAbsFileName($absResourceFileName);
-                                if ($absResourceFileName && GeneralUtility::isFirstPartOfStr($absResourceFileName, Environment::getPublicPath() . '/' . $this->fileadminFolderName . '/')) {
+                                if ($absResourceFileName && GeneralUtility::isFirstPartOfStr($absResourceFileName, Environment::getPublicPath() . '/' . $this->getFileadminFolderName() . '/')) {
                                     $destDir = PathUtility::stripPathSitePrefix(PathUtility::dirname($absResourceFileName) . '/');
                                     if ($this->verifyFolderAccess($destDir, true) !== null && $this->checkOrCreateDir($destDir)) {
                                         $this->writeFileVerify($absResourceFileName, $res_fileID);
@@ -1617,18 +1616,18 @@ class Import extends ImportExport
         // Split dir path and remove first directory (which should be "fileadmin")
         $filePathParts = explode('/', $dirPrefix);
         $firstDir = array_shift($filePathParts);
-        if ($firstDir === $this->fileadminFolderName && GeneralUtility::getFileAbsFileName($dirPrefix)) {
+        if ($firstDir === $this->getFileadminFolderName() && GeneralUtility::getFileAbsFileName($dirPrefix)) {
             $pathAcc = '';
             foreach ($filePathParts as $dirname) {
                 $pathAcc .= '/' . $dirname;
                 if (strlen($dirname)) {
-                    if (!@is_dir(Environment::getPublicPath() . '/' . $this->fileadminFolderName . $pathAcc)) {
-                        if (!GeneralUtility::mkdir(Environment::getPublicPath() . '/' . $this->fileadminFolderName . $pathAcc)) {
+                    if (!@is_dir(Environment::getPublicPath() . '/' . $this->getFileadminFolderName() . $pathAcc)) {
+                        if (!GeneralUtility::mkdir(Environment::getPublicPath() . '/' . $this->getFileadminFolderName() . $pathAcc)) {
                             $this->addError('ERROR: Directory could not be created....B');
                             return false;
                         }
                     }
-                } elseif ($dirPrefix === $this->fileadminFolderName . $pathAcc) {
+                } elseif ($dirPrefix === $this->getFileadminFolderName() . $pathAcc) {
                     return true;
                 } else {
                     $this->addError('ERROR: Directory could not be created....A');

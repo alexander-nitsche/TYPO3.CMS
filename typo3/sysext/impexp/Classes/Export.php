@@ -166,7 +166,6 @@ class Export extends ImportExport
      */
     public function init(): void
     {
-        parent::init();
         $this->mode = 'export';
     }
 
@@ -1028,7 +1027,7 @@ class Export extends ImportExport
                         $resAbsolutePath = GeneralUtility::resolveBackPath(PathUtility::dirname($fileData['ID_absFile']) . '/' . $resRelativePath);
                         $resAbsolutePath = GeneralUtility::getFileAbsFileName($resAbsolutePath);
                         if ($resAbsolutePath !== ''
-                            && GeneralUtility::isFirstPartOfStr($resAbsolutePath, Environment::getPublicPath() . '/' . $this->fileadminFolderName . '/')
+                            && GeneralUtility::isFirstPartOfStr($resAbsolutePath, Environment::getPublicPath() . '/' . $this->getFileadminFolderName() . '/')
                             && @is_file($resAbsolutePath)
                         ) {
                             $resourceCaptured = true;
