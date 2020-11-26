@@ -183,7 +183,7 @@ class Import extends ImportExport
         $this->setFlexFormRelations();
         // Unlink temporary files:
         $this->unlinkTempFiles();
-        // Finally, traverse all records and process softreferences with substitution attributes.
+        // Finally, traverse all records and process soft references with substitution attributes.
         $this->processSoftReferences();
 
         if ($this->hasErrors()) {
@@ -1352,7 +1352,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Callback function for traversing the FlexForm structure in relation to remapping softreference relations
+     * Callback function for traversing the FlexForm structure in relation to remapping soft reference relations
      *
      * @param array $pParams Set of parameters in numeric array: table, uid, field
      * @param array $dsConf TCA config for field (from Data Structure of course)
@@ -1389,7 +1389,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Substition of softreference tokens
+     * Substition of soft reference tokens
      *
      * @param string $tokenizedContent Content of field with soft reference tokens in.
      * @param array $softRefCfgs Soft reference configurations

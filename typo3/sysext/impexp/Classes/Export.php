@@ -281,7 +281,7 @@ class Export extends ImportExport
         $this->dat['header']['relStaticTables'] = $this->relStaticTables;
         // The list of excluded records
         $this->dat['header']['excludeMap'] = $this->excludeMap;
-        // Soft Reference mode for elements
+        // Soft reference mode for elements
         $this->dat['header']['softrefCfg'] = $this->softrefCfg;
         // List of extensions the import depends on.
         $this->dat['header']['extensionDependencies'] = $this->extensionDependencies;
