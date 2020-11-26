@@ -34,7 +34,7 @@
             </f:if>
         </f:else>
     </f:if>
-    <f:if condition="{contentOverview.dat.header.pagetree -> f:count()} > 0">
+    <f:if condition="{preview.dat.header.pagetree -> f:count()} > 0">
         <h3>
             <f:translate key="impexpcore_displaycon_insidePagetree"/>
         </h3>
@@ -50,7 +50,7 @@
                 <th>
                     <f:translate key="impexpcore_displaycon_message"/>
                 </th>
-                <f:if condition="{contentOverview.update}">
+                <f:if condition="{preview.update}">
                     <th>
                         <f:translate key="impexpcore_displaycon_updateMode"/>
                     </th>
@@ -58,13 +58,13 @@
                         <f:translate key="impexpcore_displaycon_currentPath"/>
                     </th>
                 </f:if>
-                <f:if condition="{contentOverview.showDiff}">
+                <f:if condition="{preview.showDiff}">
                     <th>
                         <f:translate key="impexpcore_displaycon_result"/>
                     </th>
                 </f:if>
             </tr>
-            <f:for each="{contentOverview.pagetreeLines}" as="line">
+            <f:for each="{preview.pagetreeLines}" as="line">
                 <tr data-active="{line.active}">
                     <td>
                         <f:format.raw>{line.controls}</f:format.raw>
@@ -75,7 +75,7 @@
                     <td class="col-nowrap">
                         <f:format.raw>{line.message}</f:format.raw>
                     </td>
-                    <f:if condition="{contentOverview.update}">
+                    <f:if condition="{preview.update}">
                         <td class="col-nowrap">
                             <f:format.raw>{line.updateMode}</f:format.raw>
                         </td>
@@ -83,7 +83,7 @@
                             <f:format.raw>{line.updatePath}</f:format.raw>
                         </td>
                     </f:if>
-                    <f:if condition="{contentOverview.showDiff}">
+                    <f:if condition="{preview.showDiff}">
                         <td>
                             <f:format.raw>{line.showDiffContent}</f:format.raw>
                         </td>
@@ -93,7 +93,7 @@
             </tbody>
         </table>
     </f:if>
-    <f:if condition="{contentOverview.remainingRecords -> f:count()} > 0">
+    <f:if condition="{preview.remainingRecords -> f:count()} > 0">
         <h3>
             <f:translate key="impexpcore_singlereco_outsidePagetree"/>
         </h3>
@@ -109,7 +109,7 @@
                 <th>
                     <f:translate key="impexpcore_displaycon_message"/>
                 </th>
-                <f:if condition="{contentOverview.update}">
+                <f:if condition="{preview.update}">
                     <th>
                         <f:translate key="impexpcore_displaycon_updateMode"/>
                     </th>
@@ -117,13 +117,13 @@
                         <f:translate key="impexpcore_displaycon_currentPath"/>
                     </th>
                 </f:if>
-                <f:if condition="{contentOverview.showDiff}">
+                <f:if condition="{preview.showDiff}">
                     <th>
                         <f:translate key="impexpcore_displaycon_result"/>
                     </th>
                 </f:if>
             </tr>
-            <f:for each="{contentOverview.remainingRecords}" as="line">
+            <f:for each="{preview.remainingRecords}" as="line">
                 <tr>
                     <td>
                         <f:format.raw>{line.controls}</f:format.raw>
@@ -134,7 +134,7 @@
                     <td class="col-nowrap">
                         <f:format.raw>{line.message}</f:format.raw>
                     </td>
-                    <f:if condition="{contentOverview.update}">
+                    <f:if condition="{preview.update}">
                         <td class="col-nowrap">
                             <f:format.raw>{line.updateMode}</f:format.raw>
                         </td>
@@ -142,7 +142,7 @@
                             <f:format.raw>{line.updatePath}</f:format.raw>
                         </td>
                     </f:if>
-                    <f:if condition="{contentOverview.showDiff}">
+                    <f:if condition="{preview.showDiff}">
                         <td>
                             <f:format.raw>{line.showDiffContent}</f:format.raw>
                         </td>
