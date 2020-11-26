@@ -1093,8 +1093,7 @@ abstract class ImportExport
     protected function getRecordPath(int $pid): string
     {
         if (!isset($this->cacheGetRecordPath[$pid])) {
-            $clause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
-            $this->cacheGetRecordPath[$pid] = (string)BackendUtility::getRecordPath($pid, $clause, 20);
+            $this->cacheGetRecordPath[$pid] = (string)BackendUtility::getRecordPath($pid, $this->permsClause, 20);
         }
         return $this->cacheGetRecordPath[$pid];
     }
