@@ -62,7 +62,7 @@ abstract class ImportExport
     protected $pidRecord = null;
 
     /**
-     * If set, static relations (not exported) will be shown in overview as well
+     * If set, static relations (not exported) will be shown in preview as well
      *
      * @var bool
      */
@@ -111,7 +111,7 @@ abstract class ImportExport
     protected $forceAllUids = false;
 
     /**
-     * If set, a diff-view column is added to the overview.
+     * If set, a diff-view column is added to the preview.
      *
      * @var bool
      */
@@ -250,11 +250,11 @@ abstract class ImportExport
      ********************************************************/
 
     /**
-     * Displays an overview of the header-content.
+     * Displays a preview of the import or export.
      *
-     * @return array The view data
+     * @return array The preview data
      */
-    public function displayContentOverview(): array
+    public function renderPreview(): array
     {
         if (!isset($this->dat['header'])) {
             return [];
@@ -263,29 +263,32 @@ abstract class ImportExport
         // Probably this is done to save memory space?
         unset($this->dat['files']);
 
-        $viewData = [];
+        $previewData = [];
+
         // Traverse header:
         $this->remainHeader = $this->dat['header'];
-        // If there is a page tree set, show that:
+
+        // Preview of the page tree to be exported
         if (is_array($this->dat['header']['pagetree'])) {
             reset($this->dat['header']['pagetree']);
             $lines = [];
             $this->traversePageTree($this->dat['header']['pagetree'], $lines);
 
-            $viewData['dat'] = $this->dat;
-            $viewData['update'] = $this->update;
-            $viewData['showDiff'] = $this->showDiff;
+            $previewData['dat'] = $this->dat;
+            $previewData['update'] = $this->update;
+            $previewData['showDiff'] = $this->showDiff;
             if (!empty($lines)) {
                 foreach ($lines as &$r) {
                     $r['controls'] = $this->renderControls($r);
                     $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
                 }
-                $viewData['pagetreeLines'] = $lines;
+                $previewData['pagetreeLines'] = $lines;
             } else {
-                $viewData['pagetreeLines'] = [];
+                $previewData['pagetreeLines'] = [];
             }
         }
-        // Print remaining records that were not contained inside the page tree:
+
+        // Preview the remaining records that were not included in the page tree
         if (is_array($this->remainHeader['records'])) {
             $lines = [];
             if (is_array($this->remainHeader['records']['pages'])) {
@@ -297,11 +300,11 @@ abstract class ImportExport
                     $r['controls'] = $this->renderControls($r);
                     $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
                 }
-                $viewData['remainingRecords'] = $lines;
+                $previewData['remainingRecords'] = $lines;
             }
         }
 
-        return $viewData;
+        return $previewData;
     }
 
     /**

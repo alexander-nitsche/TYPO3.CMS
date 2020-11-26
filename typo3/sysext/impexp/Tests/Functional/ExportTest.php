@@ -126,25 +126,25 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function displayContentOverviewWithoutArgumentsReturnsEmptyArray(): void
+    public function renderPreviewWithoutArgumentsReturnsEmptyArray(): void
     {
         $this->exportMock->init();
         $this->exportMock->process();
-        $viewData = $this->exportMock->displayContentOverview();
-        self::assertEquals([], $viewData);
+        $previewData = $this->exportMock->renderPreview();
+        self::assertEquals([], $previewData);
     }
 
     /**
      * @test
      */
-    public function displayContentOverviewFull(): void
+    public function renderPreviewFull(): void
     {
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
 
-        $displayContentOverviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/DisplayContentOverviewExport.php';
+        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExport.php';
 
         $this->exportMock->init();
         $this->exportMock->setPid(0);
@@ -152,8 +152,8 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->setTables(['_ALL']);
         $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
         $this->exportMock->process();
-        $viewData = $this->exportMock->displayContentOverview();
-        self::assertEquals($displayContentOverviewExport, $viewData['pagetreeLines']);
+        $previewData = $this->exportMock->renderPreview();
+        self::assertEquals($renderPreviewExport, $previewData['pagetreeLines']);
     }
 
     /**

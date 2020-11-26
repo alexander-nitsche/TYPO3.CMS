@@ -1,5 +1,5 @@
 <?php
-// Display content overview
+// Render export preview
 return [
   0 =>
   [

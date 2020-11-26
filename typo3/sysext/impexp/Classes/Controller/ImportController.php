@@ -218,7 +218,7 @@ class ImportController extends ImportExportController
 
         $this->standaloneView->assign('import', $this->import);
         $this->standaloneView->assign('errors', $this->import->getErrorLog());
-        $this->standaloneView->assign('contentOverview', $this->import->displayContentOverview());
+        $this->standaloneView->assign('preview', $this->import->renderPreview());
     }
 
     protected function getFilePathWithinFileMountBoundaries(string $filePath): string

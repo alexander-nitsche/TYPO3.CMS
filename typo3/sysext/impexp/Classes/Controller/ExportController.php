@@ -298,7 +298,7 @@ class ExportController extends ImportExportController
         }
 
         $this->standaloneView->assign('errors', $this->export->getErrorLog());
-        $this->standaloneView->assign('contentOverview', $this->export->displayContentOverview());
+        $this->standaloneView->assign('preview', $this->export->renderPreview());
     }
 
     /**
