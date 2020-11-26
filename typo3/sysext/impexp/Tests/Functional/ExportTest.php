@@ -26,9 +26,60 @@ use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 class ExportTest extends AbstractImportExportTestCase
 {
     /**
+     * @var array
+     */
+    protected $pathsToLinkInTestInstance = [
+        'typo3/sysext/impexp/Tests/Functional/Fixtures/Folders/fileadmin/user_upload' => 'fileadmin/user_upload'
+    ];
+
+    /**
+     * @var array
+     */
+    protected $testExtensionsToLoad = [
+        'typo3/sysext/impexp/Tests/Functional/Fixtures/Extensions/template_extension'
+    ];
+
+    /**
      * @var Export|MockObject|AccessibleObjectInterface
      */
     protected $exportMock;
+
+    /**
+     * @var array
+     */
+    protected $recordTypesIncludeFields =
+        [
+            'pages' => [
+                'title',
+                'deleted',
+                'doktype',
+                'hidden',
+                'perms_everybody'
+            ],
+            'tt_content' => [
+                'CType',
+                'header',
+                'header_link',
+                'deleted',
+                'hidden',
+                't3ver_oid'
+            ],
+            'sys_file' => [
+                'storage',
+                'type',
+                'metadata',
+                'identifier',
+                'identifier_hash',
+                'folder_hash',
+                'mime_type',
+                'name',
+                'sha1',
+                'size',
+                'creation_date',
+                'modification_date',
+            ],
+        ]
+    ;
 
     protected function setUp(): void
     {
@@ -70,6 +121,39 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->removeDefaultImportExportFolder();
         self::assertFalse(is_dir(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl()));
         self::assertFalse(is_file(Environment::getPublicPath() . '/' .$exportFolder->getPublicUrl() . $exportFileName));
+    }
+
+    /**
+     * @test
+     */
+    public function displayContentOverviewWithoutArgumentsReturnsEmptyArray(): void
+    {
+        $this->exportMock->init();
+        $this->exportMock->process();
+        $viewData = $this->exportMock->displayContentOverview();
+        self::assertEquals([], $viewData);
+    }
+
+    /**
+     * @test
+     */
+    public function displayContentOverviewFull(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
+
+        $displayContentOverviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/DisplayContentOverviewExport.php';
+
+        $this->exportMock->init();
+        $this->exportMock->setPid(0);
+        $this->exportMock->setLevels(Export::LEVELS_INFINITE);
+        $this->exportMock->setTables(['_ALL']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->process();
+        $viewData = $this->exportMock->displayContentOverview();
+        self::assertEquals($displayContentOverviewExport, $viewData['pagetreeLines']);
     }
 
     /**

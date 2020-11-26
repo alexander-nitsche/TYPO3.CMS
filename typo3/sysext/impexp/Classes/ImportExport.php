@@ -843,7 +843,7 @@ abstract class ImportExport
             $optValues['editable'] = $this->lang->getLL('impexpcore_softrefsel_editable');
             $optValues['exclude'] = $this->lang->getLL('impexpcore_softrefsel_exclude');
             // Get current value:
-            $value = $this->softrefCfg[$cfg['subst']['tokenID']]['mode'];
+            $value = (string)$this->softrefCfg[$cfg['subst']['tokenID']]['mode'];
             // Render options selector:
             $selectorbox = $this->renderSelectBox('tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][mode]', $value, $optValues) . '<br/>';
             if ($value === 'editable') {
