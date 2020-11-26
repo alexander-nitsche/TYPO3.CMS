@@ -119,7 +119,7 @@ abstract class ImportExport
     protected $showDiff = false;
 
     /**
-     * Array of values to substitute in editable softreferences.
+     * Array of values to substitute in editable soft references.
      *
      * @var array
      */
@@ -148,7 +148,7 @@ abstract class ImportExport
     protected $excludeMap = [];
 
     /**
-     * Soft Reference Token ID modes.
+     * Soft reference token ID modes.
      *
      * @var array
      */
@@ -690,7 +690,7 @@ abstract class ImportExport
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param string $preCode Pre-HTML code
      * @param string $htmlColorClass Alternative HTML color class to use.
-     * @param string $tokenID Token ID if this is a softreference (in which case it only makes sense with a single element in the $rels array!)
+     * @param string $tokenID Token ID if this is a soft reference (in which case it only makes sense with a single element in the $rels array!)
      *
      * @see singleRecordLines()
      */
@@ -712,7 +712,7 @@ abstract class ImportExport
             $pInfo['title'] = htmlspecialchars($fI['filename']);
             $pInfo['ref'] = 'FILE';
             $pInfo['type'] = 'file';
-            // If import mode and there is a non-RTE softreference, check the destination directory:
+            // If import mode and there is a non-RTE soft reference, check the destination directory:
             if ($this->mode === 'import' && $tokenID && !$fI['RTE_ORIG_ID']) {
                 if (isset($fI['parentRelFileName'])) {
                     $pInfo['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
@@ -820,7 +820,7 @@ abstract class ImportExport
             return  $r['type'] === 'softref' ? $this->softrefSelector($r['_softRefInfo']) : '';
         }
         // During import
-        // For softreferences with editable fields:
+        // For soft references with editable fields:
         if ($r['type'] === 'softref' && is_array($r['_softRefInfo']['subst']) && $r['_softRefInfo']['subst']['tokenID']) {
             $tokenID = $r['_softRefInfo']['subst']['tokenID'];
             $cfg = $this->softrefCfg[$tokenID];
@@ -1071,7 +1071,7 @@ abstract class ImportExport
      * Returns TRUE if soft reference should be included in exported file.
      *
      * @param string $tokenID Token ID for soft reference
-     * @return bool TRUE if softreference media should be included
+     * @return bool TRUE if soft reference media should be included
      */
     protected function includeSoftref(string $tokenID): bool
     {
