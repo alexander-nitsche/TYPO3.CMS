@@ -274,7 +274,6 @@ abstract class ImportExport
             $lines = [];
             $this->traversePageTree($this->dat['header']['pagetree'], $lines);
 
-            $previewData['dat'] = $this->dat;
             $previewData['update'] = $this->update;
             $previewData['showDiff'] = $this->showDiff;
             if (!empty($lines)) {
