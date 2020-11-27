@@ -2,10 +2,10 @@
 return [
   'update' => false,
   'showDiff' => false,
-  'pagetreeLines' =>
+  'insidePageTree' =>
   [
   ],
-  'remainingRecords' =>
+  'outsidePageTree' =>
   [
     0 =>
     [

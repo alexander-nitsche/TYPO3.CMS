@@ -609,8 +609,8 @@ class Import extends ImportExport
             $this->importData = [];
             // First add page tree if any
             if (is_array($this->dat['header']['pagetree'])) {
-                $pagesFromTree = $this->flatInversePageTree($this->dat['header']['pagetree']);
-                foreach ($pagesFromTree as $uid) {
+                $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
+                foreach ($pageList as $uid) {
                     $thisRec = $this->dat['header']['records']['pages'][$uid];
                     // PID: Set the main $this->pid, unless a NEW-id is found
                     $setPid = $this->importNewIdPids[$thisRec['pid']] ?? $this->pid;
@@ -658,8 +658,8 @@ class Import extends ImportExport
     {
         $cmd_data = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
-        $pidsFromTree = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
-        foreach ($pidsFromTree as $origPid => $newPid) {
+        $pageList = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
+        foreach ($pageList as $origPid => $newPid) {
             if ($newPid >= 0 && $this->dontIgnorePid('pages', $origPid)) {
                 // If the page had a new id (because it was created) use that instead!
                 if (strpos($this->importNewIdPids[$origPid], 'NEW') === 0) {
@@ -688,26 +688,24 @@ class Import extends ImportExport
     }
 
     /**
-     * Recursively flattening the idH array, setting PIDs as values
+     * Recursively flattening the $pageTree array, setting PIDs as values
      *
-     * @param array $idH Page uid hierarchy
-     * @param array $a Accumulation array of pages (internal, don't set from outside)
+     * @param array $pageTree Page uid hierarchy
+     * @param array $list List of pages (internal, don't set from outside)
      * @param int $pid PID value (internal)
-     * @return array Array with uid-pid pairs for all pages in the page tree.
+     * @return array List with uid-pid pairs for all pages in the page tree.
      * @see ImportExport::flatInversePageTree()
      */
-    protected function flatInversePageTreePid(array $idH, array $a = [], int $pid = -1): array
+    protected function flatInversePageTreePid(array $pageTree, array $list = [], int $pid = -1): array
     {
-        if (is_array($idH)) {
-            $idH = array_reverse($idH);
-            foreach ($idH as $v) {
-                $a[$v['uid']] = $pid;
-                if (is_array($v['subrow'])) {
-                    $a = $this->flatInversePageTreePid($v['subrow'], $a, $v['uid']);
-                }
+        $pageTree = array_reverse($pageTree);
+        foreach ($pageTree as $page) {
+            $list[$page['uid']] = $pid;
+            if (is_array($page['subrow'])) {
+                $list = $this->flatInversePageTreePid($page['subrow'], $list, $page['uid']);
             }
         }
-        return $a;
+        return $list;
     }
 
     /**
@@ -794,9 +792,9 @@ class Import extends ImportExport
     {
         $cmd_data = [];
         if (is_array($this->dat['header']['pagetree'])) {
-            $pagesFromTree = $this->flatInversePageTree($this->dat['header']['pagetree']);
+            $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
         } else {
-            $pagesFromTree = [];
+            $pageList = [];
         }
         if (is_array($this->dat['header']['pid_lookup'])) {
             foreach ($this->dat['header']['pid_lookup'] as $pid => $recList) {
@@ -805,7 +803,7 @@ class Import extends ImportExport
                     foreach ($recList as $tableName => $uidList) {
                         // If $mainPid===$newPid then we are on root level and we can consider to move pages as well!
                         // (they will not be in the page tree!)
-                        if (($tableName !== 'pages' || !$pagesFromTree[$pid]) && is_array($uidList)) {
+                        if (($tableName !== 'pages' || !$pageList[$pid]) && is_array($uidList)) {
                             $uidList = array_reverse(array_keys($uidList));
                             foreach ($uidList as $uid) {
                                 if ($this->dontIgnorePid($tableName, $uid)) {

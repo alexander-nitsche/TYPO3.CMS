@@ -34,7 +34,7 @@
             </f:if>
         </f:else>
     </f:if>
-    <f:if condition="{preview.pagetreeLines -> f:count()} > 0">
+    <f:if condition="{preview.insidePageTree -> f:count()} > 0">
         <h3>
             <f:translate key="impexpcore_displaycon_insidePagetree"/>
         </h3>
@@ -64,7 +64,7 @@
                     </th>
                 </f:if>
             </tr>
-            <f:for each="{preview.pagetreeLines}" as="line">
+            <f:for each="{preview.insidePageTree}" as="line">
                 <tr data-active="{line.active}">
                     <td>
                         <f:format.raw>{line.controls}</f:format.raw>
@@ -93,7 +93,7 @@
             </tbody>
         </table>
     </f:if>
-    <f:if condition="{preview.remainingRecords -> f:count()} > 0">
+    <f:if condition="{preview.outsidePageTree -> f:count()} > 0">
         <h3>
             <f:translate key="impexpcore_singlereco_outsidePagetree"/>
         </h3>
@@ -123,7 +123,7 @@
                     </th>
                 </f:if>
             </tr>
-            <f:for each="{preview.remainingRecords}" as="line">
+            <f:for each="{preview.outsidePageTree}" as="line">
                 <tr>
                     <td>
                         <f:format.raw>{line.controls}</f:format.raw>
