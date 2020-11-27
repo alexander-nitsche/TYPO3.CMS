@@ -134,8 +134,8 @@ class ExportTest extends AbstractImportExportTestCase
         self::assertEquals([
             'update' => false,
             'showDiff' => false,
-            'pagetreeLines' => [],
-            'remainingRecords' => []
+            'insidePageTree' => [],
+            'outsidePageTree' => []
         ], $previewData);
     }
 

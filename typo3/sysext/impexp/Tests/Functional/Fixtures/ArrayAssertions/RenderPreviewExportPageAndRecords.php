@@ -2,7 +2,7 @@
 return [
   'update' => false,
   'showDiff' => false,
-  'pagetreeLines' =>
+  'insidePageTree' =>
   [
     0 =>
     [
@@ -383,7 +383,7 @@ return [
       'message' => '',
     ],
   ],
-  'remainingRecords' =>
+  'outsidePageTree' =>
   [
   ],
 ];

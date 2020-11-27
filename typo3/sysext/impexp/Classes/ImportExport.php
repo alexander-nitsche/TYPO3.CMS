@@ -262,8 +262,8 @@ abstract class ImportExport
         $previewData = [
             'update' => $this->update,
             'showDiff' => $this->showDiff,
-            'pagetreeLines' => [],
-            'remainingRecords' => [],
+            'insidePageTree' => [],
+            'outsidePageTree' => [],
         ];
 
         if (!isset($this->dat['header']['pagetree']) && !isset($this->dat['header']['records'])) {
@@ -275,8 +275,8 @@ abstract class ImportExport
 
         // Preview of the page tree to be exported
         if (is_array($this->dat['header']['pagetree'])) {
-            $this->traversePageTree($this->dat['header']['pagetree'], $previewData['pagetreeLines']);
-            foreach ($previewData['pagetreeLines'] as &$r) {
+            $this->traversePageTree($this->dat['header']['pagetree'], $previewData['insidePageTree']);
+            foreach ($previewData['insidePageTree'] as &$r) {
                 $r['controls'] = $this->renderControls($r);
                 $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
             }
@@ -285,10 +285,10 @@ abstract class ImportExport
         // Preview the remaining records that were not included in the page tree
         if (is_array($this->remainHeader['records'])) {
             if (is_array($this->remainHeader['records']['pages'])) {
-                $this->traversePageRecords($this->remainHeader['records']['pages'], $previewData['remainingRecords']);
+                $this->traversePageRecords($this->remainHeader['records']['pages'], $previewData['outsidePageTree']);
             }
-            $this->traverseAllRecords($this->remainHeader['records'], $previewData['remainingRecords']);
-            foreach ($previewData['remainingRecords'] as &$r) {
+            $this->traverseAllRecords($this->remainHeader['records'], $previewData['outsidePageTree']);
+            foreach ($previewData['outsidePageTree'] as &$r) {
                 $r['controls'] = $this->renderControls($r);
                 $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
             }
@@ -314,6 +314,7 @@ abstract class ImportExport
 
             // Add page
             $this->singleRecordLines('pages', $pageUid, $lines, $preCode);
+
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
                 foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
@@ -326,6 +327,7 @@ abstract class ImportExport
                 }
                 unset($this->remainHeader['pid_lookup'][$pageUid]);
             }
+
             // Add subtree
             if (is_array($page['subrow'])) {
                 $this->traversePageTree($page['subrow'], $lines, $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;');
@@ -334,7 +336,7 @@ abstract class ImportExport
     }
 
     /**
-     * Test whether a record is disabled (i.e. hidden)
+     * Test whether a record is disabled (e.g. hidden)
      *
      * @param string $table Name of the records' database table
      * @param int $uid Database uid of the record
@@ -353,14 +355,14 @@ abstract class ImportExport
      * Exclude a page, its sub pages (recursively) and records placed in them from this import/export
      *
      * @param int $pageUid Uid of the page to exclude
-     * @param array $page Page array with uid/subrow (from ->dat[header][pagetree]
+     * @param array $page Page array with uid/subrow (from ->dat[header][pagetree])
      */
     protected function excludePageAndRecords(int $pageUid, array $page): void
     {
-        // Prevent having this page appear in "remaining records" table
+        // Exclude page
         unset($this->remainHeader['records']['pages'][$pageUid]);
 
-        // Subrecords
+        // Exclude records
         if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
             foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
                 if ($table !== 'pages') {
@@ -371,7 +373,8 @@ abstract class ImportExport
             }
             unset($this->remainHeader['pid_lookup'][$pageUid]);
         }
-        // Subpages excluded recursively
+
+        // Exclude subtree
         if (is_array($page['subrow'])) {
             foreach ($page['subrow'] as $subPageUid => $subPage) {
                 $this->excludePageAndRecords($subPageUid, $subPage);
@@ -387,9 +390,11 @@ abstract class ImportExport
      */
     protected function traversePageRecords(array $pageTree, array &$lines): void
     {
-        foreach ($pageTree as $pageUid => $rHeader) {
+        foreach ($pageTree as $pageUid => $page) {
+            // Add page
             $this->singleRecordLines('pages', (int)$pageUid, $lines, '', true);
-            // Subrecords:
+
+            // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
                 foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
                     if ($table !== 'pages') {
@@ -1009,21 +1014,21 @@ abstract class ImportExport
     /**
      * Recursively flattening the page tree array to a one-dimensional array.
      *
-     * @param array $idH Page tree array
-     * @param array $a Flat array of pages (internal, don't set from outside)
-     * @return array Flat array with uid-uid pairs for all pages in the page tree.
+     * @param array $pageTree Page tree array
+     * @param array $list List of pages (internal, don't set from outside)
+     * @return array List with uid-uid pairs for all pages in the page tree.
      * @see Import::flatInversePageTreePid()
      */
-    protected function flatInversePageTree(array $idH, array $a = []): array
+    protected function flatInversePageTree(array $pageTree, array $list = []): array
     {
-        $idH = array_reverse($idH);
-        foreach ($idH as $pageUid => $page) {
-            $a[$page['uid']] = $page['uid'];
+        $pageTree = array_reverse($pageTree);
+        foreach ($pageTree as $pageUid => $page) {
+            $list[$page['uid']] = $page['uid'];
             if (is_array($page['subrow'])) {
-                $a = $this->flatInversePageTree($page['subrow'], $a);
+                $list = $this->flatInversePageTree($page['subrow'], $list);
             }
         }
-        return $a;
+        return $list;
     }
 
     /**

@@ -208,37 +208,37 @@ class Export extends ImportExport
 
         // Configure which page tree to export
         if ($this->pid !== -1) {
-            $idH = null;
+            $pageTree = null;
             if ($this->levels === self::LEVELS_EXPANDED_TREE) {
-                $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                $pageTreeView = GeneralUtility::makeInstance(ExportPageTreeView::class);
                 $initClause = $this->getExcludePagesClause();
                 if ($this->excludeDisabledRecords) {
                     $initClause .= BackendUtility::BEenableFields('pages');
                 }
-                $pagetree->init($initClause);
-                $pagetree->buildTreeByExpandedState($this->pid);
-                $this->treeHTML = $pagetree->printTree();
-                $idH = $pagetree->buffer_idH;
+                $pageTreeView->init($initClause);
+                $pageTreeView->buildTreeByExpandedState($this->pid);
+                $this->treeHTML = $pageTreeView->printTree();
+                $pageTree = $pageTreeView->buffer_idH;
             } elseif ($this->levels === self::LEVELS_RECORDS_ON_THIS_PAGE) {
                 $this->addRecordsForPid($this->pid, $this->tables);
             } else {
-                $pagetree = GeneralUtility::makeInstance(ExportPageTreeView::class);
+                $pageTreeView = GeneralUtility::makeInstance(ExportPageTreeView::class);
                 $initClause = $this->getExcludePagesClause();
                 if ($this->excludeDisabledRecords) {
                     $initClause .= BackendUtility::BEenableFields('pages');
                 }
-                $pagetree->init($initClause);
-                $pagetree->buildTreeByLevels($this->pid, $this->levels);
-                $this->treeHTML = $pagetree->printTree();
-                $idH = $pagetree->buffer_idH;
+                $pageTreeView->init($initClause);
+                $pageTreeView->buildTreeByLevels($this->pid, $this->levels);
+                $this->treeHTML = $pageTreeView->printTree();
+                $pageTree = $pageTreeView->buffer_idH;
             }
-            // In most cases, we should have a multi-level array, $idH, with the page tree
+            // In most cases, we should have a multi-level array, $pageTree, with the page tree
             // structure here (and the HTML code loaded into memory for a nice display...)
-            if (is_array($idH)) {
-                $this->removeExcludedPagesFromPageTree($idH);
-                $this->setPageTree($idH);
-                $flatList = $this->flatInversePageTree($idH);
-                foreach ($flatList as $pid => $value) {
+            if (is_array($pageTree)) {
+                $this->removeExcludedPagesFromPageTree($pageTree);
+                $this->setPageTree($pageTree);
+                $pageList = $this->flatInversePageTree($pageTree);
+                foreach ($pageList as $pid => $value) {
                     $record = BackendUtility::getRecord('pages', $pid);
                     if (is_array($record)) {
                         $this->exportAddRecord('pages', $record);
@@ -312,25 +312,25 @@ class Export extends ImportExport
     /**
      * Sets the page-tree array in the export header
      *
-     * @param array $idH Hierarchy of ids, the page tree: array([uid] => array("uid" => [uid], "subrow" => array(.....)), [uid] => ....)
+     * @param array $pageTree Hierarchy of ids, the page tree: array([uid] => array("uid" => [uid], "subrow" => array(.....)), [uid] => ....)
      */
-    public function setPageTree(array $idH): void
+    public function setPageTree(array $pageTree): void
     {
-        $this->dat['header']['pagetree'] = $idH;
+        $this->dat['header']['pagetree'] = $pageTree;
     }
 
     /**
      * Removes entries in the page tree which are found in ->excludeMap[]
      *
-     * @param array $idH Hierarchy of ids, the page tree
+     * @param array $pageTree Hierarchy of ids, the page tree
      */
-    protected function removeExcludedPagesFromPageTree(array &$idH): void
+    protected function removeExcludedPagesFromPageTree(array &$pageTree): void
     {
-        foreach ($idH as $pid => $value) {
-            if ($this->isExcluded('pages', (int)$idH[$pid]['uid'])) {
-                unset($idH[$pid]);
-            } elseif (is_array($idH[$pid]['subrow'])) {
-                $this->removeExcludedPagesFromPageTree($idH[$pid]['subrow']);
+        foreach ($pageTree as $pid => $value) {
+            if ($this->isExcluded('pages', (int)$pageTree[$pid]['uid'])) {
+                unset($pageTree[$pid]);
+            } elseif (is_array($pageTree[$pid]['subrow'])) {
+                $this->removeExcludedPagesFromPageTree($pageTree[$pid]['subrow']);
             }
         }
     }
