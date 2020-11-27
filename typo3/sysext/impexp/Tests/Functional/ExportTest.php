@@ -126,25 +126,30 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function renderPreviewWithoutArgumentsReturnsEmptyArray(): void
+    public function renderPreviewWithoutArgumentsReturnsBasicArray(): void
     {
         $this->exportMock->init();
         $this->exportMock->process();
         $previewData = $this->exportMock->renderPreview();
-        self::assertEquals([], $previewData);
+        self::assertEquals([
+            'update' => false,
+            'showDiff' => false,
+            'pagetreeLines' => [],
+            'remainingRecords' => []
+        ], $previewData);
     }
 
     /**
      * @test
      */
-    public function renderPreviewFull(): void
+    public function renderPreviewForExportOfPageAndRecords(): void
     {
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
 
-        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExport.php';
+        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportPageAndRecords.php';
 
         $this->exportMock->init();
         $this->exportMock->setPid(0);
@@ -153,7 +158,47 @@ class ExportTest extends AbstractImportExportTestCase
         $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
         $this->exportMock->process();
         $previewData = $this->exportMock->renderPreview();
-        self::assertEquals($renderPreviewExport, $previewData['pagetreeLines']);
+        self::assertEquals($renderPreviewExport, $previewData);
+    }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForExportOfTable(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
+
+        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportTable.php';
+
+        $this->exportMock->init();
+        $this->exportMock->setList(['tt_content:1']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->process();
+        $previewData = $this->exportMock->renderPreview();
+        self::assertEquals($renderPreviewExport, $previewData);
+    }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForExportOfRecords(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
+
+        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportRecords.php';
+
+        $this->exportMock->init();
+        $this->exportMock->setRecord(['tt_content:1', 'tt_content:2']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->process();
+        $previewData = $this->exportMock->renderPreview();
+        self::assertEquals($renderPreviewExport, $previewData);
     }
 
     /**

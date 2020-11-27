@@ -256,49 +256,41 @@ abstract class ImportExport
      */
     public function renderPreview(): array
     {
-        if (!isset($this->dat['header'])) {
-            return [];
-        }
-
         // Probably this is done to save memory space?
         unset($this->dat['files']);
 
-        $previewData = [];
+        $previewData = [
+            'update' => $this->update,
+            'showDiff' => $this->showDiff,
+            'pagetreeLines' => [],
+            'remainingRecords' => [],
+        ];
+
+        if (!isset($this->dat['header']['pagetree']) && !isset($this->dat['header']['records'])) {
+            return $previewData;
+        }
 
         // Traverse header:
         $this->remainHeader = $this->dat['header'];
 
         // Preview of the page tree to be exported
         if (is_array($this->dat['header']['pagetree'])) {
-            $lines = [];
-            $this->traversePageTree($this->dat['header']['pagetree'], $lines);
-
-            $previewData['update'] = $this->update;
-            $previewData['showDiff'] = $this->showDiff;
-            if (!empty($lines)) {
-                foreach ($lines as &$r) {
-                    $r['controls'] = $this->renderControls($r);
-                    $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
-                }
-                $previewData['pagetreeLines'] = $lines;
-            } else {
-                $previewData['pagetreeLines'] = [];
+            $this->traversePageTree($this->dat['header']['pagetree'], $previewData['pagetreeLines']);
+            foreach ($previewData['pagetreeLines'] as &$r) {
+                $r['controls'] = $this->renderControls($r);
+                $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
             }
         }
 
         // Preview the remaining records that were not included in the page tree
         if (is_array($this->remainHeader['records'])) {
-            $lines = [];
             if (is_array($this->remainHeader['records']['pages'])) {
-                $this->traversePageRecords($this->remainHeader['records']['pages'], $lines);
+                $this->traversePageRecords($this->remainHeader['records']['pages'], $previewData['remainingRecords']);
             }
-            $this->traverseAllRecords($this->remainHeader['records'], $lines);
-            if (!empty($lines)) {
-                foreach ($lines as &$r) {
-                    $r['controls'] = $this->renderControls($r);
-                    $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
-                }
-                $previewData['remainingRecords'] = $lines;
+            $this->traverseAllRecords($this->remainHeader['records'], $previewData['remainingRecords']);
+            foreach ($previewData['remainingRecords'] as &$r) {
+                $r['controls'] = $this->renderControls($r);
+                $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
             }
         }
 
