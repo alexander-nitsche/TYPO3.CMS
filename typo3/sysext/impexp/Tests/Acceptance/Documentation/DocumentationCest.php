@@ -40,7 +40,7 @@ class DocumentationCest
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
     protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
-    protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inModuleTabsBody = '#ImportExportController .tab-content';
     protected $inTabConfiguration = '#export-configuration';
     protected $inFlashMessages = '.typo3-messages';
 

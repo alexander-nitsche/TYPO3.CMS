@@ -39,7 +39,7 @@ class ImportCest
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
     protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
-    protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inModuleTabsBody = '#ImportExportController .tab-content';
     protected $inTabImport = '#import-import';
     protected $inFlashMessages = '.typo3-messages';
 
@@ -122,29 +122,29 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
-        $I->canSeeElement($this->inModuleBody . ' .callout.callout-success');
+        $I->canSeeElement($this->inModuleTabsBody . ' .callout.callout-success');
 
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
         $I->checkOption($this->checkboxOverwriteFile);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
-        $I->canSeeElement($this->inModuleBody . ' .callout.callout-success');
+        $I->canSeeElement($this->inModuleTabsBody . ' .callout.callout-success');
 
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
         $I->uncheckOption($this->checkboxOverwriteFile);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-danger');
-        $I->canSeeElement($this->inModuleBody . ' .callout.callout-danger');
+        $I->canSeeElement($this->inModuleTabsBody . ' .callout.callout-danger');
     }
 
     /**
@@ -176,11 +176,11 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-danger');
-        $I->canSeeElement($this->inModuleBody . ' .callout.callout-danger');
+        $I->canSeeElement($this->inModuleTabsBody . ' .callout.callout-danger');
     }
 
     /**
@@ -214,7 +214,7 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -262,7 +262,7 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -314,7 +314,7 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');
@@ -368,7 +368,7 @@ class ImportCest
         $I->click($this->tabUpload, $this->inModuleTabs);
         $I->waitForElementVisible($this->inputUploadFile, 5);
         $I->attachFile($this->inputUploadFile, $fixtureFilePath);
-        $I->click($this->buttonUploadFile, $this->inModuleBody);
+        $I->click($this->buttonUploadFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('Uploading file', $this->inFlashMessages . ' .alert.alert-success .alert-message');

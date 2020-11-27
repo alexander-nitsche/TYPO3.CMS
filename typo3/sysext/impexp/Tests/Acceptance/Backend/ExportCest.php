@@ -38,7 +38,8 @@ class ExportCest
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
     protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
-    protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inModuleTabsBody = '#ImportExportController .tab-content';
+    protected $inModulePreview = '#ImportExportController > div:last-child';
     protected $inTabConfiguration = '#export-configuration';
     protected $inFlashMessages = '.typo3-messages';
 
@@ -172,11 +173,11 @@ class ExportCest
     {
         $I->wantToTest('exporting a page with records.');
 
-        $page1Icon = '.node.identifier-0_1 .node-icon-container';
+        $page2Icon = '.node.identifier-0_2 .node-icon-container';
         $contextMenuMore = '#contentMenu0 a.list-group-item-submenu';
         $contextMenuExport = '#contentMenu1 .list-group-item[data-callback-action=exportT3d]';
 
-        $I->click($page1Icon);
+        $I->click($page2Icon);
         $I->waitForElementVisible($contextMenuMore, 5);
         $I->click($contextMenuMore);
         $I->waitForElementVisible($contextMenuExport, 5);
@@ -187,10 +188,12 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->switchToContentFrame();
-        $I->cantSee('No tree exported - only tables on the page.', $this->inModuleBody);
+        $I->cantSee('No tree exported - only tables on the page.', $this->inModuleTabsBody);
+        $I->see('Inside pagetree', $this->inModulePreview);
+        $I->dontSee('Outside pagetree', $this->inModulePreview);
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
-        $I->click($buttonSaveToFile, $this->inModuleBody);
+        $I->click($buttonSaveToFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('SAVED FILE', $this->inFlashMessages . ' .alert.alert-success .alert-title');
@@ -231,11 +234,13 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->waitForElementVisible($tabExport, 5);
-        $I->canSee('No tree exported - only tables on the page.', $this->inModuleBody);
-        $I->canSee('Export tables from pages', $this->inModuleBody);
+        $I->canSee('No tree exported - only tables on the page.', $this->inModuleTabsBody);
+        $I->canSee('Export tables from pages', $this->inModuleTabsBody);
+        $I->dontSee('Inside pagetree', $this->inModulePreview);
+        $I->see('Outside pagetree', $this->inModulePreview);
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
-        $I->click($buttonSaveToFile, $this->inModuleBody);
+        $I->click($buttonSaveToFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('SAVED FILE', $this->inFlashMessages . ' .alert.alert-success .alert-title');
@@ -277,11 +282,13 @@ class ExportCest
         $buttonSaveToFile = 'tx_impexp[save_export]';
 
         $I->waitForElementVisible($tabExport, 5);
-        $I->canSee('No tree exported - only tables on the page.', $this->inModuleBody);
-        $I->canSee('Export single record', $this->inModuleBody);
+        $I->canSee('No tree exported - only tables on the page.', $this->inModuleTabsBody);
+        $I->canSee('Export single record', $this->inModuleTabsBody);
+        $I->dontSee('Inside pagetree', $this->inModulePreview);
+        $I->see('Outside pagetree', $this->inModulePreview);
         $I->click($tabExport, $this->inModuleTabs);
         $I->waitForElementVisible($contentExport, 5);
-        $I->click($buttonSaveToFile, $this->inModuleBody);
+        $I->click($buttonSaveToFile, $this->inModuleTabsBody);
         $I->wait(1);
         $I->canSeeElement($this->inFlashMessages . ' .alert.alert-success');
         $I->canSee('SAVED FILE', $this->inFlashMessages . ' .alert.alert-success .alert-title');
