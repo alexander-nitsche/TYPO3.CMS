@@ -271,7 +271,6 @@ abstract class ImportExport
 
         // Preview of the page tree to be exported
         if (is_array($this->dat['header']['pagetree'] ?? null)) {
-            reset($this->dat['header']['pagetree']);
             $lines = [];
             $this->traversePageTree($this->dat['header']['pagetree'], $lines);
 
