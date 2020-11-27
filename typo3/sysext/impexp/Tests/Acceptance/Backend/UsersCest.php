@@ -28,7 +28,7 @@ class UsersCest extends AbstractCest
     protected $inPageTree = '#typo3-pagetree-treeContainer .nodes';
     protected $inModuleHeader = '.module-docheader';
     protected $inModuleTabs = '#ImportExportController .nav-tabs';
-    protected $inModuleBody = '#ImportExportController .tab-content';
+    protected $inModuleTabsBody = '#ImportExportController .tab-content';
 
     protected $buttonUser = '#typo3-cms-backend-backend-toolbaritems-usertoolbaritem';
     protected $buttonLogout = '#typo3-cms-backend-backend-toolbaritems-usertoolbaritem a.btn.btn-danger';
@@ -137,7 +137,7 @@ class UsersCest extends AbstractCest
         $I->waitForElementVisible($this->contextMenuImport, 5);
         $I->click($this->contextMenuImport);
         $I->switchToContentFrame();
-        $I->see('From path:', $this->inModuleBody);
+        $I->see('From path:', $this->inModuleTabsBody);
         $I->seeElement($this->inModuleTabs . ' ' . $this->tabUpload);
 
         $this->switchToUser($I, 2);
@@ -148,7 +148,7 @@ class UsersCest extends AbstractCest
         $I->waitForElementVisible($this->contextMenuImport, 5);
         $I->click($this->contextMenuImport);
         $I->switchToContentFrame();
-        $I->dontSee('From path:', $this->inModuleBody);
+        $I->dontSee('From path:', $this->inModuleTabsBody);
         $I->dontSeeElement($this->inModuleTabs . ' ' . $this->tabUpload);
 
         $this->logoutUser($I);
