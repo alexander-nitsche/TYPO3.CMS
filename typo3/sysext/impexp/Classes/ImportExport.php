@@ -302,9 +302,9 @@ abstract class ImportExport
      *
      * @param array<int, array> $pageTree Page tree array with uid/subrow (from ->dat[header][pagetree])
      * @param array $lines Output lines array (is passed by reference and modified)
-     * @param string $preCode Pre-HTML code
+     * @param int $indent Indentation level
      */
-    protected function traversePageTree(array $pageTree, array &$lines, string $preCode = ''): void
+    protected function traversePageTree(array $pageTree, array &$lines, int $indent = 0): void
     {
         foreach ($pageTree as $pageUid => $page) {
             if ($this->excludeDisabledRecords === true && $this->isRecordDisabled('pages', $pageUid)) {
@@ -313,7 +313,7 @@ abstract class ImportExport
             }
 
             // Add page
-            $this->singleRecordLines('pages', $pageUid, $lines, $preCode);
+            $this->singleRecordLines('pages', $pageUid, $lines, $indent);
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
@@ -321,7 +321,7 @@ abstract class ImportExport
                     $table = (string)$table;
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
-                            $this->singleRecordLines($table, $uid, $lines, $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;');
+                            $this->singleRecordLines($table, $uid, $lines, $indent + 2);
                         }
                     }
                 }
@@ -330,7 +330,7 @@ abstract class ImportExport
 
             // Add subtree
             if (is_array($page['subrow'])) {
-                $this->traversePageTree($page['subrow'], $lines, $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;');
+                $this->traversePageTree($page['subrow'], $lines, $indent + 2);
             }
         }
     }
@@ -392,14 +392,14 @@ abstract class ImportExport
     {
         foreach ($pageTree as $pageUid => $page) {
             // Add page
-            $this->singleRecordLines('pages', (int)$pageUid, $lines, '', true);
+            $this->singleRecordLines('pages', (int)$pageUid, $lines, 0, true);
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
                 foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
-                            $this->singleRecordLines((string)$table, (int)$uid, $lines, '&nbsp;&nbsp;&nbsp;&nbsp;');
+                            $this->singleRecordLines((string)$table, (int)$uid, $lines, 2);
                         }
                     }
                 }
@@ -419,9 +419,8 @@ abstract class ImportExport
         foreach ($pageTree as $table => $records) {
             $this->addGeneralErrorsByTable($table);
             if ($table !== 'pages') {
-                $preCode = '';
                 foreach (array_keys($records) as $uid) {
-                    $this->singleRecordLines((string)$table, (int)$uid, $lines, $preCode, true);
+                    $this->singleRecordLines((string)$table, (int)$uid, $lines, 0, true);
                 }
             }
         }
@@ -448,10 +447,10 @@ abstract class ImportExport
      * @param string $table Table name
      * @param int $uid Record uid
      * @param array $lines Output lines array (is passed by reference and modified)
-     * @param string $preCode Pre-HTML code
+     * @param int $indent Indentation level
      * @param bool $checkImportInPidRecord If you want import validation, you can set this so it checks if the import can take place on the specified page.
      */
-    protected function singleRecordLines(string $table, int $uid, array &$lines, string $preCode, bool $checkImportInPidRecord = false): void
+    protected function singleRecordLines(string $table, int $uid, array &$lines, int $indent, bool $checkImportInPidRecord = false): void
     {
         // Get record:
         $record = $this->dat['header']['records'][$table][$uid];
@@ -464,11 +463,11 @@ abstract class ImportExport
         $pInfo['ref'] = $table . ':' . $uid;
         // Unknown table name:
         if ($table === '_SOFTREF_') {
-            $pInfo['preCode'] = $preCode;
+            $pInfo['preCode'] = $this->renderIndent($indent);
             $pInfo['title'] = '<em>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
         } elseif (!isset($GLOBALS['TCA'][$table])) {
             // Unknown table name:
-            $pInfo['preCode'] = $preCode;
+            $pInfo['preCode'] = $this->renderIndent($indent);
             $pInfo['msg'] = 'UNKNOWN TABLE \'' . $pInfo['ref'] . '\'';
             $pInfo['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
         } else {
@@ -548,7 +547,7 @@ abstract class ImportExport
                     }
                 }
             }
-            $pInfo['preCode'] = $preCode . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
+            $pInfo['preCode'] = $this->renderIndent($indent) . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
                 . $this->iconFactory->getIconForRecord($table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL)->render()
                 . '</span>';
             $pInfo['title'] = htmlspecialchars((string)$record['title']);
@@ -564,28 +563,26 @@ abstract class ImportExport
         $lines[] = $pInfo;
         // File relations:
         if (is_array($record['filerefs'])) {
-            $this->addFiles($record['filerefs'], $lines, $preCode);
+            $this->addFiles($record['filerefs'], $lines, $indent);
         }
         // DB relations
         if (is_array($record['rels'])) {
-            $this->addRelations($record['rels'], $lines, $preCode);
+            $this->addRelations($record['rels'], $lines, $indent);
         }
         // Soft ref
         if (!empty($record['softrefs'])) {
-            $preCode_A = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;';
-            $preCode_B = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
             foreach ($record['softrefs'] as $info) {
                 $pInfo = [];
-                $pInfo['preCode'] = $preCode_A . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
+                $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
                 $pInfo['title'] = '<em>' . $info['field'] . ', "' . $info['spKey'] . '" </em>: <span title="' . htmlspecialchars($info['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['matchString'], 60)) . '</span>';
                 if ($info['subst']['type']) {
                     if (strlen((string)$info['subst']['title'])) {
-                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
+                        $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
                     }
                     if (strlen((string)$info['subst']['description'])) {
-                        $pInfo['title'] .= '<br/>' . $preCode_B . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
+                        $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
                     }
-                    $pInfo['title'] .= '<br/>' . $preCode_B . ($info['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
+                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($info['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
                 }
                 $pInfo['ref'] = 'SOFTREF';
                 $pInfo['type'] = 'softref';
@@ -599,11 +596,11 @@ abstract class ImportExport
                 // Add relations:
                 if ($info['subst']['type'] === 'db') {
                     [$tempTable, $tempUid] = explode(':', $info['subst']['recordRef']);
-                    $this->addRelations([['table' => $tempTable, 'id' => $tempUid, 'tokenID' => $info['subst']['tokenID']]], $lines, $preCode_B, [], '');
+                    $this->addRelations([['table' => $tempTable, 'id' => $tempUid, 'tokenID' => $info['subst']['tokenID']]], $lines, $indent + 4, [], '');
                 }
                 // Add files:
                 if ($info['subst']['type'] === 'file') {
-                    $this->addFiles([$info['file_ID']], $lines, $preCode_B, '', $info['subst']['tokenID']);
+                    $this->addFiles([$info['file_ID']], $lines, $indent + 4, '', $info['subst']['tokenID']);
                 }
             }
         }
@@ -614,13 +611,13 @@ abstract class ImportExport
      *
      * @param array $rels Array of relations
      * @param array $lines Output lines array (is passed by reference and modified)
-     * @param string $preCode Pre-HTML code
+     * @param int $indent Indentation level
      * @param array $recurCheck Recursivity check stack
      * @param string $htmlColorClass Alternative HTML color class to use.
      *
      * @see singleRecordLines()
      */
-    protected function addRelations(array $rels, array &$lines, string $preCode, array $recurCheck = [], string $htmlColorClass = ''): void
+    protected function addRelations(array $rels, array &$lines, int $indent, array $recurCheck = [], string $htmlColorClass = ''): void
     {
         foreach ($rels as $dat) {
             $table = $dat['table'];
@@ -662,12 +659,12 @@ abstract class ImportExport
 
             $icon = '<span class="' . $iconClass . '" title="' . htmlspecialchars($pInfo['ref']) . '">' . $this->iconFactory->getIcon($iconName, Icon::SIZE_SMALL)->render() . '</span>';
 
-            $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;' . $icon;
+            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $icon;
             $pInfo['type'] = 'rel';
             if (!$staticFixed || $this->showStaticRelations) {
                 $lines[] = $pInfo;
                 if (is_array($record) && is_array($record['rels'])) {
-                    $this->addRelations($record['rels'], $lines, $preCode . '&nbsp;&nbsp;', array_merge($recurCheck, [$pInfo['ref']]));
+                    $this->addRelations($record['rels'], $lines, $indent + 1, array_merge($recurCheck, [$pInfo['ref']]));
                 }
             }
         }
@@ -678,13 +675,13 @@ abstract class ImportExport
      *
      * @param array $rels Array of file IDs
      * @param array $lines Output lines array (is passed by reference and modified)
-     * @param string $preCode Pre-HTML code
+     * @param int $indent Indentation level
      * @param string $htmlColorClass Alternative HTML color class to use.
      * @param string $tokenID Token ID if this is a soft reference (in which case it only makes sense with a single element in the $rels array!)
      *
      * @see singleRecordLines()
      */
-    protected function addFiles(array $rels, array &$lines, string $preCode, string $htmlColorClass = '', string $tokenID = ''): void
+    protected function addFiles(array $rels, array &$lines, int $indent, string $htmlColorClass = '', string $tokenID = ''): void
     {
         foreach ($rels as $ID) {
             // Process file:
@@ -698,7 +695,7 @@ abstract class ImportExport
                     return;
                 }
             }
-            $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
+            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
             $pInfo['title'] = htmlspecialchars($fI['filename']);
             $pInfo['ref'] = 'FILE';
             $pInfo['type'] = 'file';
@@ -747,7 +744,7 @@ abstract class ImportExport
                     $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
                 $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
-                $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
+                $pInfo['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
                 $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Original)</em>';
                 $pInfo['ref'] = 'FILE';
                 $pInfo['type'] = 'file';
@@ -766,7 +763,7 @@ abstract class ImportExport
                         $pInfo['updatePath'] = $fI['parentRelFileName'];
                     }
                     $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
-                    $pInfo['preCode'] = $preCode . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
+                    $pInfo['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
                     $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Resource)</em>';
                     $pInfo['ref'] = 'FILE';
                     $pInfo['type'] = 'file';
@@ -775,6 +772,11 @@ abstract class ImportExport
                 }
             }
         }
+    }
+
+    protected function renderIndent(int $indent): string
+    {
+        return str_repeat('&nbsp;&nbsp;', $indent);
     }
 
     /**
