@@ -357,14 +357,14 @@ abstract class ImportExport
      * @param int $pageUid Uid of the page to exclude
      * @param array $page Page array with uid/subrow (from ->dat[header][pagetree])
      */
-    protected function excludePageAndRecords(int $pageUid, array $page): void
+    protected function excludePageAndRecords(int $pageUid, array &$page): void
     {
         // Exclude page
         unset($this->remainHeader['records']['pages'][$pageUid]);
 
         // Exclude records
         if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
-            foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
+            foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => &$records) {
                 if ($table !== 'pages') {
                     foreach (array_keys($records) as $uid) {
                         unset($this->remainHeader['records'][$table][$uid]);
@@ -376,7 +376,7 @@ abstract class ImportExport
 
         // Exclude subtree
         if (is_array($page['subrow'])) {
-            foreach ($page['subrow'] as $subPageUid => $subPage) {
+            foreach ($page['subrow'] as $subPageUid => &$subPage) {
                 $this->excludePageAndRecords($subPageUid, $subPage);
             }
         }
