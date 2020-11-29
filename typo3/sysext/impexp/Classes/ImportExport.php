@@ -386,17 +386,17 @@ abstract class ImportExport
      * Go through remaining pages (not in tree)
      *
      * @param array<int, array> $pageTree Page tree array with uid/subrow (from ->dat[header][pagetree])
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $lines Output lines array
      */
-    protected function traversePageRecords(array $pageTree, array &$lines): void
+    protected function traversePageRecords(array &$pageTree, array &$lines): void
     {
-        foreach ($pageTree as $pageUid => $page) {
+        foreach ($pageTree as $pageUid => &$page) {
             // Add page
             $this->singleRecordLines('pages', (int)$pageUid, $lines, 0, true);
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
-                foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
+                foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => &$records) {
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
                             $this->singleRecordLines((string)$table, (int)$uid, $lines, 2);
