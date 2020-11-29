@@ -301,12 +301,12 @@ abstract class ImportExport
      * Go through page tree for display
      *
      * @param array<int, array> $pageTree Page tree array with uid/subrow (from ->dat[header][pagetree])
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $lines Output lines array
      * @param int $indent Indentation level
      */
-    protected function traversePageTree(array $pageTree, array &$lines, int $indent = 0): void
+    protected function traversePageTree(array &$pageTree, array &$lines, int $indent = 0): void
     {
-        foreach ($pageTree as $pageUid => $page) {
+        foreach ($pageTree as $pageUid => &$page) {
             if ($this->excludeDisabledRecords === true && $this->isRecordDisabled('pages', $pageUid)) {
                 $this->excludePageAndRecords($pageUid, $page);
                 continue;
@@ -317,7 +317,7 @@ abstract class ImportExport
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
-                foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => $records) {
+                foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => &$records) {
                     $table = (string)$table;
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
