@@ -412,11 +412,11 @@ abstract class ImportExport
      * Go through ALL records (if the pages are displayed first, those will not be among these!)
      *
      * @param array $pageTree Page tree array with uid/subrow (from ->dat[header][pagetree])
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $lines Output lines array
      */
-    protected function traverseAllRecords(array $pageTree, array &$lines): void
+    protected function traverseAllRecords(array &$pageTree, array &$lines): void
     {
-        foreach ($pageTree as $table => $records) {
+        foreach ($pageTree as $table => &$records) {
             $this->addGeneralErrorsByTable($table);
             if ($table !== 'pages') {
                 foreach (array_keys($records) as $uid) {
