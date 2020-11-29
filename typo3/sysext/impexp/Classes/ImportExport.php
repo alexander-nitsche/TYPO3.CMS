@@ -313,7 +313,7 @@ abstract class ImportExport
             }
 
             // Add page
-            $this->singleRecordLines('pages', $pageUid, $lines, $indent);
+            $this->addRecord('pages', $pageUid, $lines, $indent);
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
@@ -321,7 +321,7 @@ abstract class ImportExport
                     $table = (string)$table;
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
-                            $this->singleRecordLines($table, $uid, $lines, $indent + 2);
+                            $this->addRecord($table, $uid, $lines, $indent + 2);
                         }
                     }
                 }
@@ -392,14 +392,14 @@ abstract class ImportExport
     {
         foreach ($pageTree as $pageUid => &$page) {
             // Add page
-            $this->singleRecordLines('pages', (int)$pageUid, $lines, 0, true);
+            $this->addRecord('pages', (int)$pageUid, $lines, 0, true);
 
             // Add records
             if (is_array($this->dat['header']['pid_lookup'][$pageUid])) {
                 foreach ($this->dat['header']['pid_lookup'][$pageUid] as $table => &$records) {
                     if ($table !== 'pages') {
                         foreach (array_keys($records) as $uid) {
-                            $this->singleRecordLines((string)$table, (int)$uid, $lines, 2);
+                            $this->addRecord((string)$table, (int)$uid, $lines, 2);
                         }
                     }
                 }
@@ -420,7 +420,7 @@ abstract class ImportExport
             $this->addGeneralErrorsByTable($table);
             if ($table !== 'pages') {
                 foreach (array_keys($records) as $uid) {
-                    $this->singleRecordLines((string)$table, (int)$uid, $lines, 0, true);
+                    $this->addRecord((string)$table, (int)$uid, $lines, 0, true);
                 }
             }
         }
@@ -442,37 +442,37 @@ abstract class ImportExport
     }
 
     /**
-     * Add entries for a single record
+     * Add a record, its relations and soft references, to the preview
      *
      * @param string $table Table name
      * @param int $uid Record uid
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $lines Output lines array
      * @param int $indent Indentation level
      * @param bool $checkImportInPidRecord If you want import validation, you can set this so it checks if the import can take place on the specified page.
      */
-    protected function singleRecordLines(string $table, int $uid, array &$lines, int $indent, bool $checkImportInPidRecord = false): void
+    protected function addRecord(string $table, int $uid, array &$lines, int $indent, bool $checkImportInPidRecord = false): void
     {
-        // Get record:
         $record = $this->dat['header']['records'][$table][$uid];
         unset($this->remainHeader['records'][$table][$uid]);
         if (!is_array($record) && !($table === 'pages' && !$uid)) {
             $this->addError('MISSING RECORD: ' . $table . ':' . $uid);
         }
-        // Begin to create the line arrays information record, pInfo:
-        $pInfo = [];
-        $pInfo['ref'] = $table . ':' . $uid;
+
+        // Create record information for preview
+        $line = [];
+        $line['ref'] = $table . ':' . $uid;
         // Unknown table name:
         if ($table === '_SOFTREF_') {
-            $pInfo['preCode'] = $this->renderIndent($indent);
-            $pInfo['title'] = '<em>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
+            $line['preCode'] = $this->renderIndent($indent);
+            $line['title'] = '<em>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
         } elseif (!isset($GLOBALS['TCA'][$table])) {
             // Unknown table name:
-            $pInfo['preCode'] = $this->renderIndent($indent);
-            $pInfo['msg'] = 'UNKNOWN TABLE \'' . $pInfo['ref'] . '\'';
-            $pInfo['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
+            $line['preCode'] = $this->renderIndent($indent);
+            $line['msg'] = 'UNKNOWN TABLE \'' . $line['ref'] . '\'';
+            $line['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
         } else {
             // prepare data attribute telling whether the record is active or hidden, allowing frontend bulk selection
-            $pInfo['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
+            $line['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
 
             // Otherwise, set table icon and title.
             // Import validation will show messages if import is not possible of various items.
@@ -480,26 +480,26 @@ abstract class ImportExport
             if ($this->mode === 'import' && !empty($pidRecord)) {
                 if ($checkImportInPidRecord) {
                     if (!$this->getBackendUser()->doesUserHaveAccess($pidRecord, ($table === 'pages' ? 8 : 16))) {
-                        $pInfo['msg'] .= '\'' . $pInfo['ref'] . '\' cannot be INSERTED on this page! ';
+                        $line['msg'] .= '\'' . $line['ref'] . '\' cannot be INSERTED on this page! ';
                     }
                     if (!$this->checkDokType($table, $pidRecord['doktype']) && !$GLOBALS['TCA'][$table]['ctrl']['rootLevel']) {
-                        $pInfo['msg'] .= '\'' . $table . '\' cannot be INSERTED on this page type (change page type to \'Folder\'.) ';
+                        $line['msg'] .= '\'' . $table . '\' cannot be INSERTED on this page type (change page type to \'Folder\'.) ';
                     }
                 }
                 if (!$this->getBackendUser()->check('tables_modify', $table)) {
-                    $pInfo['msg'] .= 'You are not allowed to CREATE \'' . $table . '\' tables! ';
+                    $line['msg'] .= 'You are not allowed to CREATE \'' . $table . '\' tables! ';
                 }
                 if ($GLOBALS['TCA'][$table]['ctrl']['readOnly']) {
-                    $pInfo['msg'] .= 'TABLE \'' . $table . '\' is READ ONLY! ';
+                    $line['msg'] .= 'TABLE \'' . $table . '\' is READ ONLY! ';
                 }
                 if ($GLOBALS['TCA'][$table]['ctrl']['adminOnly'] && !$this->getBackendUser()->isAdmin()) {
-                    $pInfo['msg'] .= 'TABLE \'' . $table . '\' is ADMIN ONLY! ';
+                    $line['msg'] .= 'TABLE \'' . $table . '\' is ADMIN ONLY! ';
                 }
                 if ($GLOBALS['TCA'][$table]['ctrl']['is_static']) {
-                    $pInfo['msg'] .= 'TABLE \'' . $table . '\' is a STATIC TABLE! ';
+                    $line['msg'] .= 'TABLE \'' . $table . '\' is a STATIC TABLE! ';
                 }
                 if ((int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'] === 1) {
-                    $pInfo['msg'] .= 'TABLE \'' . $table . '\' will be inserted on ROOT LEVEL! ';
+                    $line['msg'] .= 'TABLE \'' . $table . '\' will be inserted on ROOT LEVEL! ';
                 }
                 $diffInverse = false;
                 $recInf = null;
@@ -507,7 +507,7 @@ abstract class ImportExport
                     // In case of update-PREVIEW we swap the diff-sources.
                     $diffInverse = true;
                     $recInf = $this->doesRecordExist($table, $uid, $this->showDiff ? '*' : '');
-                    $pInfo['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath((int)$recInf['pid'])) : '<strong>NEW!</strong>';
+                    $line['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath((int)$recInf['pid'])) : '<strong>NEW!</strong>';
                     // Mode selector:
                     $optValues = [];
                     $optValues[] = $recInf ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
@@ -526,9 +526,9 @@ abstract class ImportExport
                     }
                     $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
                     if ($table === 'sys_file') {
-                        $pInfo['updateMode'] = '';
+                        $line['updateMode'] = '';
                     } else {
-                        $pInfo['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', $this->importMode[$table . ':' . $uid], $optValues);
+                        $line['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', $this->importMode[$table . ':' . $uid], $optValues);
                     }
                 }
                 // Diff view:
@@ -541,68 +541,38 @@ abstract class ImportExport
                     }
                     $importRecord = $this->dat['records'][$table . ':' . $uid]['data'] ?? null;
                     if (is_array($recInf) && is_array($importRecord)) {
-                        $pInfo['showDiffContent'] = $this->compareRecords($recInf, $importRecord, $table, $diffInverse);
+                        $line['showDiffContent'] = $this->compareRecords($recInf, $importRecord, $table, $diffInverse);
                     } else {
-                        $pInfo['showDiffContent'] = 'ERROR: One of the inputs were not an array!';
+                        $line['showDiffContent'] = 'ERROR: One of the inputs were not an array!';
                     }
                 }
             }
-            $pInfo['preCode'] = $this->renderIndent($indent) . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
+            $line['preCode'] = $this->renderIndent($indent) . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
                 . $this->iconFactory->getIconForRecord($table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL)->render()
                 . '</span>';
-            $pInfo['title'] = htmlspecialchars((string)$record['title']);
+            $line['title'] = htmlspecialchars((string)$record['title']);
             // View page:
             if ($table === 'pages') {
                 $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
                 if ($viewID) {
-                    $pInfo['title'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($viewID)) . 'return false;">' . $pInfo['title'] . '</a>';
+                    $line['title'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($viewID)) . 'return false;">' . $line['title'] . '</a>';
                 }
             }
         }
-        $pInfo['type'] = 'record';
-        $lines[] = $pInfo;
-        // File relations:
+        $line['type'] = 'record';
+        $lines[] = $line;
+
+        // File relations
         if (is_array($record['filerefs'])) {
             $this->addFiles($record['filerefs'], $lines, $indent);
         }
-        // DB relations
+        // Database relations
         if (is_array($record['rels'])) {
             $this->addRelations($record['rels'], $lines, $indent);
         }
-        // Soft ref
-        if (!empty($record['softrefs'])) {
-            foreach ($record['softrefs'] as $info) {
-                $pInfo = [];
-                $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
-                $pInfo['title'] = '<em>' . $info['field'] . ', "' . $info['spKey'] . '" </em>: <span title="' . htmlspecialchars($info['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['matchString'], 60)) . '</span>';
-                if ($info['subst']['type']) {
-                    if (strlen((string)$info['subst']['title'])) {
-                        $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['title'], 60));
-                    }
-                    if (strlen((string)$info['subst']['description'])) {
-                        $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($info['subst']['description'], 60));
-                    }
-                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($info['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $info['subst']['relFileName'] . '</strong>' : '') . ($info['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $info['subst']['tokenValue'] . '</strong>' : '') . ($info['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $info['subst']['recordRef'] . '</strong>' : '');
-                }
-                $pInfo['ref'] = 'SOFTREF';
-                $pInfo['type'] = 'softref';
-                $pInfo['_softRefInfo'] = $info;
-                $pInfo['type'] = 'softref';
-                $mode = $this->softrefCfg[$info['subst']['tokenID']]['mode'];
-                if ($info['error'] && $mode !== 'editable' && $mode !== 'exclude') {
-                    $pInfo['msg'] .= $info['error'];
-                }
-                $lines[] = $pInfo;
-                // Add relations:
-                if ($info['subst']['type'] === 'db') {
-                    [$tempTable, $tempUid] = explode(':', $info['subst']['recordRef']);
-                    $this->addRelations([['table' => $tempTable, 'id' => $tempUid, 'tokenID' => $info['subst']['tokenID']]], $lines, $indent + 4, [], '');
-                }
-                // Add files:
-                if ($info['subst']['type'] === 'file') {
-                    $this->addFiles([$info['file_ID']], $lines, $indent + 4, '', $info['subst']['tokenID']);
-                }
-            }
+        // Soft references
+        if (is_array($record['softrefs'])) {
+            $this->addSoftRefs($record['softrefs'], $lines, $indent);
         }
     }
 
@@ -770,6 +740,49 @@ abstract class ImportExport
                     $lines[] = $pInfo;
                     unset($this->remainHeader['files'][$extID]);
                 }
+            }
+        }
+    }
+
+    /**
+     * Add soft reference entries for a record's rels-array
+     *
+     * @param array $refs Array of soft references
+     * @param array $lines Output lines array
+     * @param int $indent Indentation level
+     */
+    protected function addSoftRefs(array &$refs, array &$lines, int $indent): void
+    {
+        foreach ($refs as &$ref) {
+            $pInfo = [];
+            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
+            $pInfo['title'] = '<em>' . $ref['field'] . ', "' . $ref['spKey'] . '" </em>: <span title="' . htmlspecialchars($ref['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['matchString'], 60)) . '</span>';
+            if ($ref['subst']['type']) {
+                if (strlen((string)$ref['subst']['title'])) {
+                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['title'], 60));
+                }
+                if (strlen((string)$ref['subst']['description'])) {
+                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['description'], 60));
+                }
+                $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($ref['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $ref['subst']['relFileName'] . '</strong>' : '') . ($ref['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $ref['subst']['tokenValue'] . '</strong>' : '') . ($ref['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $ref['subst']['recordRef'] . '</strong>' : '');
+            }
+            $pInfo['ref'] = 'SOFTREF';
+            $pInfo['type'] = 'softref';
+            $pInfo['_softRefInfo'] = $ref;
+            $mode = $this->softrefCfg[$ref['subst']['tokenID']]['mode'];
+            if ($ref['error'] && $mode !== 'editable' && $mode !== 'exclude') {
+                $pInfo['msg'] .= $ref['error'];
+            }
+            $lines[] = $pInfo;
+
+            // Add database relations
+            if ($ref['subst']['type'] === 'db') {
+                [$referencedTable, $referencedUid] = explode(':', $ref['subst']['recordRef']);
+                $this->addRelations([['table' => $referencedTable, 'id' => $referencedUid, 'tokenID' => $ref['subst']['tokenID']]], $lines, $indent + 4, [], '');
+            }
+            // Add files relations
+            if ($ref['subst']['type'] === 'file') {
+                $this->addFiles([$ref['file_ID']], $lines, $indent + 4, '', $ref['subst']['tokenID']);
             }
         }
     }
