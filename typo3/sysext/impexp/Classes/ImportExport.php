@@ -461,23 +461,22 @@ abstract class ImportExport
         // Create record information for preview
         $line = [];
         $line['ref'] = $table . ':' . $uid;
-        // Unknown table name:
         if ($table === '_SOFTREF_') {
+            // Record is a soft reference
             $line['preCode'] = $this->renderIndent($indent);
             $line['title'] = '<em>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_softReferencesFiles')) . '</em>';
         } elseif (!isset($GLOBALS['TCA'][$table])) {
-            // Unknown table name:
+            // Record is of unknown table
             $line['preCode'] = $this->renderIndent($indent);
             $line['msg'] = 'UNKNOWN TABLE \'' . $line['ref'] . '\'';
             $line['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
         } else {
-            // prepare data attribute telling whether the record is active or hidden, allowing frontend bulk selection
-            $line['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
-
-            // Otherwise, set table icon and title.
-            // Import validation will show messages if import is not possible of various items.
             $pidRecord = $this->getPidRecord();
-            if ($this->mode === 'import' && !empty($pidRecord)) {
+            $icon = $this->iconFactory->getIconForRecord(
+                $table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL
+            )->render();
+            $line['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
+            if ($this->mode === 'import' && $pidRecord !== null) {
                 if ($checkImportInPidRecord) {
                     if (!$this->getBackendUser()->doesUserHaveAccess($pidRecord, ($table === 'pages' ? 8 : 16))) {
                         $line['msg'] .= '\'' . $line['ref'] . '\' cannot be INSERTED on this page! ';
@@ -547,15 +546,17 @@ abstract class ImportExport
                     }
                 }
             }
-            $line['preCode'] = $this->renderIndent($indent) . '<span title="' . htmlspecialchars($table . ':' . $uid) . '">'
-                . $this->iconFactory->getIconForRecord($table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL)->render()
-                . '</span>';
+            $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                $this->renderIndent($indent), htmlspecialchars($line['ref']), $icon
+            );
             $line['title'] = htmlspecialchars((string)$record['title']);
-            // View page:
+            // Link to page view
             if ($table === 'pages') {
                 $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
                 if ($viewID) {
-                    $line['title'] = '<a href="#" onclick="' . htmlspecialchars(BackendUtility::viewOnClick($viewID)) . 'return false;">' . $line['title'] . '</a>';
+                    $line['title'] = sprintf('<a href="#" onclick="%sreturn false;">%s</a>',
+                        htmlspecialchars(BackendUtility::viewOnClick($viewID)), $line['title']
+                    );
                 }
             }
         }
