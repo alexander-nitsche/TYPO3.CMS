@@ -461,6 +461,7 @@ abstract class ImportExport
         // Create record information for preview
         $line = [];
         $line['ref'] = $table . ':' . $uid;
+        $line['type'] = 'record';
         if ($table === '_SOFTREF_') {
             // Record is a soft reference
             $line['preCode'] = $this->renderIndent($indent);
@@ -468,13 +469,26 @@ abstract class ImportExport
         } elseif (!isset($GLOBALS['TCA'][$table])) {
             // Record is of unknown table
             $line['preCode'] = $this->renderIndent($indent);
-            $line['msg'] = 'UNKNOWN TABLE \'' . $line['ref'] . '\'';
             $line['title'] = '<em>' . htmlspecialchars((string)$record['title']) . '</em>';
+            $line['msg'] = 'UNKNOWN TABLE \'' . $line['ref'] . '\'';
         } else {
             $pidRecord = $this->getPidRecord();
             $icon = $this->iconFactory->getIconForRecord(
                 $table, (array)$this->dat['records'][$table . ':' . $uid]['data'], Icon::SIZE_SMALL
             )->render();
+            $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                $this->renderIndent($indent), htmlspecialchars($line['ref']), $icon
+            );
+            $line['title'] = htmlspecialchars((string)$record['title']);
+            // Link to page view
+            if ($table === 'pages') {
+                $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
+                if ($viewID) {
+                    $line['title'] = sprintf('<a href="#" onclick="%sreturn false;">%s</a>',
+                        htmlspecialchars(BackendUtility::viewOnClick($viewID)), $line['title']
+                    );
+                }
+            }
             $line['active'] = !$this->isRecordDisabled($table, $uid) ? 'active' : 'hidden';
             if ($this->mode === 'import' && $pidRecord !== null) {
                 if ($checkImportInPidRecord) {
@@ -546,21 +560,7 @@ abstract class ImportExport
                     }
                 }
             }
-            $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
-                $this->renderIndent($indent), htmlspecialchars($line['ref']), $icon
-            );
-            $line['title'] = htmlspecialchars((string)$record['title']);
-            // Link to page view
-            if ($table === 'pages') {
-                $viewID = $this->mode === 'export' ? $uid : ($this->doesImport ? $this->importMapId['pages'][$uid] : 0);
-                if ($viewID) {
-                    $line['title'] = sprintf('<a href="#" onclick="%sreturn false;">%s</a>',
-                        htmlspecialchars(BackendUtility::viewOnClick($viewID)), $line['title']
-                    );
-                }
-            }
         }
-        $line['type'] = 'record';
         $lines[] = $line;
 
         // File relations
