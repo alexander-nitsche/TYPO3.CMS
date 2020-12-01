@@ -520,28 +520,17 @@ abstract class ImportExport
                     // In case of update-PREVIEW we swap the diff-sources.
                     $diffInverse = true;
                     $recordDb = $this->getRecordFromDatabase($table, $uid, $this->showDiff ? '*' : 'uid,pid');
-                    $line['updatePath'] = $recordDb !== null ? htmlspecialchars($this->getRecordPath((int)$recordDb['pid'])) : '<strong>NEW!</strong>';
-                    // Mode selector:
-                    $optValues = [];
-                    $optValues[] = $recordDb !== null ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
-                    if ($recordDb !== null) {
-                        $optValues['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
+                    if ($recordDb === null) {
+                        $line['updatePath'] = '<strong>NEW!</strong>';
+                    } else {
+                        $line['updatePath'] = htmlspecialchars($this->getRecordPath((int)$recordDb['pid']));
                     }
-                    if ($recordDb !== null) {
-                        if (!$this->globalIgnorePid) {
-                            $optValues['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
-                        } else {
-                            $optValues['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
-                        }
-                    }
-                    if ($recordDb === null && $this->getBackendUser()->isAdmin()) {
-                        $optValues['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
-                    }
-                    $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
                     if ($table === 'sys_file') {
                         $line['updateMode'] = '';
                     } else {
-                        $line['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', (string)$this->importMode[$table . ':' . $uid], $optValues);
+                        $line['updateMode'] = $this->renderImportModeSelector(
+                            $table, $uid, $recordDb !== null
+                        );
                     }
                 }
                 // Diff view:
@@ -886,6 +875,31 @@ abstract class ImportExport
             return $selectorbox . $descriptionField;
         }
         return '';
+    }
+
+    protected function renderImportModeSelector(string $table, int $uid, bool $doesRecordExist): string
+    {
+        $optValues = [];
+        if (!$doesRecordExist) {
+            $optValues[] = $this->lang->getLL('impexpcore_singlereco_insert');
+            if ($this->getBackendUser()->isAdmin()) {
+                $optValues['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
+            }
+        } else {
+            $optValues[] = $this->lang->getLL('impexpcore_singlereco_update');
+            $optValues['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
+            if (!$this->globalIgnorePid) {
+                $optValues['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
+            } else {
+                $optValues['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
+            }
+        }
+        $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
+        return $this->renderSelectBox(
+            'tx_impexp[import_mode][' . $table . ':' . $uid . ']',
+            (string)$this->importMode[$table . ':' . $uid],
+            $optValues
+        );
     }
 
     /**
