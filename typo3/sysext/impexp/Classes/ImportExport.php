@@ -455,7 +455,7 @@ abstract class ImportExport
     {
         $record = $this->dat['header']['records'][$table][$uid];
         unset($this->remainHeader['records'][$table][$uid]);
-        if (!is_array($record) && !($table === 'pages' && !$uid)) {
+        if (!is_array($record) && !($table === 'pages' && $uid === 0)) {
             $this->addError('MISSING RECORD: ' . $table . ':' . $uid);
         }
 
