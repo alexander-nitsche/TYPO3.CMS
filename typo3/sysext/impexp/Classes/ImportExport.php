@@ -592,9 +592,9 @@ abstract class ImportExport
         foreach ($rels as $dat) {
             $table = $dat['table'];
             $uid = $dat['id'];
-            $pInfo = [];
-            $pInfo['ref'] = $table . ':' . $uid;
-            if (in_array($pInfo['ref'], $recurCheck)) {
+            $line = [];
+            $line['ref'] = $table . ':' . $uid;
+            if (in_array($line['ref'], $recurCheck)) {
                 continue;
             }
             $iconName = 'status-status-checked';
@@ -605,36 +605,36 @@ abstract class ImportExport
                 $record = $this->dat['header']['records'][$table][$uid];
                 if (!is_array($record)) {
                     if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid) || $dat['tokenID'] && !$this->includeSoftref($dat['tokenID'])) {
-                        $pInfo['title'] = htmlspecialchars('STATIC: ' . $pInfo['ref']);
+                        $line['title'] = htmlspecialchars('STATIC: ' . $line['ref']);
                         $iconClass = 'text-info';
                         $staticFixed = true;
                     } else {
                         $doesRE = $this->doesRecordExist($table, (int)$uid);
                         $lostPath = $this->getRecordPath($table === 'pages' ? (int)$doesRE['uid'] : (int)$doesRE['pid']);
-                        $pInfo['title'] = htmlspecialchars($pInfo['ref']);
-                        $pInfo['title'] = '<span title="' . htmlspecialchars($lostPath) . '">' . $pInfo['title'] . '</span>';
-                        $pInfo['msg'] = 'LOST RELATION' . (!$doesRE ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
+                        $line['title'] = htmlspecialchars($line['ref']);
+                        $line['title'] = '<span title="' . htmlspecialchars($lostPath) . '">' . $line['title'] . '</span>';
+                        $line['msg'] = 'LOST RELATION' . (!$doesRE ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
                         $iconClass = 'text-danger';
                         $iconName = 'status-dialog-warning';
                     }
                 } else {
-                    $pInfo['title'] = htmlspecialchars((string)$record['title']);
-                    $pInfo['title'] = '<span title="' . htmlspecialchars($this->getRecordPath(($table === 'pages' ? (int)$record['uid'] : (int)$record['pid']))) . '">' . $pInfo['title'] . '</span>';
+                    $line['title'] = htmlspecialchars((string)$record['title']);
+                    $line['title'] = '<span title="' . htmlspecialchars($this->getRecordPath(($table === 'pages' ? (int)$record['uid'] : (int)$record['pid']))) . '">' . $line['title'] . '</span>';
                 }
             } else {
                 // Negative values in relation fields. This is typically sys_language fields, fe_users fields etc. They are static values. They CAN theoretically be negative pointers to uids in other tables but this is so rarely used that it is not supported
-                $pInfo['title'] = htmlspecialchars('FIXED: ' . $pInfo['ref']);
+                $line['title'] = htmlspecialchars('FIXED: ' . $line['ref']);
                 $staticFixed = true;
             }
 
-            $icon = '<span class="' . $iconClass . '" title="' . htmlspecialchars($pInfo['ref']) . '">' . $this->iconFactory->getIcon($iconName, Icon::SIZE_SMALL)->render() . '</span>';
+            $icon = '<span class="' . $iconClass . '" title="' . htmlspecialchars($line['ref']) . '">' . $this->iconFactory->getIcon($iconName, Icon::SIZE_SMALL)->render() . '</span>';
 
-            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $icon;
-            $pInfo['type'] = 'rel';
+            $line['preCode'] = $this->renderIndent($indent + 2) . $icon;
+            $line['type'] = 'rel';
             if (!$staticFixed || $this->showStaticRelations) {
-                $lines[] = $pInfo;
+                $lines[] = $line;
                 if (is_array($record) && is_array($record['rels'])) {
-                    $this->addRelations($record['rels'], $lines, $indent + 1, array_merge($recurCheck, [$pInfo['ref']]));
+                    $this->addRelations($record['rels'], $lines, $indent + 1, array_merge($recurCheck, [$line['ref']]));
                 }
             }
         }
@@ -655,39 +655,39 @@ abstract class ImportExport
     {
         foreach ($rels as $ID) {
             // Process file:
-            $pInfo = [];
+            $line = [];
             $fI = $this->dat['header']['files'][$ID];
             if (!is_array($fI)) {
                 if (!$tokenID || $this->includeSoftref($tokenID)) {
-                    $pInfo['msg'] = 'MISSING FILE: ' . $ID;
+                    $line['msg'] = 'MISSING FILE: ' . $ID;
                     $this->addError('MISSING FILE: ' . $ID);
                 } else {
                     return;
                 }
             }
-            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-            $pInfo['title'] = htmlspecialchars($fI['filename']);
-            $pInfo['ref'] = 'FILE';
-            $pInfo['type'] = 'file';
+            $line['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
+            $line['title'] = htmlspecialchars($fI['filename']);
+            $line['ref'] = 'FILE';
+            $line['type'] = 'file';
             // If import mode and there is a non-RTE soft reference, check the destination directory:
             if ($this->mode === 'import' && $tokenID && !$fI['RTE_ORIG_ID']) {
                 if (isset($fI['parentRelFileName'])) {
-                    $pInfo['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
+                    $line['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
                 } else {
                     $testDirPrefix = PathUtility::dirname($fI['relFileName']) . '/';
                     $testDirPrefix2 = $this->verifyFolderAccess($testDirPrefix);
                     if (!$testDirPrefix2) {
-                        $pInfo['msg'] = 'ERROR: There are no available filemounts to write file in! ';
+                        $line['msg'] = 'ERROR: There are no available filemounts to write file in! ';
                     } elseif ($testDirPrefix !== $testDirPrefix2) {
-                        $pInfo['msg'] = 'File will be attempted written to "' . $testDirPrefix2 . '". ';
+                        $line['msg'] = 'File will be attempted written to "' . $testDirPrefix2 . '". ';
                     }
                 }
                 // Check if file exists:
                 if (file_exists(Environment::getPublicPath() . '/' . $fI['relFileName'])) {
                     if ($this->update) {
-                        $pInfo['updatePath'] .= 'File exists.';
+                        $line['updatePath'] .= 'File exists.';
                     } else {
-                        $pInfo['msg'] .= 'File already exists! ';
+                        $line['msg'] .= 'File already exists! ';
                     }
                 }
                 // Check extension:
@@ -695,49 +695,49 @@ abstract class ImportExport
                 if ($fileProcObj->actionPerms['addFile']) {
                     $testFI = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fI['relFileName']);
                     if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($testFI['file'])) {
-                        $pInfo['msg'] .= 'File extension was not allowed!';
+                        $line['msg'] .= 'File extension was not allowed!';
                     }
                 } else {
-                    $pInfo['msg'] = 'Your user profile does not allow you to create files on the server!';
+                    $line['msg'] = 'Your user profile does not allow you to create files on the server!';
                 }
             }
-            $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
-            $lines[] = $pInfo;
+            $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
+            $lines[] = $line;
             unset($this->remainHeader['files'][$ID]);
             // RTE originals:
             if ($fI['RTE_ORIG_ID']) {
                 $ID = $fI['RTE_ORIG_ID'];
-                $pInfo = [];
+                $line = [];
                 $fI = $this->dat['header']['files'][$ID];
                 if (!is_array($fI)) {
-                    $pInfo['msg'] = 'MISSING RTE original FILE: ' . $ID;
+                    $line['msg'] = 'MISSING RTE original FILE: ' . $ID;
                     $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
-                $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
-                $pInfo['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-                $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Original)</em>';
-                $pInfo['ref'] = 'FILE';
-                $pInfo['type'] = 'file';
-                $lines[] = $pInfo;
+                $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
+                $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
+                $line['title'] = htmlspecialchars($fI['filename']) . ' <em>(Original)</em>';
+                $line['ref'] = 'FILE';
+                $line['type'] = 'file';
+                $lines[] = $line;
                 unset($this->remainHeader['files'][$ID]);
             }
             // External resources:
             if (is_array($fI['EXT_RES_ID'])) {
                 foreach ($fI['EXT_RES_ID'] as $extID) {
-                    $pInfo = [];
+                    $line = [];
                     $fI = $this->dat['header']['files'][$extID];
                     if (!is_array($fI)) {
-                        $pInfo['msg'] = 'MISSING External Resource FILE: ' . $extID;
+                        $line['msg'] = 'MISSING External Resource FILE: ' . $extID;
                         $this->addError('MISSING External Resource FILE: ' . $extID);
                     } else {
-                        $pInfo['updatePath'] = $fI['parentRelFileName'];
+                        $line['updatePath'] = $fI['parentRelFileName'];
                     }
-                    $pInfo['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
-                    $pInfo['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
-                    $pInfo['title'] = htmlspecialchars($fI['filename']) . ' <em>(Resource)</em>';
-                    $pInfo['ref'] = 'FILE';
-                    $pInfo['type'] = 'file';
-                    $lines[] = $pInfo;
+                    $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
+                    $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
+                    $line['title'] = htmlspecialchars($fI['filename']) . ' <em>(Resource)</em>';
+                    $line['ref'] = 'FILE';
+                    $line['type'] = 'file';
+                    $lines[] = $line;
                     unset($this->remainHeader['files'][$extID]);
                 }
             }
@@ -754,26 +754,26 @@ abstract class ImportExport
     protected function addSoftRefs(array &$refs, array &$lines, int $indent): void
     {
         foreach ($refs as &$ref) {
-            $pInfo = [];
-            $pInfo['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
-            $pInfo['title'] = '<em>' . $ref['field'] . ', "' . $ref['spKey'] . '" </em>: <span title="' . htmlspecialchars($ref['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['matchString'], 60)) . '</span>';
+            $line = [];
+            $line['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
+            $line['title'] = '<em>' . $ref['field'] . ', "' . $ref['spKey'] . '" </em>: <span title="' . htmlspecialchars($ref['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['matchString'], 60)) . '</span>';
             if ($ref['subst']['type']) {
                 if (strlen((string)$ref['subst']['title'])) {
-                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['title'], 60));
+                    $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['title'], 60));
                 }
                 if (strlen((string)$ref['subst']['description'])) {
-                    $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['description'], 60));
+                    $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['description'], 60));
                 }
-                $pInfo['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($ref['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $ref['subst']['relFileName'] . '</strong>' : '') . ($ref['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $ref['subst']['tokenValue'] . '</strong>' : '') . ($ref['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $ref['subst']['recordRef'] . '</strong>' : '');
+                $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($ref['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $ref['subst']['relFileName'] . '</strong>' : '') . ($ref['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $ref['subst']['tokenValue'] . '</strong>' : '') . ($ref['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $ref['subst']['recordRef'] . '</strong>' : '');
             }
-            $pInfo['ref'] = 'SOFTREF';
-            $pInfo['type'] = 'softref';
-            $pInfo['_softRefInfo'] = $ref;
+            $line['ref'] = 'SOFTREF';
+            $line['type'] = 'softref';
+            $line['_softRefInfo'] = $ref;
             $mode = $this->softrefCfg[$ref['subst']['tokenID']]['mode'];
             if ($ref['error'] && $mode !== 'editable' && $mode !== 'exclude') {
-                $pInfo['msg'] .= $ref['error'];
+                $line['msg'] .= $ref['error'];
             }
-            $lines[] = $pInfo;
+            $lines[] = $line;
 
             // Add database relations
             if ($ref['subst']['type'] === 'db') {
