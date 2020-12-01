@@ -847,7 +847,8 @@ class Import extends ImportExport
         }
         $record = $this->dat['records'][$table . ':' . $uid]['data'];
         if (is_array($record)) {
-            if ($this->update && $this->doesRecordExist($table, $uid) && $this->importMode[$table . ':' . $uid] !== 'as_new') {
+            $recordDb = $this->getRecordFromDatabase($table, $uid);
+            if ($this->update && $recordDb !== null && $this->importMode[$table . ':' . $uid] !== 'as_new') {
                 $ID = $uid;
             } elseif ($table === 'sys_file_metadata' && $record['sys_language_uid'] == '0' && $this->importMapId['sys_file'][$record['file']]) {
                 // on adding sys_file records the belonging sys_file_metadata record was also created
