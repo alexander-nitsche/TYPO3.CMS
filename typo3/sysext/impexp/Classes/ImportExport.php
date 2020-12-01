@@ -502,26 +502,26 @@ abstract class ImportExport
                     $line['msg'] .= 'TABLE \'' . $table . '\' will be inserted on ROOT LEVEL! ';
                 }
                 $diffInverse = false;
-                $recInf = null;
+                $recordDb = null;
                 if ($this->update) {
                     // In case of update-PREVIEW we swap the diff-sources.
                     $diffInverse = true;
-                    $recInf = $this->doesRecordExist($table, $uid, $this->showDiff ? '*' : '');
-                    $line['updatePath'] = $recInf ? htmlspecialchars($this->getRecordPath((int)$recInf['pid'])) : '<strong>NEW!</strong>';
+                    $recordDb = $this->getRecordFromDatabase($table, $uid, $this->showDiff ? '*' : 'uid,pid');
+                    $line['updatePath'] = $recordDb !== null ? htmlspecialchars($this->getRecordPath((int)$recordDb['pid'])) : '<strong>NEW!</strong>';
                     // Mode selector:
                     $optValues = [];
-                    $optValues[] = $recInf ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
-                    if ($recInf) {
+                    $optValues[] = $recordDb !== null ? $this->lang->getLL('impexpcore_singlereco_update') : $this->lang->getLL('impexpcore_singlereco_insert');
+                    if ($recordDb !== null) {
                         $optValues['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
                     }
-                    if ($recInf) {
+                    if ($recordDb !== null) {
                         if (!$this->globalIgnorePid) {
                             $optValues['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
                         } else {
                             $optValues['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
                         }
                     }
-                    if (!$recInf && $this->getBackendUser()->isAdmin()) {
+                    if ($recordDb === null && $this->getBackendUser()->isAdmin()) {
                         $optValues['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
                     }
                     $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
@@ -536,12 +536,12 @@ abstract class ImportExport
                     // For IMPORTS, get new id:
                     if ($newUid = $this->importMapId[$table][$uid]) {
                         $diffInverse = false;
-                        $recInf = $this->doesRecordExist($table, $newUid, '*');
-                        BackendUtility::workspaceOL($table, $recInf);
+                        $recordDb = $this->getRecordFromDatabase($table, $newUid, '*');
+                        BackendUtility::workspaceOL($table, $recordDb);
                     }
                     $importRecord = $this->dat['records'][$table . ':' . $uid]['data'] ?? null;
-                    if (is_array($recInf) && is_array($importRecord)) {
-                        $line['showDiffContent'] = $this->compareRecords($recInf, $importRecord, $table, $diffInverse);
+                    if (is_array($recordDb) && is_array($importRecord)) {
+                        $line['showDiffContent'] = $this->compareRecords($recordDb, $importRecord, $table, $diffInverse);
                     } else {
                         $line['showDiffContent'] = 'ERROR: One of the inputs were not an array!';
                     }
@@ -609,11 +609,11 @@ abstract class ImportExport
                         $iconClass = 'text-info';
                         $staticFixed = true;
                     } else {
-                        $doesRE = $this->doesRecordExist($table, (int)$uid);
-                        $lostPath = $this->getRecordPath($table === 'pages' ? (int)$doesRE['uid'] : (int)$doesRE['pid']);
+                        $recordDb = $this->getRecordFromDatabase($table, (int)$uid);
+                        $lostPath = $this->getRecordPath($table === 'pages' ? (int)$recordDb['uid'] : (int)$recordDb['pid']);
                         $line['title'] = htmlspecialchars($line['ref']);
                         $line['title'] = '<span title="' . htmlspecialchars($lostPath) . '">' . $line['title'] . '</span>';
-                        $line['msg'] = 'LOST RELATION' . (!$doesRE ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
+                        $line['msg'] = 'LOST RELATION' . ($recordDb === null ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
                         $iconClass = 'text-danger';
                         $iconName = 'status-dialog-warning';
                     }
@@ -1085,16 +1085,16 @@ abstract class ImportExport
     }
 
     /**
-     * Checks if the record exists
+     * Returns given fields of record if it exists.
      *
      * @param string $table Table name
      * @param int $uid UID of record
      * @param string $fields Field list to select. Default is "uid,pid"
      * @return array|null Result of \TYPO3\CMS\Backend\Utility\BackendUtility::getRecord() which means the record if found, otherwise NULL
      */
-    protected function doesRecordExist(string $table, int $uid, string $fields = ''): ?array
+    protected function getRecordFromDatabase(string $table, int $uid, string $fields = 'uid,pid'): ?array
     {
-        return BackendUtility::getRecord($table, $uid, $fields ?: 'uid,pid');
+        return BackendUtility::getRecord($table, $uid, $fields);
     }
 
     /**
