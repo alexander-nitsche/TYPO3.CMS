@@ -242,6 +242,7 @@ abstract class ImportExport
     {
         $this->iconFactory = GeneralUtility::makeInstance(IconFactory::class);
         $this->lang = $this->getLanguageService();
+        $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
     }
 

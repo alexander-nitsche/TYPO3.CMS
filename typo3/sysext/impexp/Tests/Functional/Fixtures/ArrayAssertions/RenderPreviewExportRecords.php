@@ -10,7 +10,7 @@ return [
     0 =>
     [
       'ref' => 'tt_content:1',
-      'active' => 'active',
+      'type' => 'record',
       'preCode' => '<span title="tt_content:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-mimetypes-x-content-text" data-identifier="mimetypes-x-content-text">
 	<span class="icon-markup">
 <svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/mimetypes.svg#mimetypes-x-content-text" /></svg>
@@ -18,8 +18,8 @@ return [
 	
 </span></span>',
       'title' => 'Test content',
-      'type' => 'record',
-      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:1]" id="checkExcludett_content:1" value="1" /> <label for="checkExcludett_content:1"></label>',
+      'active' => 'active',
+      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:1]" id="checkExcludett_content:1" value="1" /> <label for="checkExcludett_content:1">Exclude</label>',
       'message' => '',
     ],
     1 =>
@@ -30,7 +30,7 @@ return [
 	</span>
 	
 </span>',
-      'title' => '<em>header_link, "typolink" </em>: <span title="file:2">file:2</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>sys_file:2</strong>',
+      'title' => '<em>header_link, "typolink" </em>: <span title="file:2">file:2</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:2</strong>',
       'ref' => 'SOFTREF',
       'type' => 'softref',
       '_softRefInfo' =>
@@ -46,7 +46,7 @@ return [
           'tokenValue' => 'file:2',
         ],
       ],
-      'controls' => '<select name="tx_impexp[softrefCfg][2487ce518ed56d22f20f259928ff43f1][mode]"><option value="" selected="selected"></option><option value="editable"></option><option value="exclude"></option></select><br/>',
+      'controls' => '<select name="tx_impexp[softrefCfg][2487ce518ed56d22f20f259928ff43f1][mode]"><option value="" selected="selected"></option><option value="editable">Editable</option><option value="exclude">Exclude</option></select><br/>',
       'message' => '',
     ],
     2 =>
@@ -67,7 +67,7 @@ return [
     3 =>
     [
       'ref' => 'tt_content:2',
-      'active' => 'active',
+      'type' => 'record',
       'preCode' => '<span title="tt_content:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-mimetypes-x-content-text" data-identifier="mimetypes-x-content-text">
 	<span class="icon-markup">
 <svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/mimetypes.svg#mimetypes-x-content-text" /></svg>
@@ -75,8 +75,8 @@ return [
 	
 </span></span>',
       'title' => 'Test content 2',
-      'type' => 'record',
-      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:2]" id="checkExcludett_content:2" value="1" /> <label for="checkExcludett_content:2"></label>',
+      'active' => 'active',
+      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:2]" id="checkExcludett_content:2" value="1" /> <label for="checkExcludett_content:2">Exclude</label>',
       'message' => '',
     ],
     4 =>
@@ -87,7 +87,7 @@ return [
 	</span>
 	
 </span>',
-      'title' => '<em>header_link, "typolink" </em>: <span title="file:4">file:4</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>sys_file:4</strong>',
+      'title' => '<em>header_link, "typolink" </em>: <span title="file:4">file:4</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:4</strong>',
       'ref' => 'SOFTREF',
       'type' => 'softref',
       '_softRefInfo' =>
@@ -103,7 +103,7 @@ return [
           'tokenValue' => 'file:4',
         ],
       ],
-      'controls' => '<select name="tx_impexp[softrefCfg][81b8b33df54ef433f1cbc7c3e513e6c4][mode]"><option value="" selected="selected"></option><option value="editable"></option><option value="exclude"></option></select><br/>',
+      'controls' => '<select name="tx_impexp[softrefCfg][81b8b33df54ef433f1cbc7c3e513e6c4][mode]"><option value="" selected="selected"></option><option value="editable">Editable</option><option value="exclude">Exclude</option></select><br/>',
       'message' => '',
     ],
     5 =>
