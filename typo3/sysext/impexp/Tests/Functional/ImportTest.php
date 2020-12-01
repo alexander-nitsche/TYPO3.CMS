@@ -119,4 +119,39 @@ class ImportTest extends AbstractImportExportTestCase
         $previewData = $this->importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForImportOfPageAndRecordsWithDiffView(): void
+    {
+        $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithDiff.php';
+
+        $this->importMock->init();
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $this->importMock->importData();
+        $this->importMock->setShowDiff(true);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
+        $previewData = $this->importMock->renderPreview();
+        self::assertEquals($renderPreviewImport, $previewData);
+    }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForImportOfPageAndRecordsByUpdateWithDiffView(): void
+    {
+        $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdateWithDiff.php';
+
+        $this->importMock->init();
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $this->importMock->importData();
+        $this->importMock->setShowDiff(true);
+        $this->importMock->setUpdate(true);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
+        $previewData = $this->importMock->renderPreview();
+        self::assertEquals($renderPreviewImport, $previewData);
+    }
 }
