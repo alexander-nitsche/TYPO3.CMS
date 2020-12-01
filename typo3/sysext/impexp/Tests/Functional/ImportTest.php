@@ -89,4 +89,34 @@ class ImportTest extends AbstractImportExportTestCase
             'empty path' => [''],
         ];
     }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForImportOfPageAndRecords(): void
+    {
+        $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecords.php';
+
+        $this->importMock->init();
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $previewData = $this->importMock->renderPreview();
+        self::assertEquals($renderPreviewImport, $previewData);
+    }
+
+    /**
+     * @test
+     */
+    public function renderPreviewForImportOfPageAndRecordsByUpdate(): void
+    {
+        $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdate.php';
+
+        $this->importMock->init();
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $this->importMock->importData();
+        $this->importMock->setUpdate(true);
+        $previewData = $this->importMock->renderPreview();
+        self::assertEquals($renderPreviewImport, $previewData);
+    }
 }
