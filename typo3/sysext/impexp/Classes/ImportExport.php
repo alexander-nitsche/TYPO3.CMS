@@ -513,11 +513,8 @@ abstract class ImportExport
                 if ((int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'] === 1) {
                     $line['msg'] .= 'TABLE \'' . $table . '\' will be inserted on ROOT LEVEL! ';
                 }
-                $diffInverse = false;
                 $recordDb = null;
                 if ($this->update) {
-                    // In case of update-PREVIEW we swap the diff-sources.
-                    $diffInverse = true;
                     $recordDb = $this->getRecordFromDatabase($table, $uid, $this->showDiff ? '*' : 'uid,pid');
                     if ($recordDb === null) {
                         $line['updatePath'] = '<strong>NEW!</strong>';
@@ -532,9 +529,10 @@ abstract class ImportExport
                         );
                     }
                 }
-                // Diff view:
+                // Diff view
                 if ($this->showDiff) {
-                    // For IMPORTS, get new id:
+                    $diffInverse = $this->update ? true : false;
+                    // For imports, get new id:
                     if ($newUid = $this->importMapId[$table][$uid]) {
                         $diffInverse = false;
                         $recordDb = $this->getRecordFromDatabase($table, $newUid, '*');
