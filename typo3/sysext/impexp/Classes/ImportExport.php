@@ -528,7 +528,7 @@ abstract class ImportExport
                     if ($table === 'sys_file') {
                         $line['updateMode'] = '';
                     } else {
-                        $line['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', $this->importMode[$table . ':' . $uid], $optValues);
+                        $line['updateMode'] = $this->renderSelectBox('tx_impexp[import_mode][' . $table . ':' . $uid . ']', (string)$this->importMode[$table . ':' . $uid], $optValues);
                     }
                 }
                 // Diff view:
