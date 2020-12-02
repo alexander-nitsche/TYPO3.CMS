@@ -53,7 +53,6 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
         $out = $subject->render();
 
@@ -74,7 +73,6 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
         $out = $subject->render();
 
@@ -100,7 +98,6 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $subject->setSaveFilesOutsideExportFile(true);
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
         $out = $subject->render();
@@ -123,7 +120,6 @@ class PagesAndTtContentWithImagesTest extends AbstractImportExportTestCase
 
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $subject->setSaveFilesOutsideExportFile(true);
         $this->compileExportPagesAndRelatedTtContentWithImages($subject);
         $out = $subject->render();

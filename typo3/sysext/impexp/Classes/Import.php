@@ -48,6 +48,11 @@ use TYPO3\CMS\Impexp\Exception\PrerequisitesNotMetException;
 class Import extends ImportExport
 {
     /**
+     * @var string
+     */
+    protected $mode = 'import';
+
+    /**
      * Used to register the forged UID values for imported records that we want
      * to create with the same UIDs as in the import file. Admin-only feature.
      *
@@ -123,7 +128,6 @@ class Import extends ImportExport
      */
     public function init(): void
     {
-        $this->mode = 'import';
         $this->compress = function_exists('gzcompress');
     }
 

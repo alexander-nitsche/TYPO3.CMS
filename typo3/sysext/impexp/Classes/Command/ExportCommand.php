@@ -179,8 +179,6 @@ class ExportCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $export = $this->getExport();
-        $export->init();
-
         try {
             $export->setExportFileName(PathUtility::basename((string)$input->getArgument('file')));
             $export->setExportFileType((string)$input->getOption('fileType'));
@@ -199,7 +197,6 @@ class ExportCommand extends Command
             $export->setNotes((string)$input->getOption('notes'));
             $export->setExtensionDependencies($input->getOption('dependency'));
             $export->setSaveFilesOutsideExportFile($input->getOption('saveFilesOutsideExportFile'));
-
             $export->process();
             $saveFile = $export->saveToFile();
             $io->success('Exporting to ' . $saveFile->getPublicUrl() . ' succeeded.');

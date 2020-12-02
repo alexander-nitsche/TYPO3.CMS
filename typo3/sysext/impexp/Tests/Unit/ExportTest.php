@@ -54,7 +54,6 @@ class ExportTest extends UnitTestCase
      */
     public function setExportFileNameSanitizesFileName(string $fileName, string $expected): void
     {
-        $this->exportMock->init();
         $this->exportMock->setExportFileName($fileName);
         $actual = $this->exportMock->getExportFileName();
 
@@ -76,7 +75,6 @@ class ExportTest extends UnitTestCase
      */
     public function getOrGenerateExportFileNameWithFileExtensionConsidersPidAndLevels(): void
     {
-        $this->exportMock->init();
         $this->exportMock->setPid(1);
         $this->exportMock->setLevels(2);
         $patternDateTime = '[0-9-_]{16}';
@@ -88,7 +86,6 @@ class ExportTest extends UnitTestCase
      */
     public function getOrGenerateExportFileNameWithFileExtensionConsidersRecords(): void
     {
-        $this->exportMock->init();
         $this->exportMock->setRecord(['page:1', 'tt_content:1']);
         $patternDateTime = '[0-9-_]{16}';
         self::assertRegExp("/T3D_recs_page_1-tt_conte_$patternDateTime.xml/", $this->exportMock->getOrGenerateExportFileNameWithFileExtension());
@@ -99,7 +96,6 @@ class ExportTest extends UnitTestCase
      */
     public function getOrGenerateExportFileNameWithFileExtensionConsidersLists(): void
     {
-        $this->exportMock->init();
         $this->exportMock->setList(['sys_language:0', 'news:12']);
         $patternDateTime = '[0-9-_]{16}';
         self::assertRegExp("/T3D_list_sys_language_0-_$patternDateTime.xml/", $this->exportMock->getOrGenerateExportFileNameWithFileExtension());
