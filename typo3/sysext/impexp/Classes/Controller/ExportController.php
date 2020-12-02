@@ -207,7 +207,6 @@ class ExportController extends ImportExportController
     {
         // Create export object and configure it:
         $this->export = GeneralUtility::makeInstance(Export::class);
-        $this->export->init();
         $this->export->setExcludeMap((array)$inData['exclude']);
         $this->export->setSoftrefCfg((array)$inData['softrefCfg']);
         $this->export->setExtensionDependencies(($inData['extension_dep'] === '') ? [] : (array)$inData['extension_dep']);

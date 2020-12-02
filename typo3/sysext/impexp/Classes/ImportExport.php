@@ -41,6 +41,13 @@ use TYPO3\CMS\Core\Utility\PathUtility;
 abstract class ImportExport
 {
     /**
+     * Whether "import" or "export" mode of object.
+     *
+     * @var string
+     */
+    protected $mode = '';
+
+    /**
      * A WHERE clause for selection records from the pages table based on read-permissions of the current backend user.
      *
      * @var string
@@ -67,13 +74,6 @@ abstract class ImportExport
      * @var bool
      */
     protected $showStaticRelations = false;
-
-    /**
-     * Whether "import" or "export" mode of object. Set through init() function
-     *
-     * @var string
-     */
-    protected $mode = '';
 
     /**
      * Updates all records that has same UID instead of creating new!

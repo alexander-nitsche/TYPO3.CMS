@@ -93,7 +93,6 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
     {
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $subject->setPid(1);
         $subject->setLevels(1);
         $subject->setTables(['_ALL']);
@@ -116,7 +115,6 @@ class PagesAndTtContentTest extends AbstractImportExportTestCase
     {
         /** @var Export|MockObject|AccessibleObjectInterface $subject */
         $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
-        $subject->init();
         $subject->setPid(1);
         $subject->setExcludeMap(['pages:2' => 1]);
         $subject->setLevels(1);

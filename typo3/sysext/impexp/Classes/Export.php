@@ -54,6 +54,11 @@ class Export extends ImportExport
     /**
      * @var string
      */
+    protected $mode = 'export';
+
+    /**
+     * @var string
+     */
     protected $title = '';
 
     /**
@@ -156,18 +161,6 @@ class Export extends ImportExport
      * @var array
      */
     protected $pageInWebMountCache = [];
-
-    /**************************
-     * Initialize
-     *************************/
-
-    /**
-     * Init the object
-     */
-    public function init(): void
-    {
-        $this->mode = 'export';
-    }
 
     /**************************
      * Export / Init + Meta Data

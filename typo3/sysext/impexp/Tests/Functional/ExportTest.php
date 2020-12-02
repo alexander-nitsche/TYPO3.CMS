@@ -92,8 +92,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function creationAndDeletionOfTemporaryFolderSucceeds(): void
     {
-        $this->exportMock->init();
-
         $temporaryFolderName = $this->exportMock->getOrCreateTemporaryFolderName();
         $temporaryFileName = $temporaryFolderName . '/export_file.txt';
         file_put_contents($temporaryFileName, 'Hello TYPO3 World.');
@@ -110,8 +108,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function creationAndDeletionOfDefaultImportExportFolderSucceeds(): void
     {
-        $this->exportMock->init();
-
         $exportFolder = $this->exportMock->getOrCreateDefaultImportExportFolder();
         $exportFileName = 'export_file.txt';
         $exportFolder->createFile($exportFileName);
@@ -128,7 +124,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function renderPreviewWithoutArgumentsReturnsBasicArray(): void
     {
-        $this->exportMock->init();
         $this->exportMock->process();
         $previewData = $this->exportMock->renderPreview();
         self::assertEquals([
@@ -151,7 +146,6 @@ class ExportTest extends AbstractImportExportTestCase
 
         $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportPageAndRecords.php';
 
-        $this->exportMock->init();
         $this->exportMock->setPid(0);
         $this->exportMock->setLevels(Export::LEVELS_INFINITE);
         $this->exportMock->setTables(['_ALL']);
@@ -173,7 +167,6 @@ class ExportTest extends AbstractImportExportTestCase
 
         $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportTable.php';
 
-        $this->exportMock->init();
         $this->exportMock->setList(['tt_content:1']);
         $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
         $this->exportMock->process();
@@ -193,7 +186,6 @@ class ExportTest extends AbstractImportExportTestCase
 
         $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportRecords.php';
 
-        $this->exportMock->init();
         $this->exportMock->setRecord(['tt_content:1', 'tt_content:2']);
         $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
         $this->exportMock->process();
@@ -206,7 +198,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function renderSucceedsWithoutArguments(): void
     {
-        $this->exportMock->init();
         $this->exportMock->process();
         $actual = $this->exportMock->render();
 
@@ -218,7 +209,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function saveXmlToFileIsDefaultAndSucceeds(): void
     {
-        $this->exportMock->init();
         $this->exportMock->setExportFileName('export');
         $this->exportMock->process();
 
@@ -234,7 +224,6 @@ class ExportTest extends AbstractImportExportTestCase
      */
     public function saveT3dToFileSucceeds(): void
     {
-        $this->exportMock->init();
         $this->exportMock->setExportFileName('export');
         $this->exportMock->setExportFileType(Export::FILETYPE_T3D);
         $this->exportMock->process();
@@ -259,7 +248,6 @@ class ExportTest extends AbstractImportExportTestCase
             self::markTestSkipped('The function gzcompress() is not available for compression.');
         }
 
-        $this->exportMock->init();
         $this->exportMock->setExportFileName('export');
         $this->exportMock->setExportFileType(Export::FILETYPE_T3DZ);
         $this->exportMock->process();

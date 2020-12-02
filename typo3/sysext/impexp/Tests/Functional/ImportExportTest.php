@@ -59,7 +59,6 @@ class ImportExportTest extends AbstractImportExportTestCase
         $import->setForceAllUids(true);
         $import->importData();
 
-        $this->exportMock->init();
         $this->exportMock->setPid(1);
         $this->exportMock->setLevels(Export::LEVELS_INFINITE);
         $this->exportMock->setTables(['_ALL']);
