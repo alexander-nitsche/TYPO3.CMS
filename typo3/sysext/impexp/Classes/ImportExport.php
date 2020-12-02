@@ -572,11 +572,10 @@ abstract class ImportExport
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param int $indent Indentation level
      * @param array $recursionCheck Recursion check stack
-     * @param string $htmlColorClass Alternative HTML color class to use.
      *
      * @see singleRecordLines()
      */
-    protected function addRelations(array $rels, array &$lines, int $indent, array $recursionCheck = [], string $htmlColorClass = ''): void
+    protected function addRelations(array $rels, array &$lines, int $indent, array $recursionCheck = []): void
     {
         foreach ($rels as $dat) {
             $table = $dat['table'];
@@ -635,12 +634,11 @@ abstract class ImportExport
      * @param array $rels Array of file IDs
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param int $indent Indentation level
-     * @param string $htmlColorClass Alternative HTML color class to use.
      * @param string $tokenID Token ID if this is a soft reference (in which case it only makes sense with a single element in the $rels array!)
      *
      * @see singleRecordLines()
      */
-    protected function addFiles(array $rels, array &$lines, int $indent, string $htmlColorClass = '', string $tokenID = ''): void
+    protected function addFiles(array $rels, array &$lines, int $indent, string $tokenID = ''): void
     {
         foreach ($rels as $ID) {
             // Process file:
@@ -767,11 +765,11 @@ abstract class ImportExport
             // Add database relations
             if ($ref['subst']['type'] === 'db') {
                 [$referencedTable, $referencedUid] = explode(':', $ref['subst']['recordRef']);
-                $this->addRelations([['table' => $referencedTable, 'id' => $referencedUid, 'tokenID' => $ref['subst']['tokenID']]], $lines, $indent + 4, [], '');
+                $this->addRelations([['table' => $referencedTable, 'id' => $referencedUid, 'tokenID' => $ref['subst']['tokenID']]], $lines, $indent + 4, []);
             }
             // Add files relations
             if ($ref['subst']['type'] === 'file') {
-                $this->addFiles([$ref['file_ID']], $lines, $indent + 4, '', $ref['subst']['tokenID']);
+                $this->addFiles([$ref['file_ID']], $lines, $indent + 4, $ref['subst']['tokenID']);
             }
         }
     }
