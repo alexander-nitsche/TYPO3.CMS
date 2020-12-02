@@ -171,9 +171,9 @@ return [
     ],
     11 =>
     [
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-default-not-found" data-identifier="default-not-found">
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
 	<span class="icon-markup">
-<svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/default.svg#default-not-found" /></svg>
+<img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-soft.png" width="16" height="16" alt="" />
 	</span>
 	
 </span>',
@@ -242,9 +242,9 @@ return [
     ],
     15 =>
     [
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-default-not-found" data-identifier="default-not-found">
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
 	<span class="icon-markup">
-<svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/default.svg#default-not-found" /></svg>
+<img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-soft.png" width="16" height="16" alt="" />
 	</span>
 	
 </span>',
@@ -298,9 +298,9 @@ return [
     ],
     18 =>
     [
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-default-not-found" data-identifier="default-not-found">
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
 	<span class="icon-markup">
-<svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/default.svg#default-not-found" /></svg>
+<img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-soft.png" width="16" height="16" alt="" />
 	</span>
 	
 </span>',
