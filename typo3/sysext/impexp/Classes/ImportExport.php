@@ -566,22 +566,23 @@ abstract class ImportExport
     }
 
     /**
-     * Add DB relations entries for a record's rels-array
+     * Add database relations of a record to the preview
      *
-     * @param array $rels Array of relations
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $relations Array of relations
+     * @param array $lines Output lines array
      * @param int $indent Indentation level
      * @param array $recursionCheck Recursion check stack
      *
-     * @see singleRecordLines()
+     * @see addRecord()
      */
-    protected function addRelations(array $rels, array &$lines, int $indent, array $recursionCheck = []): void
+    protected function addRelations(array &$relations, array &$lines, int $indent, array $recursionCheck = []): void
     {
-        foreach ($rels as $dat) {
-            $table = $dat['table'];
-            $uid = $dat['id'];
+        foreach ($relations as &$relation) {
+            $table = $relation['table'];
+            $uid = $relation['id'];
             $line = [];
             $line['ref'] = $table . ':' . $uid;
+            $line['type'] = 'rel';
             if (in_array($line['ref'], $recursionCheck)) {
                 continue;
             }
@@ -592,33 +593,39 @@ abstract class ImportExport
             if ($uid > 0) {
                 $record = $this->dat['header']['records'][$table][$uid];
                 if (!is_array($record)) {
-                    if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid) || $dat['tokenID'] && !$this->includeSoftref($dat['tokenID'])) {
+                    if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid)
+                        || $relation['tokenID'] && !$this->includeSoftref($relation['tokenID'])) {
                         $line['title'] = htmlspecialchars('STATIC: ' . $line['ref']);
                         $iconClass = 'text-info';
                         $staticFixed = true;
                     } else {
                         $recordDb = $this->getRecordFromDatabase($table, (int)$uid);
-                        $lostPath = $this->getRecordPath($table === 'pages' ? (int)$recordDb['uid'] : (int)$recordDb['pid']);
-                        $line['title'] = htmlspecialchars($line['ref']);
-                        $line['title'] = '<span title="' . htmlspecialchars($lostPath) . '">' . $line['title'] . '</span>';
-                        $line['msg'] = 'LOST RELATION' . ($recordDb === null ? ' (Record not found!)' : ' (Path: ' . $lostPath . ')');
+                        $recordPath = $this->getRecordPath($table === 'pages' ? (int)$recordDb['uid'] : (int)$recordDb['pid']);
+                        $line['title'] = sprintf('<span title="%s">%s</span>',
+                            htmlspecialchars($recordPath), htmlspecialchars($line['ref'])
+                        );
+                        $line['msg'] = 'LOST RELATION' . ($recordDb === null ? ' (Record not found!)' : ' (Path: ' . $recordPath . ')');
                         $iconClass = 'text-danger';
                         $iconName = 'status-dialog-warning';
                     }
                 } else {
-                    $line['title'] = htmlspecialchars((string)$record['title']);
-                    $line['title'] = '<span title="' . htmlspecialchars($this->getRecordPath(($table === 'pages' ? (int)$record['uid'] : (int)$record['pid']))) . '">' . $line['title'] . '</span>';
+                    $recordPath = $this->getRecordPath($table === 'pages' ? (int)$record['uid'] : (int)$record['pid']);
+                    $line['title'] = sprintf('<span title="%s">%s</span>',
+                        htmlspecialchars($recordPath), htmlspecialchars((string)$record['title'])
+                    );
                 }
             } else {
-                // Negative values in relation fields. This is typically sys_language fields, fe_users fields etc. They are static values. They CAN theoretically be negative pointers to uids in other tables but this is so rarely used that it is not supported
+                // Negative values in relation fields. These are typically fields of sys_language, fe_users etc.
+                // They are static values. They CAN theoretically be negative pointers to uids in other tables,
+                // but this is so rarely used that it is not supported.
                 $line['title'] = htmlspecialchars('FIXED: ' . $line['ref']);
                 $staticFixed = true;
             }
 
-            $icon = '<span class="' . $iconClass . '" title="' . htmlspecialchars($line['ref']) . '">' . $this->iconFactory->getIcon($iconName, Icon::SIZE_SMALL)->render() . '</span>';
-
-            $line['preCode'] = $this->renderIndent($indent + 2) . $icon;
-            $line['type'] = 'rel';
+            $icon = $this->iconFactory->getIcon($iconName, Icon::SIZE_SMALL)->render();
+            $line['preCode'] = sprintf('%s<span class="%s" title="%s">%s</span>',
+                $this->renderIndent($indent + 2), $iconClass, htmlspecialchars($line['ref']), $icon
+            );
             if (!$staticFixed || $this->showStaticRelations) {
                 $lines[] = $line;
                 if (is_array($record) && is_array($record['rels'])) {
@@ -765,7 +772,8 @@ abstract class ImportExport
             // Add database relations
             if ($ref['subst']['type'] === 'db') {
                 [$referencedTable, $referencedUid] = explode(':', $ref['subst']['recordRef']);
-                $this->addRelations([['table' => $referencedTable, 'id' => $referencedUid, 'tokenID' => $ref['subst']['tokenID']]], $lines, $indent + 4, []);
+                $relations = [['table' => $referencedTable, 'id' => $referencedUid, 'tokenID' => $ref['subst']['tokenID']]];
+                $this->addRelations($relations, $lines, $indent + 4);
             }
             // Add files relations
             if ($ref['subst']['type'] === 'file') {
