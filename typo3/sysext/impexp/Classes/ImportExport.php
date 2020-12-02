@@ -571,19 +571,19 @@ abstract class ImportExport
      * @param array $rels Array of relations
      * @param array $lines Output lines array (is passed by reference and modified)
      * @param int $indent Indentation level
-     * @param array $recurCheck Recursivity check stack
+     * @param array $recursionCheck Recursion check stack
      * @param string $htmlColorClass Alternative HTML color class to use.
      *
      * @see singleRecordLines()
      */
-    protected function addRelations(array $rels, array &$lines, int $indent, array $recurCheck = [], string $htmlColorClass = ''): void
+    protected function addRelations(array $rels, array &$lines, int $indent, array $recursionCheck = [], string $htmlColorClass = ''): void
     {
         foreach ($rels as $dat) {
             $table = $dat['table'];
             $uid = $dat['id'];
             $line = [];
             $line['ref'] = $table . ':' . $uid;
-            if (in_array($line['ref'], $recurCheck)) {
+            if (in_array($line['ref'], $recursionCheck)) {
                 continue;
             }
             $iconName = 'status-status-checked';
@@ -623,7 +623,7 @@ abstract class ImportExport
             if (!$staticFixed || $this->showStaticRelations) {
                 $lines[] = $line;
                 if (is_array($record) && is_array($record['rels'])) {
-                    $this->addRelations($record['rels'], $lines, $indent + 1, array_merge($recurCheck, [$line['ref']]));
+                    $this->addRelations($record['rels'], $lines, $indent + 1, array_merge($recursionCheck, [$line['ref']]));
                 }
             }
         }
