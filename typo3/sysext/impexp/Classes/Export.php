@@ -953,34 +953,34 @@ class Export extends ImportExport
             return;
         }
 
-        $fileInfo = stat($fileData['ID_absFile']);
+        $fileStat = stat($fileData['ID_absFile']);
         $fileMd5 = md5_file($fileData['ID_absFile']);
         $pathInfo = pathinfo(PathUtility::basename($fileData['ID_absFile']));
 
-        $fileRecord = [];
-        $fileRecord['filename'] = PathUtility::basename($fileData['ID_absFile']);
-        $fileRecord['filemtime'] = $fileInfo['mtime'];
-        $fileRecord['relFileRef'] = PathUtility::stripPathSitePrefix($fileData['ID_absFile']);
+        $fileInfo = [];
+        $fileInfo['filename'] = PathUtility::basename($fileData['ID_absFile']);
+        $fileInfo['filemtime'] = $fileStat['mtime'];
+        $fileInfo['relFileRef'] = PathUtility::stripPathSitePrefix($fileData['ID_absFile']);
         if ($recordRef) {
-            $fileRecord['record_ref'] = $recordRef . '/' . $fieldName;
+            $fileInfo['record_ref'] = $recordRef . '/' . $fieldName;
         }
         if ($fileData['relFileName']) {
-            $fileRecord['relFileName'] = $fileData['relFileName'];
+            $fileInfo['relFileName'] = $fileData['relFileName'];
         }
 
         // Setting this data in the header
-        $this->dat['header']['files'][$fileData['ID']] = $fileRecord;
+        $this->dat['header']['files'][$fileData['ID']] = $fileInfo;
 
         if (!$this->saveFilesOutsideExportFile) {
-            $fileRecord['content'] = (string)file_get_contents($fileData['ID_absFile']);
+            $fileInfo['content'] = (string)file_get_contents($fileData['ID_absFile']);
         } else {
             GeneralUtility::upload_copy_move(
                 $fileData['ID_absFile'],
                 $this->getOrCreateTemporaryFolderName() . '/' . $fileMd5
             );
         }
-        $fileRecord['content_md5'] = $fileMd5;
-        $this->dat['files'][$fileData['ID']] = $fileRecord;
+        $fileInfo['content_md5'] = $fileMd5;
+        $this->dat['files'][$fileData['ID']] = $fileInfo;
 
         // ... and for the recordlisting, why not let us know WHICH relations there was...
         if ($recordRef !== '' && $recordRef !== '_SOFTREF_') {
@@ -1006,7 +1006,7 @@ class Export extends ImportExport
                         (string)preg_replace(
                             '/(url[[:space:]]*\\([[:space:]]*["\']?)([^"\')]*)(["\']?[[:space:]]*\\))/i',
                             '\\1' . $uniqueDelimiter . '\\2' . $uniqueDelimiter . '\\3',
-                            $fileRecord['content']
+                            $fileInfo['content']
                         )
                     );
                 } else {
@@ -1016,7 +1016,7 @@ class Export extends ImportExport
                         $uniqueDelimiter,
                         $htmlParser->prefixResourcePath(
                             $uniqueDelimiter,
-                            $fileRecord['content'],
+                            $fileInfo['content'],
                             [],
                             $uniqueDelimiter
                         )
@@ -1038,17 +1038,17 @@ class Export extends ImportExport
                             $fileContentParts[$index] = '{EXT_RES_ID:' . $resourceId . '}';
                             // Add file to memory if it is not set already:
                             if (!isset($this->dat['header']['files'][$resourceId])) {
-                                $fileInfo = stat($resAbsolutePath);
-                                $fileRecord = [];
-                                $fileRecord['filename'] = PathUtility::basename($resAbsolutePath);
-                                $fileRecord['filemtime'] = $fileInfo['mtime'];
-                                $fileRecord['record_ref'] = '_EXT_PARENT_:' . $fileData['ID'];
-                                $fileRecord['parentRelFileName'] = $resRelativePath;
+                                $fileStat = stat($resAbsolutePath);
+                                $fileInfo = [];
+                                $fileInfo['filename'] = PathUtility::basename($resAbsolutePath);
+                                $fileInfo['filemtime'] = $fileStat['mtime'];
+                                $fileInfo['record_ref'] = '_EXT_PARENT_:' . $fileData['ID'];
+                                $fileInfo['parentRelFileName'] = $resRelativePath;
                                 // Setting this data in the header
-                                $this->dat['header']['files'][$resourceId] = $fileRecord;
-                                $fileRecord['content'] = (string)file_get_contents($resAbsolutePath);
-                                $fileRecord['content_md5'] = md5($fileRecord['content']);
-                                $this->dat['files'][$resourceId] = $fileRecord;
+                                $this->dat['header']['files'][$resourceId] = $fileInfo;
+                                $fileInfo['content'] = (string)file_get_contents($resAbsolutePath);
+                                $fileInfo['content_md5'] = md5($fileInfo['content']);
+                                $this->dat['files'][$resourceId] = $fileInfo;
                             }
                         }
                     }
@@ -1103,23 +1103,23 @@ class Export extends ImportExport
         // Build unique id based on the storage and the file identifier
         $fileId = md5($file->getStorage()->getUid() . ':' . $file->getProperty('identifier_hash'));
 
-        $fileRecord = [];
-        $fileRecord['filename'] = $file->getProperty('name');
-        $fileRecord['filemtime'] = $file->getProperty('modification_date');
+        $fileInfo = [];
+        $fileInfo['filename'] = $file->getProperty('name');
+        $fileInfo['filemtime'] = $file->getProperty('modification_date');
 
         // Setting this data in the header
-        $this->dat['header']['files_fal'][$fileId] = $fileRecord;
+        $this->dat['header']['files_fal'][$fileId] = $fileInfo;
 
         if (!$this->saveFilesOutsideExportFile) {
-            $fileRecord['content'] = $file->getContents();
+            $fileInfo['content'] = $file->getContents();
         } else {
             GeneralUtility::upload_copy_move(
                 $file->getForLocalProcessing(false),
                 $this->getOrCreateTemporaryFolderName() . '/' . $fileSha1
             );
         }
-        $fileRecord['content_sha1'] = $fileSha1;
-        $this->dat['files_fal'][$fileId] = $fileRecord;
+        $fileInfo['content_sha1'] = $fileSha1;
+        $this->dat['files_fal'][$fileId] = $fileInfo;
     }
 
     /**************************

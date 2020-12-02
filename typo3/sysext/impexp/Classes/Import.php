@@ -1045,8 +1045,8 @@ class Import extends ImportExport
                             case 'file':
                                 if (is_array($config['newValueFiles']) && !empty($config['newValueFiles'])) {
                                     $valArr = [];
-                                    foreach ($config['newValueFiles'] as $fI) {
-                                        $valArr[] = $this->importAddFileNameToBeCopied($fI);
+                                    foreach ($config['newValueFiles'] as $fileInfo) {
+                                        $valArr[] = $this->importAddFileNameToBeCopied($fileInfo);
                                     }
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArr);
                                 }
@@ -1119,24 +1119,24 @@ class Import extends ImportExport
     /**
      * Writes the file from import array to temp dir and returns the filename of it.
      *
-     * @param array $fI File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
+     * @param array $fileInfo File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
      * @return string|null Absolute filename of the temporary filename of the file.
      */
-    protected function importAddFileNameToBeCopied(array $fI): ?string
+    protected function importAddFileNameToBeCopied(array $fileInfo): ?string
     {
-        if (is_array($this->dat['files'][$fI['ID']])) {
+        if (is_array($this->dat['files'][$fileInfo['ID']])) {
             $tmpFile = null;
             $tmpFolder = $this->getTemporaryFolderName();
             // check if there is the right file already in the local folder
             if ($tmpFolder !== null) {
-                if (is_file($tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5']) &&
-                    md5_file($tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5']) === $this->dat['files'][$fI['ID']]['content_md5']) {
-                    $tmpFile = $tmpFolder . '/' . $this->dat['files'][$fI['ID']]['content_md5'];
+                if (is_file($tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5']) &&
+                    md5_file($tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5']) === $this->dat['files'][$fileInfo['ID']]['content_md5']) {
+                    $tmpFile = $tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5'];
                 }
             }
             if ($tmpFile === null) {
                 $tmpFile = GeneralUtility::tempnam('import_temp_');
-                GeneralUtility::writeFile($tmpFile, $this->dat['files'][$fI['ID']]['content']);
+                GeneralUtility::writeFile($tmpFile, $this->dat['files'][$fileInfo['ID']]['content']);
             }
             clearstatcache();
             if (@is_file($tmpFile)) {
@@ -1145,7 +1145,7 @@ class Import extends ImportExport
             }
             $this->addError('Error: temporary file ' . $tmpFile . ' was not written as it should have been!');
         } else {
-            $this->addError('Error: No file found for ID ' . $fI['ID']);
+            $this->addError('Error: No file found for ID ' . $fileInfo['ID']);
         }
         return null;
     }
@@ -1259,8 +1259,8 @@ class Import extends ImportExport
         }
         if (is_array($config['flexFormRels']['file'][$path])) {
             $valArr = [];
-            foreach ($config['flexFormRels']['file'][$path] as $fI) {
-                $valArr[] = $this->importAddFileNameToBeCopied($fI);
+            foreach ($config['flexFormRels']['file'][$path] as $fileInfo) {
+                $valArr[] = $this->importAddFileNameToBeCopied($fileInfo);
             }
             $dataValue = implode(',', $valArr);
         }

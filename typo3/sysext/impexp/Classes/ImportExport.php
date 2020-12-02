@@ -636,22 +636,22 @@ abstract class ImportExport
     }
 
     /**
-     * Add file relation entries for a record's rels-array
+     * Add file relations of a record to the preview
      *
-     * @param array $rels Array of file IDs
-     * @param array $lines Output lines array (is passed by reference and modified)
+     * @param array $relations Array of file IDs
+     * @param array $lines Output lines array
      * @param int $indent Indentation level
-     * @param string $tokenID Token ID if this is a soft reference (in which case it only makes sense with a single element in the $rels array!)
+     * @param string $tokenID Token ID if this is a soft reference (in which case it only makes sense with a single element in the $relations array!)
      *
-     * @see singleRecordLines()
+     * @see addRecord()
      */
-    protected function addFiles(array $rels, array &$lines, int $indent, string $tokenID = ''): void
+    protected function addFiles(array &$relations, array &$lines, int $indent, string $tokenID = ''): void
     {
-        foreach ($rels as $ID) {
+        foreach ($relations as $ID) {
             // Process file:
             $line = [];
-            $fI = $this->dat['header']['files'][$ID];
-            if (!is_array($fI)) {
+            $fileInfo = $this->dat['header']['files'][$ID];
+            if (!is_array($fileInfo)) {
                 if (!$tokenID || $this->includeSoftref($tokenID)) {
                     $line['msg'] = 'MISSING FILE: ' . $ID;
                     $this->addError('MISSING FILE: ' . $ID);
@@ -660,15 +660,15 @@ abstract class ImportExport
                 }
             }
             $line['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-            $line['title'] = htmlspecialchars($fI['filename']);
+            $line['title'] = htmlspecialchars($fileInfo['filename']);
             $line['ref'] = 'FILE';
             $line['type'] = 'file';
             // If import mode and there is a non-RTE soft reference, check the destination directory:
-            if ($this->mode === 'import' && $tokenID && !$fI['RTE_ORIG_ID']) {
-                if (isset($fI['parentRelFileName'])) {
+            if ($this->mode === 'import' && $tokenID && !$fileInfo['RTE_ORIG_ID']) {
+                if (isset($fileInfo['parentRelFileName'])) {
                     $line['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
                 } else {
-                    $testDirPrefix = PathUtility::dirname($fI['relFileName']) . '/';
+                    $testDirPrefix = PathUtility::dirname($fileInfo['relFileName']) . '/';
                     $testDirPrefix2 = $this->verifyFolderAccess($testDirPrefix);
                     if (!$testDirPrefix2) {
                         $line['msg'] = 'ERROR: There are no available filemounts to write file in! ';
@@ -677,7 +677,7 @@ abstract class ImportExport
                     }
                 }
                 // Check if file exists:
-                if (file_exists(Environment::getPublicPath() . '/' . $fI['relFileName'])) {
+                if (file_exists(Environment::getPublicPath() . '/' . $fileInfo['relFileName'])) {
                     if ($this->update) {
                         $line['updatePath'] .= 'File exists.';
                     } else {
@@ -687,7 +687,7 @@ abstract class ImportExport
                 // Check extension:
                 $fileProcObj = $this->getFileProcObj();
                 if ($fileProcObj->actionPerms['addFile']) {
-                    $testFI = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fI['relFileName']);
+                    $testFI = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fileInfo['relFileName']);
                     if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($testFI['file'])) {
                         $line['msg'] .= 'File extension was not allowed!';
                     }
@@ -699,36 +699,36 @@ abstract class ImportExport
             $lines[] = $line;
             unset($this->remainHeader['files'][$ID]);
             // RTE originals:
-            if ($fI['RTE_ORIG_ID']) {
-                $ID = $fI['RTE_ORIG_ID'];
+            if ($fileInfo['RTE_ORIG_ID']) {
+                $ID = $fileInfo['RTE_ORIG_ID'];
                 $line = [];
-                $fI = $this->dat['header']['files'][$ID];
-                if (!is_array($fI)) {
+                $fileInfo = $this->dat['header']['files'][$ID];
+                if (!is_array($fileInfo)) {
                     $line['msg'] = 'MISSING RTE original FILE: ' . $ID;
                     $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
                 $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
                 $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-                $line['title'] = htmlspecialchars($fI['filename']) . ' <em>(Original)</em>';
+                $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Original)</em>';
                 $line['ref'] = 'FILE';
                 $line['type'] = 'file';
                 $lines[] = $line;
                 unset($this->remainHeader['files'][$ID]);
             }
             // External resources:
-            if (is_array($fI['EXT_RES_ID'])) {
-                foreach ($fI['EXT_RES_ID'] as $extID) {
+            if (is_array($fileInfo['EXT_RES_ID'])) {
+                foreach ($fileInfo['EXT_RES_ID'] as $extID) {
                     $line = [];
-                    $fI = $this->dat['header']['files'][$extID];
-                    if (!is_array($fI)) {
+                    $fileInfo = $this->dat['header']['files'][$extID];
+                    if (!is_array($fileInfo)) {
                         $line['msg'] = 'MISSING External Resource FILE: ' . $extID;
                         $this->addError('MISSING External Resource FILE: ' . $extID);
                     } else {
-                        $line['updatePath'] = $fI['parentRelFileName'];
+                        $line['updatePath'] = $fileInfo['parentRelFileName'];
                     }
                     $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
                     $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
-                    $line['title'] = htmlspecialchars($fI['filename']) . ' <em>(Resource)</em>';
+                    $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Resource)</em>';
                     $line['ref'] = 'FILE';
                     $line['type'] = 'file';
                     $lines[] = $line;
@@ -777,7 +777,8 @@ abstract class ImportExport
             }
             // Add files relations
             if ($ref['subst']['type'] === 'file') {
-                $this->addFiles([$ref['file_ID']], $lines, $indent + 4, $ref['subst']['tokenID']);
+                $relations = [$ref['file_ID']];
+                $this->addFiles($relations, $lines, $indent + 4, $ref['subst']['tokenID']);
             }
         }
     }
@@ -842,9 +843,9 @@ abstract class ImportExport
     protected function softrefSelector(array $cfg): string
     {
         // Looking for file ID if any:
-        $fI = $cfg['file_ID'] ? $this->dat['header']['files'][$cfg['file_ID']] : [];
+        $fileInfo = $cfg['file_ID'] ? $this->dat['header']['files'][$cfg['file_ID']] : [];
         // Substitution scheme has to be around and RTE images MUST be exported.
-        if (is_array($cfg['subst']) && $cfg['subst']['tokenID'] && !$fI['RTE_ORIG_ID']) {
+        if (is_array($cfg['subst']) && $cfg['subst']['tokenID'] && !$fileInfo['RTE_ORIG_ID']) {
             // Create options:
             $optValues = [];
             $optValues[''] = '';
