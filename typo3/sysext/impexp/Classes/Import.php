@@ -1494,7 +1494,7 @@ class Import extends ImportExport
             return PathUtility::stripPathSitePrefix($this->fileIdMap[$fileID]);
         }
         // Verify FileMount access to dir-prefix. Returns the best alternative relative path if any
-        $dirPrefix = $this->verifyFolderAccess($origDirPrefix);
+        $dirPrefix = $this->resolveStoragePath($origDirPrefix);
         if ($dirPrefix !== null && (!$this->update || $origDirPrefix === $dirPrefix) && $this->checkOrCreateDir($dirPrefix)) {
             $fileHeaderInfo = $this->dat['header']['files'][$fileID];
             $updMode = $this->update && $this->importMapId[$table][$uid] === $uid && $this->importMode[$table . ':' . $uid] !== 'as_new';
@@ -1524,7 +1524,7 @@ class Import extends ImportExport
                                 $absResourceFileName = GeneralUtility::getFileAbsFileName($absResourceFileName);
                                 if ($absResourceFileName && GeneralUtility::isFirstPartOfStr($absResourceFileName, Environment::getPublicPath() . '/' . $this->getFileadminFolderName() . '/')) {
                                     $destDir = PathUtility::stripPathSitePrefix(PathUtility::dirname($absResourceFileName) . '/');
-                                    if ($this->verifyFolderAccess($destDir, true) !== null && $this->checkOrCreateDir($destDir)) {
+                                    if ($this->resolveStoragePath($destDir, false) !== null && $this->checkOrCreateDir($destDir)) {
                                         $this->writeFileVerify($absResourceFileName, $res_fileID);
                                     } else {
                                         $this->addError('ERROR: Could not create file in directory "' . $destDir . '"');

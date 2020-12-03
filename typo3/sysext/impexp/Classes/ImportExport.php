@@ -668,12 +668,12 @@ abstract class ImportExport
                 if (isset($fileInfo['parentRelFileName'])) {
                     $line['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
                 } else {
-                    $testDirPrefix = PathUtility::dirname($fileInfo['relFileName']) . '/';
-                    $testDirPrefix2 = $this->verifyFolderAccess($testDirPrefix);
-                    if (!$testDirPrefix2) {
-                        $line['msg'] = 'ERROR: There are no available filemounts to write file in! ';
-                    } elseif ($testDirPrefix !== $testDirPrefix2) {
-                        $line['msg'] = 'File will be attempted written to "' . $testDirPrefix2 . '". ';
+                    $origDirPrefix = PathUtility::dirname($fileInfo['relFileName']) . '/';
+                    $dirPrefix = $this->resolveStoragePath($origDirPrefix);
+                    if ($dirPrefix === null) {
+                        $line['msg'] = 'ERROR: There are no available file mounts to write file in! ';
+                    } elseif ($origDirPrefix !== $dirPrefix) {
+                        $line['msg'] = 'File will be attempted written to "' . $dirPrefix . '". ';
                     }
                 }
                 // Check if file exists:
@@ -908,37 +908,6 @@ abstract class ImportExport
         );
     }
 
-    /**
-     * Verifies that the input path relative to public web path is found in the backend users filemounts.
-     * If it doesn't it will try to find another relative filemount for the user and return an alternative path prefix for the file.
-     *
-     * @param string $dirPrefix Path relative to public web path
-     * @param bool $noAlternative If set, Do not look for alternative path! Just return FALSE
-     * @return string If a path is available that will be returned, otherwise NULL.
-     * @throws \Exception
-     */
-    protected function verifyFolderAccess(string $dirPrefix, bool $noAlternative = false): ?string
-    {
-        // Check the absolute path for public web path, if the user has access - no problem
-        try {
-            GeneralUtility::makeInstance(ResourceFactory::class)->getFolderObjectFromCombinedIdentifier($dirPrefix);
-            return $dirPrefix;
-        } catch (InsufficientFolderAccessPermissionsException $e) {
-            // Check all storages available for the user as alternative
-            if (!$noAlternative) {
-                $fileStorages = $this->getBackendUser()->getFileStorages();
-                foreach ($fileStorages as $fileStorage) {
-                    try {
-                        $folder = $fileStorage->getFolder(rtrim($dirPrefix, '/'));
-                        return $folder->getPublicUrl();
-                    } catch (InsufficientFolderAccessPermissionsException $e) {
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
     /*****************************
      * Helper functions of kinds
      *****************************/
@@ -1045,6 +1014,35 @@ abstract class ImportExport
         if (!empty($this->defaultImportExportFolder)) {
             $this->defaultImportExportFolder->delete(true);
         }
+    }
+
+    /**
+     * Checks if the input path relative to the public web path can be found in the file mounts of the backend user.
+     * If not, it checks all file mounts of the user for the relative path and returns it if found.
+     *
+     * @param string $dirPrefix Path relative to public web path.
+     * @param bool $checkAlternatives If set to false, do not look for an alternative path.
+     * @return string If a path is available, it will be returned, otherwise NULL.
+     * @throws \Exception
+     */
+    protected function resolveStoragePath(string $dirPrefix, bool $checkAlternatives = true): ?string
+    {
+        try {
+            GeneralUtility::makeInstance(ResourceFactory::class)->getFolderObjectFromCombinedIdentifier($dirPrefix);
+            return $dirPrefix;
+        } catch (InsufficientFolderAccessPermissionsException $e) {
+            if ($checkAlternatives) {
+                $fileStorages = $this->getBackendUser()->getFileStorages();
+                foreach ($fileStorages as $fileStorage) {
+                    try {
+                        $folder = $fileStorage->getFolder(rtrim($dirPrefix, '/'));
+                        return $folder->getPublicUrl();
+                    } catch (InsufficientFolderAccessPermissionsException $e) {
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
