@@ -277,9 +277,9 @@ abstract class ImportExport
         // Preview of the page tree to be exported
         if (is_array($this->dat['header']['pagetree'])) {
             $this->traversePageTree($this->dat['header']['pagetree'], $previewData['insidePageTree']);
-            foreach ($previewData['insidePageTree'] as &$r) {
-                $r['controls'] = $this->renderControls($r);
-                $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
+            foreach ($previewData['insidePageTree'] as &$line) {
+                $line['controls'] = $this->renderControls($line);
+                $line['message'] = ($line['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($line['msg']) . '</span>' : '');
             }
         }
 
@@ -289,9 +289,9 @@ abstract class ImportExport
                 $this->traversePageRecords($this->remainHeader['records']['pages'], $previewData['outsidePageTree']);
             }
             $this->traverseAllRecords($this->remainHeader['records'], $previewData['outsidePageTree']);
-            foreach ($previewData['outsidePageTree'] as &$r) {
-                $r['controls'] = $this->renderControls($r);
-                $r['message'] = ($r['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($r['msg']) . '</span>' : '');
+            foreach ($previewData['outsidePageTree'] as &$line) {
+                $line['controls'] = $this->renderControls($line);
+                $line['message'] = ($line['msg'] && !$this->doesImport ? '<span class="text-danger">' . htmlspecialchars($line['msg']) . '</span>' : '');
             }
         }
 
@@ -855,21 +855,21 @@ abstract class ImportExport
     /**
      * Render input controls for import or export
      *
-     * @param array $r Configuration for element
+     * @param array $line Output line array
      * @return string HTML
      */
-    protected function renderControls(array $r): string
+    protected function renderControls(array $line): string
     {
         if ($this->mode === 'export') {
-            if ($r['type'] === 'record') {
-                return '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][' . $r['ref'] . ']" id="checkExclude' . $r['ref'] . '" value="1" /> <label for="checkExclude' . $r['ref'] . '">' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_exclude')) . '</label>';
+            if ($line['type'] === 'record') {
+                return '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][' . $line['ref'] . ']" id="checkExclude' . $line['ref'] . '" value="1" /> <label for="checkExclude' . $line['ref'] . '">' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_exclude')) . '</label>';
             }
-            return  $r['type'] === 'softref' ? $this->softrefSelector($r['_softRefInfo']) : '';
+            return  $line['type'] === 'softref' ? $this->softrefSelector($line['_softRefInfo']) : '';
         }
         // During import
         // For soft references with editable fields:
-        if ($r['type'] === 'softref' && is_array($r['_softRefInfo']['subst']) && $r['_softRefInfo']['subst']['tokenID']) {
-            $tokenID = $r['_softRefInfo']['subst']['tokenID'];
+        if ($line['type'] === 'softref' && is_array($line['_softRefInfo']['subst']) && $line['_softRefInfo']['subst']['tokenID']) {
+            $tokenID = $line['_softRefInfo']['subst']['tokenID'];
             $cfg = $this->softrefCfg[$tokenID];
             if ($cfg['mode'] === 'editable') {
                 return (strlen((string)$cfg['title']) ? '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>' : '') . htmlspecialchars((string)$cfg['description']) . '<br/>
