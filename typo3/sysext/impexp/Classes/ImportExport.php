@@ -836,18 +836,17 @@ abstract class ImportExport
     }
 
     /**
-     * Verifies that a table is allowed on a certain doktype of a page
+     * Verifies that a table is allowed on a certain doktype of a page.
      *
-     * @param string $checkTable Table name to check
-     * @param int $doktype doktype value.
+     * @param string $table Table name to check
+     * @param int $dokType Page doktype
      * @return bool TRUE if OK
      */
-    protected function checkDokType(string $checkTable, int $doktype): bool
+    protected function checkDokType(string $table, int $dokType): bool
     {
-        $allowedTableList = $GLOBALS['PAGES_TYPES'][$doktype]['allowedTables'] ?? $GLOBALS['PAGES_TYPES']['default']['allowedTables'];
+        $allowedTableList = $GLOBALS['PAGES_TYPES'][$dokType]['allowedTables'] ?? $GLOBALS['PAGES_TYPES']['default']['allowedTables'];
         $allowedArray = GeneralUtility::trimExplode(',', $allowedTableList, true);
-        // If all tables or the table is listed as an allowed type, return TRUE
-        if (strpos($allowedTableList, '*') !== false || in_array($checkTable, $allowedArray)) {
+        if (strpos($allowedTableList, '*') !== false || in_array($table, $allowedArray)) {
             return true;
         }
         return false;
