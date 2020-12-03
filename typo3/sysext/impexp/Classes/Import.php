@@ -1567,7 +1567,7 @@ class Import extends ImportExport
      *
      * @param string $fileName Absolute filename inside public web path to write to
      * @param string $fileID File ID from import memory
-     * @param bool $bypassMountCheck Bypasses the checking against filemounts - only for RTE files!
+     * @param bool $bypassMountCheck Bypasses the checking against file mounts - only for RTE files!
      * @return bool Returns TRUE if it went well. Notice that the content of the file is read again, and md5 from import memory is validated.
      */
     protected function writeFileVerify(string $fileName, string $fileID, bool $bypassMountCheck = false): bool

@@ -636,7 +636,9 @@ abstract class ImportExport
     }
 
     /**
-     * Add file relations of a record to the preview
+     * Add file relations of a record to the preview.
+     *
+     * Public access for testing purpose only.
      *
      * @param array $relations Array of file IDs
      * @param array $lines Output lines array
@@ -645,26 +647,30 @@ abstract class ImportExport
      *
      * @see addRecord()
      */
-    protected function addFiles(array &$relations, array &$lines, int $indent, string $tokenID = ''): void
+    public function addFiles(array &$relations, array &$lines, int $indent, string $tokenID = ''): void
     {
         foreach ($relations as $ID) {
-            // Process file:
             $line = [];
             $fileInfo = $this->dat['header']['files'][$ID];
             if (!is_array($fileInfo)) {
-                if (!$tokenID || $this->includeSoftref($tokenID)) {
+                if ($tokenID !== '' || $this->includeSoftref($tokenID)) {
                     $line['msg'] = 'MISSING FILE: ' . $ID;
                     $this->addError('MISSING FILE: ' . $ID);
                 } else {
                     return;
                 }
             }
-            $line['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-            $line['title'] = htmlspecialchars($fileInfo['filename']);
             $line['ref'] = 'FILE';
             $line['type'] = 'file';
-            // If import mode and there is a non-RTE soft reference, check the destination directory:
-            if ($this->mode === 'import' && $tokenID && !$fileInfo['RTE_ORIG_ID']) {
+            $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                $this->renderIndent($indent + 2), htmlspecialchars($line['ref']),
+                $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render()
+            );
+            $line['title'] = htmlspecialchars($fileInfo['filename']);
+            $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
+            // If import mode and there is a non-RTE soft reference, check the destination directory.
+            if ($this->mode === 'import' && $tokenID !== '' && !$fileInfo['RTE_ORIG_ID']) {
+                // Check folder existence
                 if (isset($fileInfo['parentRelFileName'])) {
                     $line['msg'] = 'Seems like this file is already referenced from within an HTML/CSS file. That takes precedence. ';
                 } else {
@@ -676,7 +682,7 @@ abstract class ImportExport
                         $line['msg'] = 'File will be attempted written to "' . $dirPrefix . '". ';
                     }
                 }
-                // Check if file exists:
+                // Check file existence
                 if (file_exists(Environment::getPublicPath() . '/' . $fileInfo['relFileName'])) {
                     if ($this->update) {
                         $line['updatePath'] .= 'File exists.';
@@ -684,7 +690,7 @@ abstract class ImportExport
                         $line['msg'] .= 'File already exists! ';
                     }
                 }
-                // Check extension:
+                // Check file extension
                 $fileProcObj = $this->getFileProcObj();
                 if ($fileProcObj->actionPerms['addFile']) {
                     $pathInfo = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fileInfo['relFileName']);
@@ -695,10 +701,10 @@ abstract class ImportExport
                     $line['msg'] = 'Your user profile does not allow you to create files on the server!';
                 }
             }
-            $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
             $lines[] = $line;
             unset($this->remainHeader['files'][$ID]);
-            // RTE originals:
+
+            // RTE originals
             if ($fileInfo['RTE_ORIG_ID']) {
                 $ID = $fileInfo['RTE_ORIG_ID'];
                 $line = [];
@@ -707,15 +713,19 @@ abstract class ImportExport
                     $line['msg'] = 'MISSING RTE original FILE: ' . $ID;
                     $this->addError('MISSING RTE original FILE: ' . $ID);
                 }
-                $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
-                $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render();
-                $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Original)</em>';
                 $line['ref'] = 'FILE';
                 $line['type'] = 'file';
+                $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                    $this->renderIndent($indent + 4), htmlspecialchars($line['ref']),
+                    $this->iconFactory->getIcon('status-reference-hard', Icon::SIZE_SMALL)->render()
+                );
+                $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Original)</em>';
+                $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$ID]);
                 $lines[] = $line;
                 unset($this->remainHeader['files'][$ID]);
             }
-            // External resources:
+
+            // External resources
             if (is_array($fileInfo['EXT_RES_ID'])) {
                 foreach ($fileInfo['EXT_RES_ID'] as $extID) {
                     $line = [];
@@ -726,11 +736,14 @@ abstract class ImportExport
                     } else {
                         $line['updatePath'] = $fileInfo['parentRelFileName'];
                     }
-                    $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
-                    $line['preCode'] = $this->renderIndent($indent + 4) . $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render();
-                    $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Resource)</em>';
                     $line['ref'] = 'FILE';
                     $line['type'] = 'file';
+                    $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                        $this->renderIndent($indent + 4), htmlspecialchars($line['ref']),
+                        $this->iconFactory->getIcon('actions-insert-reference', Icon::SIZE_SMALL)->render()
+                    );
+                    $line['title'] = htmlspecialchars($fileInfo['filename']) . ' <em>(Resource)</em>';
+                    $line['showDiffContent'] = PathUtility::stripPathSitePrefix($this->fileIdMap[$extID]);
                     $lines[] = $line;
                     unset($this->remainHeader['files'][$extID]);
                 }
