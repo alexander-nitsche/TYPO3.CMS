@@ -154,4 +154,59 @@ class ImportTest extends AbstractImportExportTestCase
         $previewData = $this->importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
+
+    /**
+     * Temporary test until there is a complex functional test which tests addFiles() implicitly.
+     *
+     * @test
+     * @dataProvider addFilesSucceedsDataProvider
+     * @param array $dat
+     * @param array $relations
+     * @param string $tokenID
+     * @param array $expected
+     */
+    public function addFilesSucceeds(array $dat, array $relations, string $tokenID, array $expected): void
+    {
+        $importMock = $this->getAccessibleMock(
+            Import::class,
+            ['addError'],
+            [], '', true
+        );
+        $importMock->init();
+
+        $lines = [];
+        $importMock->_set('dat', $dat);
+        $importMock->addFiles($relations, $lines, 0, $tokenID);
+        self::assertEquals($expected, $lines);
+    }
+
+    public function addFilesSucceedsDataProvider(): array
+    {
+        return [
+            ['dat' => [
+                'header' => [
+                    'files' => [
+                        '123456789' => [
+                            'filename' => 'filename.jpg',
+                            'relFileName' => 'filename.jpg',
+                        ]
+                    ]
+                ]
+            ], 'relations' => [
+                '123456789'
+            ], 'tokenID' => '987654321'
+            , 'expected' => [
+                [
+                    'ref' => 'FILE',
+                    'type' => 'file',
+                    'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;<span title="FILE"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-hard" data-identifier="status-reference-hard">
+'."\t".'<span class="icon-markup">
+<img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-hard.png" width="16" height="16" alt="" />
+'."\t".'</span>'."\n\t\n".'</span></span>',
+                    'title' => 'filename.jpg',
+                    'showDiffContent' => false,
+                ],
+            ]]
+        ];
+    }
 }
