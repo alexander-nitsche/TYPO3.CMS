@@ -752,29 +752,63 @@ abstract class ImportExport
     }
 
     /**
-     * Add soft reference entries for a record's rels-array
+     * Add soft references of a record to the preview
      *
      * @param array $refs Array of soft references
      * @param array $lines Output lines array
      * @param int $indent Indentation level
+     *
+     * @see addRecord()
      */
     protected function addSoftRefs(array &$refs, array &$lines, int $indent): void
     {
         foreach ($refs as &$ref) {
             $line = [];
-            $line['preCode'] = $this->renderIndent($indent + 2) . $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render();
-            $line['title'] = '<em>' . $ref['field'] . ', "' . $ref['spKey'] . '" </em>: <span title="' . htmlspecialchars($ref['matchString']) . '">' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['matchString'], 60)) . '</span>';
-            if ($ref['subst']['type']) {
-                if (strlen((string)$ref['subst']['title'])) {
-                    $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['title'], 60));
-                }
-                if (strlen((string)$ref['subst']['description'])) {
-                    $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . '<strong>' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')) . '</strong> ' . htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['description'], 60));
-                }
-                $line['title'] .= '<br/>' . $this->renderIndent($indent + 4) . ($ref['subst']['type'] === 'file' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')) . ' <strong>' . $ref['subst']['relFileName'] . '</strong>' : '') . ($ref['subst']['type'] === 'string' ? htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')) . ' <strong>' . $ref['subst']['tokenValue'] . '</strong>' : '') . ($ref['subst']['type'] === 'db' ? htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')) . ' <strong>' . $ref['subst']['recordRef'] . '</strong>' : '');
-            }
             $line['ref'] = 'SOFTREF';
             $line['type'] = 'softref';
+            $line['preCode'] = sprintf('%s<span title="%s">%s</span>',
+                $this->renderIndent($indent + 2), htmlspecialchars($line['ref']),
+                $this->iconFactory->getIcon('status-reference-soft', Icon::SIZE_SMALL)->render()
+            );
+            $line['title'] = sprintf('<em>%s, "%s"</em> : <span title="%s">%s</span>',
+                $ref['field'], $ref['spKey'], htmlspecialchars($ref['matchString']),
+                htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['matchString'], 60))
+            );
+            if ($ref['subst']['type']) {
+                if (strlen((string)$ref['subst']['title'])) {
+                    $line['title'] .= sprintf('<br/>%s<strong>%s</strong> %s',
+                        $this->renderIndent($indent + 4),
+                        htmlspecialchars($this->lang->getLL('impexpcore_singlereco_title')),
+                        htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['title'], 60))
+                    );
+                }
+                if (strlen((string)$ref['subst']['description'])) {
+                    $line['title'] .= sprintf('<br/>%s<strong>%s</strong> %s',
+                        $this->renderIndent($indent + 4),
+                        htmlspecialchars($this->lang->getLL('impexpcore_singlereco_descr')),
+                        htmlspecialchars(GeneralUtility::fixed_lgd_cs($ref['subst']['description'], 60))
+                    );
+                }
+                if ($ref['subst']['type'] === 'db') {
+                    $line['title'] .= sprintf('<br/>%s%s <strong>%s</strong>',
+                        $this->renderIndent($indent + 4),
+                        htmlspecialchars($this->lang->getLL('impexpcore_softrefsel_record')),
+                        $ref['subst']['recordRef']
+                    );
+                } elseif ($ref['subst']['type'] === 'file') {
+                    $line['title'] .= sprintf('<br/>%s%s <strong>%s</strong>',
+                        $this->renderIndent($indent + 4),
+                        htmlspecialchars($this->lang->getLL('impexpcore_singlereco_filename')),
+                        $ref['subst']['relFileName']
+                    );
+                } elseif ($ref['subst']['type'] === 'string') {
+                    $line['title'] .= sprintf('<br/>%s%s <strong>%s</strong>',
+                        $this->renderIndent($indent + 4),
+                        htmlspecialchars($this->lang->getLL('impexpcore_singlereco_value')),
+                        $ref['subst']['tokenValue']
+                    );
+                }
+            }
             $line['_softRefInfo'] = $ref;
             $mode = $this->softrefCfg[$ref['subst']['tokenID']]['mode'];
             if ($ref['error'] && $mode !== 'editable' && $mode !== 'exclude') {
