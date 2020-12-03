@@ -1586,8 +1586,8 @@ class Import extends ImportExport
                 return false;
             }
         }
-        $fI = GeneralUtility::split_fileref($fileName);
-        if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($fI['file'])) {
+        $pathInfo = GeneralUtility::split_fileref($fileName);
+        if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($pathInfo['file'])) {
             $this->addError('ERROR: Filename "' . $fileName . '" failed against extension check or deny-pattern!');
             return false;
         }
@@ -1675,7 +1675,7 @@ class Import extends ImportExport
         }
 
         if ($this->hasErrors() === false) {
-            $fI = pathinfo($filePath);
+            $pathInfo = pathinfo($filePath);
             if (@is_dir($filePath . '.files')) {
                 if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
                     // copy the folder lowlevel to typo3temp, because the files would be deleted after import
@@ -1684,7 +1684,7 @@ class Import extends ImportExport
                     $this->addError('External import files for the given import source is currently not supported.');
                 }
             }
-            if (strtolower($fI['extension']) === 'xml') {
+            if (strtolower($pathInfo['extension']) === 'xml') {
                 // XML:
                 $xmlContent = (string)file_get_contents($filePath);
                 if (strlen($xmlContent)) {

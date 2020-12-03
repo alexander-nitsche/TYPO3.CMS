@@ -687,8 +687,8 @@ abstract class ImportExport
                 // Check extension:
                 $fileProcObj = $this->getFileProcObj();
                 if ($fileProcObj->actionPerms['addFile']) {
-                    $testFI = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fileInfo['relFileName']);
-                    if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($testFI['file'])) {
+                    $pathInfo = GeneralUtility::split_fileref(Environment::getPublicPath() . '/' . $fileInfo['relFileName']);
+                    if (!GeneralUtility::makeInstance(FileNameValidator::class)->isValid($pathInfo['file'])) {
                         $line['msg'] .= 'File extension was not allowed!';
                     }
                 } else {
