@@ -2,9 +2,9 @@
 return [
   'update' => true,
   'showDiff' => true,
-  'insidePageTree' => 
+  'insidePageTree' =>
   [
-    0 => 
+    0 =>
     [
       'ref' => 'pages:0',
       'type' => 'record',
@@ -22,7 +22,7 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    1 => 
+    1 =>
     [
       'ref' => 'sys_file:1',
       'type' => 'record',
@@ -61,9 +61,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    2 => 
+    2 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -71,11 +72,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    3 => 
+    3 =>
     [
       'ref' => 'sys_file:2',
       'type' => 'record',
@@ -114,9 +114,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    4 => 
+    4 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -124,11 +125,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    5 => 
+    5 =>
     [
       'ref' => 'sys_file_storage:1',
       'type' => 'record',
@@ -179,7 +179,7 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    6 => 
+    6 =>
     [
       'ref' => 'tt_content:1',
       'type' => 'record',
@@ -212,9 +212,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    7 => 
+    7 =>
     [
       'ref' => 'sys_file_reference:1',
+      'type' => 'rel',
       'title' => '<span title="/Root/">used-1.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_reference:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -222,13 +223,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    8 => 
+    8 =>
     [
       'ref' => 'sys_file:1',
+      'type' => 'rel',
       'title' => '<span title="/">used-1.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -236,13 +237,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    9 => 
+    9 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -250,11 +251,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    10 => 
+    10 =>
     [
       'ref' => 'tt_content:2',
       'type' => 'record',
@@ -287,9 +287,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    11 => 
+    11 =>
     [
       'ref' => 'sys_file_reference:2',
+      'type' => 'rel',
       'title' => '<span title="/Root/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_reference:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -297,13 +298,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    12 => 
+    12 =>
     [
       'ref' => 'sys_file:2',
+      'type' => 'rel',
       'title' => '<span title="/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -311,13 +312,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    13 => 
+    13 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -325,11 +326,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    14 => 
+    14 =>
     [
       'ref' => 'tt_content:3',
       'type' => 'record',
@@ -347,9 +347,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    15 => 
+    15 =>
     [
       'ref' => 'sys_file_reference:3',
+      'type' => 'rel',
       'title' => '<span title="/Root/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_reference:3"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -357,13 +358,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    16 => 
+    16 =>
     [
       'ref' => 'sys_file:2',
+      'type' => 'rel',
       'title' => '<span title="/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -371,13 +372,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    17 => 
+    17 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -385,11 +386,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    18 => 
+    18 =>
     [
       'ref' => 'sys_file_reference:1',
       'type' => 'record',
@@ -407,9 +407,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    19 => 
+    19 =>
     [
       'ref' => 'sys_file:1',
+      'type' => 'rel',
       'title' => '<span title="/">used-1.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -417,13 +418,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    20 => 
+    20 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -431,11 +432,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    21 => 
+    21 =>
     [
       'ref' => 'sys_file_reference:2',
       'type' => 'record',
@@ -453,9 +453,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    22 => 
+    22 =>
     [
       'ref' => 'sys_file:2',
+      'type' => 'rel',
       'title' => '<span title="/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -463,13 +464,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    23 => 
+    23 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -477,11 +478,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    24 => 
+    24 =>
     [
       'ref' => 'sys_file_reference:3',
       'type' => 'record',
@@ -499,9 +499,10 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    25 => 
+    25 =>
     [
       'ref' => 'sys_file:2',
+      'type' => 'rel',
       'title' => '<span title="/">used-2.jpg</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -509,13 +510,13 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    26 => 
+    26 =>
     [
       'ref' => 'sys_file_storage:1',
+      'type' => 'rel',
       'title' => '<span title="/">fileadmin</span>',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
@@ -523,11 +524,10 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
-    27 => 
+    27 =>
     [
       'ref' => 'pages:1',
       'type' => 'record',
@@ -546,7 +546,7 @@ return [
       'message' => '',
     ],
   ],
-  'outsidePageTree' => 
+  'outsidePageTree' =>
   [
   ],
 ];

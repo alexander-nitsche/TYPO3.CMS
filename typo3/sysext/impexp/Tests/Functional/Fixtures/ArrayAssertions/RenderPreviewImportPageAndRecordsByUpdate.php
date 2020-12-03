@@ -40,15 +40,15 @@ return [
     ],
     2 =>
     [
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
+      'ref' => 'SOFTREF',
+      'type' => 'softref',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span title="SOFTREF"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
 	<span class="icon-markup">
 <img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-soft.png" width="16" height="16" alt="" />
 	</span>
 	
-</span>',
-      'title' => '<em>header_link, "typolink" </em>: <span title="file:2">file:2</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:2</strong>',
-      'ref' => 'SOFTREF',
-      'type' => 'softref',
+</span></span>',
+      'title' => '<em>header_link, "typolink"</em> : <span title="file:2">file:2</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:2</strong>',
       '_softRefInfo' =>
       [
         'field' => 'header_link',
@@ -68,6 +68,7 @@ return [
     3 =>
     [
       'ref' => 'sys_file:2',
+      'type' => 'rel',
       'title' => '<span title="/">sys_file:2</span>',
       'msg' => 'LOST RELATION (Path: /)',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file:2"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
@@ -76,7 +77,6 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
@@ -99,15 +99,15 @@ return [
     ],
     5 =>
     [
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
+      'ref' => 'SOFTREF',
+      'type' => 'softref',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span title="SOFTREF"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-reference-soft" data-identifier="status-reference-soft">
 	<span class="icon-markup">
 <img src="typo3/sysext/impexp/Resources/Public/Icons/status-reference-soft.png" width="16" height="16" alt="" />
 	</span>
 	
-</span>',
-      'title' => '<em>header_link, "typolink" </em>: <span title="file:4">file:4</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:4</strong>',
-      'ref' => 'SOFTREF',
-      'type' => 'softref',
+</span></span>',
+      'title' => '<em>header_link, "typolink"</em> : <span title="file:4">file:4</span><br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Record <strong>sys_file:4</strong>',
       '_softRefInfo' =>
       [
         'field' => 'header_link',
@@ -127,6 +127,7 @@ return [
     6 =>
     [
       'ref' => 'sys_file:4',
+      'type' => 'rel',
       'title' => '<span title="/">sys_file:4</span>',
       'msg' => 'LOST RELATION (Record not found!)',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file:4"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
@@ -135,7 +136,6 @@ return [
 	</span>
 	
 </span></span>',
-      'type' => 'rel',
       'controls' => '',
       'message' => '',
     ],
