@@ -1001,6 +1001,40 @@ abstract class ImportExport
         );
     }
 
+    /**
+     * Renders a select box from option values.
+     *
+     * @param string $name Form element name
+     * @param string $value Current value
+     * @param array $options Options to display (key/value pairs)
+     * @return string HTML
+     */
+    protected function renderSelectBox(string $name, string $value, array &$options): string
+    {
+        $optionsHtml = '';
+        $isValueInOptions = false;
+
+        foreach ($options as $k => $v) {
+            if ((string)$k === $value) {
+                $isValueInOptions = true;
+                $selectedHtml = ' selected="selected"';
+            } else {
+                $selectedHtml = '';
+            }
+            $optionsHtml .= sprintf('<option value="%s"%s>%s</option>',
+                htmlspecialchars((string)$k), $selectedHtml, htmlspecialchars((string)$v));
+        }
+
+        // Append and select the current value as an option of the form "[value]"
+        // if it is not available in the options.
+        if (!$isValueInOptions && $value !== '') {
+            $optionsHtml .= sprintf('<option value="%s" selected="selected">%s</option>',
+                htmlspecialchars($value), htmlspecialchars('[\'' . $value . '\']'));
+        }
+
+        return '<select name="' . $name . '">' . $optionsHtml . '</select>';
+    }
+
     /*****************************
      * Helper functions of kinds
      *****************************/
@@ -1223,40 +1257,6 @@ abstract class ImportExport
             $this->cacheGetRecordPath[$pid] = (string)BackendUtility::getRecordPath($pid, $this->permsClause, 20);
         }
         return $this->cacheGetRecordPath[$pid];
-    }
-
-    /**
-     * Renders a select box from option values.
-     *
-     * @param string $name Form element name
-     * @param string $value Current value
-     * @param array $options Options to display (key/value pairs)
-     * @return string HTML
-     */
-    protected function renderSelectBox(string $name, string $value, array &$options): string
-    {
-        $optionsHtml = '';
-        $isValueInOptions = false;
-
-        foreach ($options as $k => $v) {
-            if ((string)$k === $value) {
-                $isValueInOptions = true;
-                $selectedHtml = ' selected="selected"';
-            } else {
-                $selectedHtml = '';
-            }
-            $optionsHtml .= sprintf('<option value="%s"%s>%s</option>',
-                htmlspecialchars((string)$k), $selectedHtml, htmlspecialchars((string)$v));
-        }
-
-        // Append and select the current value as an option of the form "[value]"
-        // if it is not available in the options.
-        if (!$isValueInOptions && $value !== '') {
-            $optionsHtml .= sprintf('<option value="%s" selected="selected">%s</option>',
-                htmlspecialchars($value), htmlspecialchars('[\'' . $value . '\']'));
-        }
-
-        return '<select name="' . $name . '">' . $optionsHtml . '</select>';
     }
 
     /**
