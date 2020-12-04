@@ -240,10 +240,10 @@ class ExportTest extends UnitTestCase
     {
         $exportMock = $this->getAccessibleMock(
             Export::class,
-            ['addError', 'exportAddFile', 'includeSoftref'],
+            ['addError', 'exportAddFile', 'includeSoftRef'],
             [], '', false
         );
-        $exportMock->expects(self::any())->method('includeSoftref')->willReturn(true);
+        $exportMock->expects(self::any())->method('includeSoftRef')->willReturn(true);
 
         $exportMock->_set('dat', $dat);
         $exportMock->_call('exportAddFilesFromRelations');
