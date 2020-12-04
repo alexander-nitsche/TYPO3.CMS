@@ -1427,7 +1427,7 @@ class Import extends ImportExport
                         case 'db':
                         default:
                             // Trying to map database element if found in the mapID array:
-                            [$tempTable, $tempUid] = explode(':', $cfg['subst']['recordRef']);
+                            [$tempTable, $tempUid] = explode(':', (string)$cfg['subst']['recordRef']);
                             if (isset($this->importMapId[$tempTable][$tempUid])) {
                                 $insertValue = BackendUtility::wsMapId($tempTable, $this->importMapId[$tempTable][$tempUid]);
                                 if (strpos($cfg['subst']['tokenValue'], ':') !== false) {
