@@ -417,15 +417,15 @@ class ExportController extends ImportExportController
      */
     protected function getTableSelectOptions(string $excludeList = ''): array
     {
-        $optValues = [];
+        $options = [];
         if (!GeneralUtility::inList($excludeList, '_ALL')) {
-            $optValues['_ALL'] = '[' . $this->lang->getLL('ALL_tables') . ']';
+            $options['_ALL'] = '[' . $this->lang->getLL('ALL_tables') . ']';
         }
         foreach ($GLOBALS['TCA'] as $table => $_) {
             if (!GeneralUtility::inList($excludeList, $table) && $this->getBackendUser()->check('tables_select', $table)) {
-                $optValues[$table] = $table;
+                $options[$table] = $table;
             }
         }
-        return $optValues;
+        return $options;
     }
 }

@@ -929,14 +929,14 @@ abstract class ImportExport
         $fileInfo = $ref['file_ID'] ? $this->dat['header']['files'][$ref['file_ID']] : [];
         // Substitution scheme has to be around and RTE images MUST be exported.
         if (isset($ref['subst']['tokenID']) && !$fileInfo['RTE_ORIG_ID']) {
-            $optValues = [];
-            $optValues[''] = '';
-            $optValues['editable'] = $this->lang->getLL('impexpcore_softrefsel_editable');
-            $optValues['exclude'] = $this->lang->getLL('impexpcore_softrefsel_exclude');
+            $options = [];
+            $options[''] = '';
+            $options['editable'] = $this->lang->getLL('impexpcore_softrefsel_editable');
+            $options['exclude'] = $this->lang->getLL('impexpcore_softrefsel_exclude');
             $value = (string)$this->softrefCfg[$ref['subst']['tokenID']]['mode'];
             $selectHtml = $this->renderSelectBox(
                 'tx_impexp[softrefCfg][' . $ref['subst']['tokenID'] . '][mode]',
-                $value, $optValues
+                $value, $options
                 ) . '<br/>';
             $textFieldHtml = '';
             if ($value === 'editable') {
@@ -978,26 +978,26 @@ abstract class ImportExport
      */
     protected function renderImportModeSelector(string $table, int $uid, bool $doesRecordExist): string
     {
-        $optValues = [];
+        $options = [];
         if (!$doesRecordExist) {
-            $optValues[] = $this->lang->getLL('impexpcore_singlereco_insert');
+            $options[] = $this->lang->getLL('impexpcore_singlereco_insert');
             if ($this->getBackendUser()->isAdmin()) {
-                $optValues['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
+                $options['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
             }
         } else {
-            $optValues[] = $this->lang->getLL('impexpcore_singlereco_update');
-            $optValues['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
+            $options[] = $this->lang->getLL('impexpcore_singlereco_update');
+            $options['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
             if (!$this->globalIgnorePid) {
-                $optValues['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
+                $options['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
             } else {
-                $optValues['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
+                $options['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
             }
         }
-        $optValues['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
+        $options['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
         return $this->renderSelectBox(
             'tx_impexp[import_mode][' . $table . ':' . $uid . ']',
             (string)$this->importMode[$table . ':' . $uid],
-            $optValues
+            $options
         );
     }
 
