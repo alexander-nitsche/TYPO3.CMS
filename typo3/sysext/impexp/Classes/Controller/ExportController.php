@@ -309,7 +309,7 @@ class ExportController extends ImportExportController
     {
         // Page tree export:
         if (MathUtility::canBeInterpretedAsInteger($inData['pagetree']['id'])) {
-            $opt = [
+            $options = [
                 Export::LEVELS_RECORDS_ON_THIS_PAGE => $this->lang->getLL('makeconfig_tablesOnThisPage'),
                 Export::LEVELS_EXPANDED_TREE => $this->lang->getLL('makeconfig_expandedTree'),
                 0 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_0'),
@@ -319,7 +319,7 @@ class ExportController extends ImportExportController
                 4 => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_4'),
                 Export::LEVELS_INFINITE => $this->lang->sL('LLL:EXT:core/Resources/Private/Language/locallang_core.xlf:labels.depth_infi'),
             ];
-            $this->standaloneView->assign('levelSelectOptions', $opt);
+            $this->standaloneView->assign('levelSelectOptions', $options);
             $this->standaloneView->assign('tableSelectOptions', $this->getTableSelectOptions('pages'));
             $this->standaloneView->assign('treeHTML', $this->export->getTreeHTML());
         }
