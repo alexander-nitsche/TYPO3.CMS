@@ -758,7 +758,7 @@ class Export extends ImportExport
                 if (is_array($relation['softrefs']['keys'])) {
                     foreach ($relation['softrefs']['keys'] as &$elements) {
                         foreach ($elements as &$el) {
-                            if ($el['subst']['type'] === 'db' && $this->includeSoftref($el['subst']['tokenID'])) {
+                            if ($el['subst']['type'] === 'db' && $this->includeSoftRef($el['subst']['tokenID'])) {
                                 [$referencedTable, $referencedUid] = explode(':', $el['subst']['recordRef']);
                                 $dbRelationData = [
                                     'table' => $referencedTable,
@@ -816,7 +816,7 @@ class Export extends ImportExport
         if (
             isset($GLOBALS['TCA'][$recordData['table']]) && !$this->isTableStatic($recordData['table'])
             && !$this->isExcluded($recordData['table'], (int)$recordData['id'])
-            && (!$tokenID || $this->includeSoftref($tokenID)) && $this->inclRelation($recordData['table'])
+            && (!$tokenID || $this->includeSoftRef($tokenID)) && $this->inclRelation($recordData['table'])
             && !isset($this->dat['records'][$recordRef])
         ) {
             $addRecords[$recordRef] = $recordData;
@@ -880,7 +880,7 @@ class Export extends ImportExport
                         foreach ($relation['flexFormRels']['softrefs'] as &$subList) {
                             foreach ($subList['keys'] as &$elements) {
                                 foreach ($elements as &$el) {
-                                    if ($el['subst']['type'] === 'file' && $this->includeSoftref($el['subst']['tokenID'])) {
+                                    if ($el['subst']['type'] === 'file' && $this->includeSoftRef($el['subst']['tokenID'])) {
                                         // Create abs path and ID for file:
                                         $ID_absFile = GeneralUtility::getFileAbsFileName(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
                                         $ID = md5($el['subst']['relFileName']);
@@ -907,7 +907,7 @@ class Export extends ImportExport
                 if (isset($relation['softrefs']['keys'])) {
                     foreach ($relation['softrefs']['keys'] as &$elements) {
                         foreach ($elements as &$el) {
-                            if ($el['subst']['type'] === 'file' && $this->includeSoftref($el['subst']['tokenID'])) {
+                            if ($el['subst']['type'] === 'file' && $this->includeSoftRef($el['subst']['tokenID'])) {
                                 // Create abs path and ID for file:
                                 $ID_absFile = GeneralUtility::getFileAbsFileName(Environment::getPublicPath() . '/' . $el['subst']['relFileName']);
                                 $ID = md5($el['subst']['relFileName']);

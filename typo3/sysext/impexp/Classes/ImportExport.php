@@ -594,7 +594,7 @@ abstract class ImportExport
                 $record = $this->dat['header']['records'][$table][$uid];
                 if (!is_array($record)) {
                     if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid)
-                        || $relation['tokenID'] && !$this->includeSoftref($relation['tokenID'])) {
+                        || $relation['tokenID'] && !$this->includeSoftRef($relation['tokenID'])) {
                         $line['title'] = htmlspecialchars('STATIC: ' . $line['ref']);
                         $iconClass = 'text-info';
                         $staticFixed = true;
@@ -653,7 +653,7 @@ abstract class ImportExport
             $line = [];
             $fileInfo = $this->dat['header']['files'][$ID];
             if (!is_array($fileInfo)) {
-                if ($tokenID !== '' || $this->includeSoftref($tokenID)) {
+                if ($tokenID !== '' || $this->includeSoftRef($tokenID)) {
                     $line['msg'] = 'MISSING FILE: ' . $ID;
                     $this->addError('MISSING FILE: ' . $ID);
                 } else {
@@ -1192,7 +1192,7 @@ abstract class ImportExport
      * @param string $tokenID Token ID for soft reference
      * @return bool TRUE if soft reference media should be included
      */
-    protected function includeSoftref(string $tokenID): bool
+    protected function includeSoftRef(string $tokenID): bool
     {
         $mode = $this->softrefCfg[$tokenID]['mode'];
         return $tokenID && $mode !== 'exclude' && $mode !== 'editable';
