@@ -1109,7 +1109,7 @@ class Import extends ImportExport
                     $value = $relDat['table'] . '_' . $this->importMapId[$relDat['table']][$relDat['id']];
                 }
                 $valArray[] = $value;
-            } elseif ($this->isTableStatic($relDat['table']) || $this->isExcluded($relDat['table'], (int)$relDat['id']) || $relDat['id'] < 0) {
+            } elseif ($this->isTableStatic($relDat['table']) || $this->isRecordExcluded($relDat['table'], (int)$relDat['id']) || $relDat['id'] < 0) {
                 // Checking for less than zero because some select types could contain negative values,
                 // eg. fe_groups (-1, -2) and sys_language (-1 = ALL languages). This must be handled on both export and import.
                 $valArray[] = $relDat['table'] . '_' . $relDat['id'];

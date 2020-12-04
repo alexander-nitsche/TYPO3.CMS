@@ -593,8 +593,8 @@ abstract class ImportExport
             if ($uid > 0) {
                 $record = $this->dat['header']['records'][$table][$uid];
                 if (!is_array($record)) {
-                    if ($this->isTableStatic($table) || $this->isExcluded($table, (int)$uid)
-                        || $relation['tokenID'] && !$this->includeSoftRef($relation['tokenID'])) {
+                    if ($this->isTableStatic($table) || $this->isRecordExcluded($table, (int)$uid)
+                        || $relation['tokenID'] && !$this->isSoftRefIncluded($relation['tokenID'])) {
                         $line['title'] = htmlspecialchars('STATIC: ' . $line['ref']);
                         $iconClass = 'text-info';
                         $staticFixed = true;
@@ -653,7 +653,7 @@ abstract class ImportExport
             $line = [];
             $fileInfo = $this->dat['header']['files'][$ID];
             if (!is_array($fileInfo)) {
-                if ($tokenID !== '' || $this->includeSoftRef($tokenID)) {
+                if ($tokenID !== '' || $this->isSoftRefIncluded($tokenID)) {
                     $line['msg'] = 'MISSING FILE: ' . $ID;
                     $this->addError('MISSING FILE: ' . $ID);
                 } else {
@@ -1175,24 +1175,24 @@ abstract class ImportExport
     }
 
     /**
-     * Returns TRUE if the element should be excluded as static record.
+     * Returns TRUE if the element should be excluded from import and export.
      *
      * @param string $table Table name
-     * @param int $uid UID value
-     * @return bool TRUE, if table is marked static
+     * @param int $uid Record UID
+     * @return bool TRUE, if the record should be excluded
      */
-    protected function isExcluded(string $table, int $uid): bool
+    protected function isRecordExcluded(string $table, int $uid): bool
     {
         return (bool)$this->excludeMap[$table . ':' . $uid];
     }
 
     /**
-     * Returns TRUE if soft reference should be included in exported file.
+     * Returns TRUE if the soft reference should be included in export.
      *
      * @param string $tokenID Token ID for soft reference
-     * @return bool TRUE if soft reference media should be included
+     * @return bool TRUE, if soft reference should be included
      */
-    protected function includeSoftRef(string $tokenID): bool
+    protected function isSoftRefIncluded(string $tokenID): bool
     {
         $mode = $this->softrefCfg[$tokenID]['mode'];
         return $tokenID && $mode !== 'exclude' && $mode !== 'editable';
