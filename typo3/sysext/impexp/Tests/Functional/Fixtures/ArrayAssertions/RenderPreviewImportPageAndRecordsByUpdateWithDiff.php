@@ -37,27 +37,13 @@ return [
       'msg' => 'TABLE \'sys_file\' will be inserted on ROOT LEVEL! ',
       'updatePath' => '/',
       'updateMode' => '',
-      'showDiffContent' => '<strong class="text-nowrap">[sys_file:1 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Identifier (identifier)</td>
-                        <td><del>/user_upload/typo3_image3.</del><ins>/user_upload/used-1.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>Filename (name)</td>
-                        <td><del>typo3_image3.</del><ins>used-1.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>SHA1 (sha1)</td>
-                        <td><del>e873c1e2ffd0f191e183a1057de3eef4d62e782d</del><ins>da9acdf1e105784a57bbffec9520969578287797</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Size (size)</td>
-                        <td><del>5565</del><ins>7958</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[sys_file:1 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Identifier (identifier)</td><td><del>/user_upload/typo3_image3.</del><ins>/user_upload/used-1.</ins>jpg</td></tr>
+<tr><td>Filename (name)</td><td><del>typo3_image3.</del><ins>used-1.</ins>jpg</td></tr>
+<tr><td>SHA1 (sha1)</td><td><del>e873c1e2ffd0f191e183a1057de3eef4d62e782d</del><ins>da9acdf1e105784a57bbffec9520969578287797</ins></td></tr>
+<tr><td>Size (size)</td><td><del>5565</del><ins>7958</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -90,27 +76,13 @@ return [
       'msg' => 'TABLE \'sys_file\' will be inserted on ROOT LEVEL! ',
       'updatePath' => '/',
       'updateMode' => '',
-      'showDiffContent' => '<strong class="text-nowrap">[sys_file:2 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Identifier (identifier)</td>
-                        <td><del>/user_upload/used-2.</del><ins>/user_upload/typo3_image3.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>Filename (name)</td>
-                        <td><del>used-2.</del><ins>typo3_image3.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>SHA1 (sha1)</td>
-                        <td><del>c3511df85d21bc578faf71c6a19eeb3ff44af370</del><ins>e873c1e2ffd0f191e183a1057de3eef4d62e782d</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Size (size)</td>
-                        <td><del>7425</del><ins>5565</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[sys_file:2 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Identifier (identifier)</td><td><del>/user_upload/used-2.</del><ins>/user_upload/typo3_image3.</ins>jpg</td></tr>
+<tr><td>Filename (name)</td><td><del>used-2.</del><ins>typo3_image3.</ins>jpg</td></tr>
+<tr><td>SHA1 (sha1)</td><td><del>c3511df85d21bc578faf71c6a19eeb3ff44af370</del><ins>e873c1e2ffd0f191e183a1057de3eef4d62e782d</ins></td></tr>
+<tr><td>Size (size)</td><td><del>7425</del><ins>5565</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -143,10 +115,9 @@ return [
       'msg' => 'TABLE \'sys_file_storage\' will be inserted on ROOT LEVEL! ',
       'updatePath' => '/',
       'updateMode' => '<select name="tx_impexp[import_mode][sys_file_storage:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
-      'showDiffContent' => '<strong class="text-nowrap">[sys_file_storage:1 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Driver Configuration (configuration)</td>
-                        <td>
+      'showDiffContent' => '<strong class="text-nowrap">[sys_file_storage:1 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Driver Configuration (configuration)</td><td>
 
 <del>    \\n        \\n            \\n                \\n                    fileadmin/\\n                \\n                \\n                    relative\\n                \\n                \\n                    1\\n                \\n            \\n        \\n    \\n</del><ins>	
 		
@@ -163,19 +134,10 @@ return [
 			
 		
 	
-</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Is default storage? (is_default)</td>
-                        <td><del>Yes</del><ins>No</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Description (description)</td>
-                        <td><strong>Field missing</strong> in database</td>
-                    </tr>
-                </table>',
+</ins></td></tr>
+<tr><td>Is default storage? (is_default)</td><td><del>Yes</del><ins>No</ins></td></tr>
+<tr><td>Description (description)</td><td><strong>Field missing</strong> in database</td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -193,22 +155,12 @@ return [
       'active' => 'active',
       'updatePath' => '/Root/',
       'updateMode' => '<select name="tx_impexp[import_mode][tt_content:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
-      'showDiffContent' => '<strong class="text-nowrap">[tt_content:1 =&gt; 2]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Type (CType)</td>
-                        <td><del>Text &amp; Images</del><ins>Text</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Header (header)</td>
-                        <td><del>CE 1 first image</del><ins>Test content</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Images (image)</td>
-                        <td><del>1</del><ins>0</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[tt_content:1 =&gt; 2]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
+<tr><td>Header (header)</td><td><del>CE 1 first image</del><ins>Test content</ins></td></tr>
+<tr><td>Images (image)</td><td><del>1</del><ins>0</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -268,22 +220,12 @@ return [
       'active' => 'active',
       'updatePath' => '/Root/',
       'updateMode' => '<select name="tx_impexp[import_mode][tt_content:2]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
-      'showDiffContent' => '<strong class="text-nowrap">[tt_content:2 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Type (CType)</td>
-                        <td><del>Text &amp; Images</del><ins>Text</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Header (header)</td>
-                        <td><del>CE 2 second image</del><ins>Test content 2</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Images (image)</td>
-                        <td><del>1</del><ins>0</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[tt_content:2 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
+<tr><td>Header (header)</td><td><del>CE 2 second image</del><ins>Test content 2</ins></td></tr>
+<tr><td>Images (image)</td><td><del>1</del><ins>0</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -541,7 +483,8 @@ return [
       'active' => 'active',
       'updatePath' => '/',
       'updateMode' => '<select name="tx_impexp[import_mode][pages:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
-      'showDiffContent' => '<strong class="text-nowrap">[pages:1 =&gt; 1]:</strong> Match',
+      'showDiffContent' => '<strong class="text-nowrap">[pages:1 =&gt; 1]:</strong>
+Match',
       'controls' => '',
       'message' => '',
     ],

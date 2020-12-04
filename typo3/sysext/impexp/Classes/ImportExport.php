@@ -196,6 +196,11 @@ abstract class ImportExport
     protected $fileProcObj;
 
     /**
+     * @var DiffUtility
+     */
+    protected $diffUtility;
+
+    /**
      * @var array
      */
     protected $remainHeader = [];
@@ -1263,51 +1268,80 @@ abstract class ImportExport
      * Compares two records, the current database record and the one from the import memory.
      * Will return HTML code to show any differences between them!
      *
-     * @param array $databaseRecord Database record, all fields (new values)
-     * @param array $importRecord Import memory records for the same table/uid, all fields (old values)
+     * @param array $databaseRecord Database record, all fields (old values)
+     * @param array $importRecord Import memory record for the same table/uid, all fields (new values)
      * @param string $table The table name of the record
-     * @param bool $inverseDiff Inverse the diff view (switch red/green, needed for pre-update difference view)
+     * @param bool $inverse Inverse the diff view (switch red/green, needed for pre-update difference view)
      * @return string HTML
      */
-    protected function compareRecords(array $databaseRecord, array $importRecord, string $table, bool $inverseDiff = false): string
+    protected function compareRecords(array &$databaseRecord, array $importRecord, string $table, bool $inverse = false): string
     {
-        // Initialize:
-        $output = [];
-        $diffUtility = GeneralUtility::makeInstance(DiffUtility::class);
-        // Traverse based on database record
-        foreach ($databaseRecord as $fN => $value) {
-            if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
-                if (isset($importRecord[$fN])) {
-                    if (trim((string)$databaseRecord[$fN]) !== trim((string)$importRecord[$fN])) {
-                        // Create diff-result:
-                        $output[$fN] = $diffUtility->makeDiffDisplay(BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $importRecord[$fN] : $databaseRecord[$fN], 0, true, true), BackendUtility::getProcessedValue($table, $fN, !$inverseDiff ? $databaseRecord[$fN] : $importRecord[$fN], 0, true, true));
+        $diffHtml = '';
+
+        // Updated fields
+        foreach ($databaseRecord as $fieldName => &$fieldValue) {
+            if (is_array($GLOBALS['TCA'][$table]['columns'][$fieldName])
+                && $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] !== 'passthrough'
+            ) {
+                if (isset($importRecord[$fieldName])) {
+                    if (trim((string)$databaseRecord[$fieldName]) !== trim((string)$importRecord[$fieldName])) {
+                        $diffFieldHtml = $this->getDiffUtility()->makeDiffDisplay(
+                            BackendUtility::getProcessedValue(
+                                $table, $fieldName,
+                                !$inverse ? $importRecord[$fieldName] : $databaseRecord[$fieldName],
+                                0, true, true
+                            ),
+                            BackendUtility::getProcessedValue(
+                                $table, $fieldName,
+                                !$inverse ? $databaseRecord[$fieldName] : $importRecord[$fieldName],
+                                0, true, true
+                            )
+                        );
+                        $diffHtml .= sprintf('<tr><td>%s (%s)</td><td>%s</td></tr>' . PHP_EOL,
+                            htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fieldName]['label'])),
+                            htmlspecialchars((string)$fieldName),
+                            $diffFieldHtml);
                     }
-                    unset($importRecord[$fN]);
+                    unset($importRecord[$fieldName]);
                 }
             }
         }
-        // Traverse remaining in import record:
-        foreach ($importRecord as $fN => $value) {
-            if (is_array($GLOBALS['TCA'][$table]['columns'][$fN]) && $GLOBALS['TCA'][$table]['columns'][$fN]['config']['type'] !== 'passthrough') {
-                $output[$fN] = '<strong>Field missing</strong> in database';
+
+        // New fields
+        foreach ($importRecord as $fieldName => &$fieldValue) {
+            if (is_array($GLOBALS['TCA'][$table]['columns'][$fieldName])
+                && $GLOBALS['TCA'][$table]['columns'][$fieldName]['config']['type'] !== 'passthrough'
+            ) {
+                $diffFieldHtml = '<strong>Field missing</strong> in database';
+                $diffHtml .= sprintf('<tr><td>%s (%s)</td><td>%s</td></tr>' . PHP_EOL,
+                    htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fieldName]['label'])),
+                    htmlspecialchars((string)$fieldName),
+                    $diffFieldHtml);
             }
         }
-        // Create output:
-        if (!empty($output)) {
-            $tRows = [];
-            foreach ($output as $fN => $state) {
-                $tRows[] = '
-                    <tr>
-                        <td>' . htmlspecialchars($this->lang->sL($GLOBALS['TCA'][$table]['columns'][$fN]['label'])) . ' (' . htmlspecialchars((string)$fN) . ')</td>
-                        <td>' . $state . '</td>
-                    </tr>
-                ';
-            }
-            $output = '<table class="table table-striped table-hover">' . implode('', $tRows) . '</table>';
+
+        if ($diffHtml !== '') {
+            $diffHtml = '<table class="table table-striped table-hover">' . PHP_EOL . $diffHtml . '</table>';
         } else {
-            $output = 'Match';
+            $diffHtml = 'Match';
         }
-        return '<strong class="text-nowrap">[' . htmlspecialchars($table . ':' . $importRecord['uid'] . ' => ' . $databaseRecord['uid']) . ']:</strong> ' . $output;
+
+        return sprintf('<strong class="text-nowrap">[%s]:</strong>' . PHP_EOL . '%s',
+            htmlspecialchars($table . ':' . $importRecord['uid'] . ' => ' . $databaseRecord['uid']),
+            $diffHtml);
+    }
+
+    /**
+     * Returns string comparing object, initialized only once.
+     *
+     * @return DiffUtility String comparing object
+     */
+    protected function getDiffUtility(): DiffUtility
+    {
+        if ($this->diffUtility === null) {
+            $this->diffUtility = GeneralUtility::makeInstance(DiffUtility::class);
+        }
+        return $this->diffUtility;
     }
 
     /**

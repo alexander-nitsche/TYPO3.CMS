@@ -64,27 +64,13 @@ return [
       'title' => 'used-2.jpg',
       'active' => 'active',
       'msg' => 'TABLE \'sys_file\' will be inserted on ROOT LEVEL! ',
-      'showDiffContent' => '<strong class="text-nowrap">[sys_file:2 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Identifier (identifier)</td>
-                        <td><del>/user_upload/used-2.</del><ins>/user_upload/typo3_image3.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>Filename (name)</td>
-                        <td><del>used-2.</del><ins>typo3_image3.</ins>jpg</td>
-                    </tr>
-                
-                    <tr>
-                        <td>SHA1 (sha1)</td>
-                        <td><del>c3511df85d21bc578faf71c6a19eeb3ff44af370</del><ins>e873c1e2ffd0f191e183a1057de3eef4d62e782d</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Size (size)</td>
-                        <td><del>7425</del><ins>5565</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[sys_file:2 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Identifier (identifier)</td><td><del>/user_upload/used-2.</del><ins>/user_upload/typo3_image3.</ins>jpg</td></tr>
+<tr><td>Filename (name)</td><td><del>used-2.</del><ins>typo3_image3.</ins>jpg</td></tr>
+<tr><td>SHA1 (sha1)</td><td><del>c3511df85d21bc578faf71c6a19eeb3ff44af370</del><ins>e873c1e2ffd0f191e183a1057de3eef4d62e782d</ins></td></tr>
+<tr><td>Size (size)</td><td><del>7425</del><ins>5565</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -131,22 +117,12 @@ return [
 </span></span>',
       'title' => 'CE 1 first image',
       'active' => 'active',
-      'showDiffContent' => '<strong class="text-nowrap">[tt_content:1 =&gt; 2]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Type (CType)</td>
-                        <td><del>Text &amp; Images</del><ins>Text</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Header (header)</td>
-                        <td><del>CE 1 first image</del><ins>Test content</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Images (image)</td>
-                        <td><del>1</del><ins>0</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[tt_content:1 =&gt; 2]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
+<tr><td>Header (header)</td><td><del>CE 1 first image</del><ins>Test content</ins></td></tr>
+<tr><td>Images (image)</td><td><del>1</del><ins>0</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -204,22 +180,12 @@ return [
 </span></span>',
       'title' => 'CE 2 second image',
       'active' => 'active',
-      'showDiffContent' => '<strong class="text-nowrap">[tt_content:2 =&gt; 1]:</strong> <table class="table table-striped table-hover">
-                    <tr>
-                        <td>Type (CType)</td>
-                        <td><del>Text &amp; Images</del><ins>Text</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Header (header)</td>
-                        <td><del>CE 2 second image</del><ins>Test content 2</ins></td>
-                    </tr>
-                
-                    <tr>
-                        <td>Images (image)</td>
-                        <td><del>1</del><ins>0</ins></td>
-                    </tr>
-                </table>',
+      'showDiffContent' => '<strong class="text-nowrap">[tt_content:2 =&gt; 1]:</strong>
+<table class="table table-striped table-hover">
+<tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
+<tr><td>Header (header)</td><td><del>CE 2 second image</del><ins>Test content 2</ins></td></tr>
+<tr><td>Images (image)</td><td><del>1</del><ins>0</ins></td></tr>
+</table>',
       'controls' => '',
       'message' => '',
     ],
@@ -467,7 +433,8 @@ return [
 </span></span>',
       'title' => '<a href="#" onclick="return false;">Root</a>',
       'active' => 'active',
-      'showDiffContent' => '<strong class="text-nowrap">[pages:1 =&gt; 1]:</strong> Match',
+      'showDiffContent' => '<strong class="text-nowrap">[pages:1 =&gt; 1]:</strong>
+Match',
       'controls' => '',
       'message' => '',
     ],
