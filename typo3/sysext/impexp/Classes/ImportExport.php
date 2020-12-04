@@ -864,7 +864,7 @@ abstract class ImportExport
             if ($line['type'] === 'record') {
                 return $this->renderRecordExcludeCheckbox($line['ref']);
             } elseif ($line['type'] === 'softref') {
-                return $this->softrefSelector($line['_softRefInfo']);
+                return $this->renderSoftRefExportSelector($line['_softRefInfo']);
             }
         }
         elseif ($this->mode === 'import') {
@@ -918,50 +918,52 @@ abstract class ImportExport
     }
 
     /**
-     * Selectorbox with export options for soft references
+     * Render select box with export options for soft references.
+     * An export box is shown only if a substitution scheme is found for the soft reference.
      *
-     * @param array $cfg Softref configuration array. An export box is shown only if a substitution scheme is found for the soft reference.
-     * @return string Selector box HTML
+     * @param array $ref Soft reference
+     * @return string HTML
      */
-    protected function softrefSelector(array $cfg): string
+    protected function renderSoftRefExportSelector(array &$ref): string
     {
-        // Looking for file ID if any:
-        $fileInfo = $cfg['file_ID'] ? $this->dat['header']['files'][$cfg['file_ID']] : [];
+        $fileInfo = $ref['file_ID'] ? $this->dat['header']['files'][$ref['file_ID']] : [];
         // Substitution scheme has to be around and RTE images MUST be exported.
-        if (is_array($cfg['subst']) && $cfg['subst']['tokenID'] && !$fileInfo['RTE_ORIG_ID']) {
-            // Create options:
+        if (isset($ref['subst']['tokenID']) && !$fileInfo['RTE_ORIG_ID']) {
             $optValues = [];
             $optValues[''] = '';
             $optValues['editable'] = $this->lang->getLL('impexpcore_softrefsel_editable');
             $optValues['exclude'] = $this->lang->getLL('impexpcore_softrefsel_exclude');
-            // Get current value:
-            $value = (string)$this->softrefCfg[$cfg['subst']['tokenID']]['mode'];
-            // Render options selector:
-            $selectorbox = $this->renderSelectBox('tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][mode]', $value, $optValues) . '<br/>';
+            $value = (string)$this->softrefCfg[$ref['subst']['tokenID']]['mode'];
+            $selectHtml = $this->renderSelectBox(
+                'tx_impexp[softrefCfg][' . $ref['subst']['tokenID'] . '][mode]',
+                $value, $optValues
+                ) . '<br/>';
+            $textFieldHtml = '';
             if ($value === 'editable') {
-                $descriptionField = '';
-                // Title:
-                if (strlen((string)$cfg['subst']['title'])) {
-                    $descriptionField .= '
-					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][title]" value="' . htmlspecialchars((string)$cfg['subst']['title']) . '" />
-					<strong>' . htmlspecialchars((string)$cfg['subst']['title']) . '</strong><br/>';
+                if (strlen((string)$ref['subst']['title'])) {
+                    $textFieldHtml .= sprintf('
+                        <input type="hidden" name="tx_impexp[softrefCfg][%1$s][title]" value="%2$s" />
+                        <strong>%2$s</strong><br/>',
+                        $ref['subst']['tokenID'],
+                        htmlspecialchars((string)$ref['subst']['title']));
                 }
-                // Description:
-                if (!strlen((string)$cfg['subst']['description'])) {
-                    $descriptionField .= '
-					' . htmlspecialchars($this->lang->getLL('impexpcore_printerror_description')) . '<br/>
-					<input type="text" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars((string)$this->softrefCfg[$cfg['subst']['tokenID']]['description']) . '" />';
+                if (!strlen((string)$ref['subst']['description'])) {
+                    $textFieldHtml .= sprintf('
+                        %s<br/>
+                        <input type="text" name="tx_impexp[softrefCfg][%s][description]" value="%s" />',
+                        htmlspecialchars($this->lang->getLL('impexpcore_printerror_description')),
+                        $ref['subst']['tokenID'],
+                        htmlspecialchars((string)$this->softrefCfg[$ref['subst']['tokenID']]['description']));
                 } else {
-                    $descriptionField .= '
-
-					<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][description]" value="' . htmlspecialchars((string)$cfg['subst']['description']) . '" />' . htmlspecialchars((string)$cfg['subst']['description']);
+                    $textFieldHtml .= sprintf('
+                        <input type="hidden" name="tx_impexp[softrefCfg][%1$s][description]" value="%2$s" />%2$s',
+                        $ref['subst']['tokenID'], htmlspecialchars((string)$ref['subst']['description']));
                 }
-                // Default Value:
-                $descriptionField .= '<input type="hidden" name="tx_impexp[softrefCfg][' . $cfg['subst']['tokenID'] . '][defValue]" value="' . htmlspecialchars($cfg['subst']['tokenValue']) . '" />';
-            } else {
-                $descriptionField = '';
+                $textFieldHtml .= sprintf('
+                    <input type="hidden" name="tx_impexp[softrefCfg][%s][defValue]" value="%s" />',
+                    $ref['subst']['tokenID'], htmlspecialchars($ref['subst']['tokenValue']));
             }
-            return $selectorbox . $descriptionField;
+            return $selectHtml . $textFieldHtml;
         }
         return '';
     }
