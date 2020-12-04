@@ -19,7 +19,9 @@ return [
 </span></span>',
       'title' => 'Test content',
       'active' => 'active',
-      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:1]" id="checkExcludett_content:1" value="1" /> <label for="checkExcludett_content:1">Exclude</label>',
+      'controls' => '
+            <input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:1]" id="checkExcludett_content:1" value="1" />
+            <label for="checkExcludett_content:1">Exclude</label>',
       'message' => '',
     ],
     1 =>
@@ -76,7 +78,9 @@ return [
 </span></span>',
       'title' => 'Test content 2',
       'active' => 'active',
-      'controls' => '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:2]" id="checkExcludett_content:2" value="1" /> <label for="checkExcludett_content:2">Exclude</label>',
+      'controls' => '
+            <input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][tt_content:2]" id="checkExcludett_content:2" value="1" />
+            <label for="checkExcludett_content:2">Exclude</label>',
       'message' => '',
     ],
     4 =>

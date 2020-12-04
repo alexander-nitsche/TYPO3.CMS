@@ -156,6 +156,20 @@ class ImportTest extends AbstractImportExportTestCase
     }
 
     /**
+     * @test
+     */
+    public function renderPreviewForImportOfPageAndRecordsWithSoftRefs(): void
+    {
+        $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithSoftRefs.php';
+
+        $this->importMock->init();
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-softrefs.xml');
+        $previewData = $this->importMock->renderPreview();
+        self::assertEquals($renderPreviewImport, $previewData);
+    }
+
+    /**
      * Temporary test until there is a complex functional test which tests addFiles() implicitly.
      *
      * @test

@@ -858,22 +858,59 @@ abstract class ImportExport
      * @param array $line Output line array
      * @return string HTML
      */
-    protected function renderControls(array $line): string
+    protected function renderControls(array &$line): string
     {
         if ($this->mode === 'export') {
             if ($line['type'] === 'record') {
-                return '<input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][' . $line['ref'] . ']" id="checkExclude' . $line['ref'] . '" value="1" /> <label for="checkExclude' . $line['ref'] . '">' . htmlspecialchars($this->lang->getLL('impexpcore_singlereco_exclude')) . '</label>';
+                return $this->renderRecordExcludeCheckbox($line['ref']);
+            } elseif ($line['type'] === 'softref') {
+                return $this->softrefSelector($line['_softRefInfo']);
             }
-            return  $line['type'] === 'softref' ? $this->softrefSelector($line['_softRefInfo']) : '';
         }
-        // During import
-        // For soft references with editable fields:
-        if ($line['type'] === 'softref' && is_array($line['_softRefInfo']['subst']) && $line['_softRefInfo']['subst']['tokenID']) {
-            $tokenID = $line['_softRefInfo']['subst']['tokenID'];
-            $cfg = $this->softrefCfg[$tokenID];
+        elseif ($this->mode === 'import') {
+            if ($line['type'] === 'softref') {
+                return $this->renderSoftRefImportTextField($line['_softRefInfo']);
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Render check box for exclusion of a record from export.
+     *
+     * @param string $recordRef The record ID of the form [table]:[id].
+     * @return string HTML
+     */
+    protected function renderRecordExcludeCheckbox(string &$recordRef): string
+    {
+        return sprintf('
+            <input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][%1$s]" id="checkExclude%1$s" value="1" />
+            <label for="checkExclude%1$s">%2$s</label>',
+            $recordRef, htmlspecialchars($this->lang->getLL('impexpcore_singlereco_exclude')));
+    }
+
+    /**
+     * Render text field when importing a soft reference.
+     *
+     * @param array $ref Soft reference
+     * @return string HTML
+     */
+    protected function renderSoftRefImportTextField(array &$ref): string
+    {
+        if (isset($ref['subst']['tokenID'])) {
+            $tokenID = $ref['subst']['tokenID'];
+            $cfg = &$this->softrefCfg[$tokenID];
             if ($cfg['mode'] === 'editable') {
-                return (strlen((string)$cfg['title']) ? '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>' : '') . htmlspecialchars((string)$cfg['description']) . '<br/>
-						<input type="text" name="tx_impexp[softrefInputValues][' . $tokenID . ']" value="' . htmlspecialchars($this->softrefInputValues[$tokenID] ?? $cfg['defValue']) . '" />';
+                $html = '';
+                if (strlen((string)$cfg['title'])) {
+                    $html .= '<strong>' . htmlspecialchars((string)$cfg['title']) . '</strong><br/>';
+                }
+                $html .= htmlspecialchars((string)$cfg['description']) . '<br/>';
+                $html .= sprintf('<input type="text" name="tx_impexp[softrefInputValues][%s]" value="%s" />',
+                    $tokenID,
+                    htmlspecialchars($this->softrefInputValues[$tokenID] ?? $cfg['defValue'])
+                );
+                return $html;
             }
         }
 

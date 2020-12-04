@@ -158,6 +158,26 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
+    public function renderPreviewForExportOfPageAndRecordsWithSoftRefs(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content-with-softrefs.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+
+        $renderPreviewExport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewExportPageAndRecordsWithSoftRefs.php';
+
+        $this->exportMock->setPid(0);
+        $this->exportMock->setLevels(Export::LEVELS_INFINITE);
+        $this->exportMock->setTables(['_ALL']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->process();
+        $previewData = $this->exportMock->renderPreview();
+        self::assertEquals($renderPreviewExport, $previewData);
+    }
+
+    /**
+     * @test
+     */
     public function renderPreviewForExportOfTable(): void
     {
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
