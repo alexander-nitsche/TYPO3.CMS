@@ -968,6 +968,14 @@ abstract class ImportExport
         return '';
     }
 
+    /**
+     * Render select box with import options for the record.
+     *
+     * @param string $table Table name
+     * @param int $uid Record UID
+     * @param bool $doesRecordExist Is there already a record with this UID in the database?
+     * @return string HTML
+     */
     protected function renderImportModeSelector(string $table, int $uid, bool $doesRecordExist): string
     {
         $optValues = [];
