@@ -1165,7 +1165,9 @@ abstract class ImportExport
     protected function isTableStatic(string $table): bool
     {
         if (is_array($GLOBALS['TCA'][$table])) {
-            return ($GLOBALS['TCA'][$table]['ctrl']['is_static'] ?? false) || in_array($table, $this->relStaticTables) || in_array('_ALL', $this->relStaticTables);
+            return ($GLOBALS['TCA'][$table]['ctrl']['is_static'] ?? false)
+                || in_array($table, $this->relStaticTables)
+                || in_array('_ALL', $this->relStaticTables);
         }
         return false;
     }
