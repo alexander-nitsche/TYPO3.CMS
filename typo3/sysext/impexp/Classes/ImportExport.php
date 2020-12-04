@@ -520,19 +520,19 @@ abstract class ImportExport
                 if ((int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'] === 1) {
                     $line['msg'] .= 'TABLE \'' . $table . '\' will be inserted on ROOT LEVEL! ';
                 }
-                $recordDb = null;
+                $databaseRecord = null;
                 if ($this->update) {
-                    $recordDb = $this->getRecordFromDatabase($table, $uid, $this->showDiff ? '*' : 'uid,pid');
-                    if ($recordDb === null) {
+                    $databaseRecord = $this->getRecordFromDatabase($table, $uid, $this->showDiff ? '*' : 'uid,pid');
+                    if ($databaseRecord === null) {
                         $line['updatePath'] = '<strong>NEW!</strong>';
                     } else {
-                        $line['updatePath'] = htmlspecialchars($this->getRecordPath((int)$recordDb['pid']));
+                        $line['updatePath'] = htmlspecialchars($this->getRecordPath((int)$databaseRecord['pid']));
                     }
                     if ($table === 'sys_file') {
                         $line['updateMode'] = '';
                     } else {
                         $line['updateMode'] = $this->renderImportModeSelector(
-                            $table, $uid, $recordDb !== null
+                            $table, $uid, $databaseRecord !== null
                         );
                     }
                 }
@@ -542,12 +542,12 @@ abstract class ImportExport
                     // For imports, get new id:
                     if ($newUid = $this->importMapId[$table][$uid]) {
                         $diffInverse = false;
-                        $recordDb = $this->getRecordFromDatabase($table, $newUid, '*');
-                        BackendUtility::workspaceOL($table, $recordDb);
+                        $databaseRecord = $this->getRecordFromDatabase($table, $newUid, '*');
+                        BackendUtility::workspaceOL($table, $databaseRecord);
                     }
                     $importRecord = $this->dat['records'][$table . ':' . $uid]['data'] ?? null;
-                    if (is_array($recordDb) && is_array($importRecord)) {
-                        $line['showDiffContent'] = $this->compareRecords($recordDb, $importRecord, $table, $diffInverse);
+                    if (is_array($databaseRecord) && is_array($importRecord)) {
+                        $line['showDiffContent'] = $this->compareRecords($databaseRecord, $importRecord, $table, $diffInverse);
                     } else {
                         $line['showDiffContent'] = 'ERROR: One of the inputs were not an array!';
                     }
@@ -604,12 +604,12 @@ abstract class ImportExport
                         $iconClass = 'text-info';
                         $staticFixed = true;
                     } else {
-                        $recordDb = $this->getRecordFromDatabase($table, (int)$uid);
-                        $recordPath = $this->getRecordPath($table === 'pages' ? (int)$recordDb['uid'] : (int)$recordDb['pid']);
+                        $databaseRecord = $this->getRecordFromDatabase($table, (int)$uid);
+                        $recordPath = $this->getRecordPath($table === 'pages' ? (int)$databaseRecord['uid'] : (int)$databaseRecord['pid']);
                         $line['title'] = sprintf('<span title="%s">%s</span>',
                             htmlspecialchars($recordPath), htmlspecialchars($line['ref'])
                         );
-                        $line['msg'] = 'LOST RELATION' . ($recordDb === null ? ' (Record not found!)' : ' (Path: ' . $recordPath . ')');
+                        $line['msg'] = 'LOST RELATION' . ($databaseRecord === null ? ' (Record not found!)' : ' (Path: ' . $recordPath . ')');
                         $iconClass = 'text-danger';
                         $iconName = 'status-dialog-warning';
                     }
