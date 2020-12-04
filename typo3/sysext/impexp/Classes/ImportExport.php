@@ -1226,28 +1226,37 @@ abstract class ImportExport
     }
 
     /**
-     * Makes a selector-box from optValues
+     * Renders a select box from option values.
      *
-     * @param string $prefix Form element name
+     * @param string $name Form element name
      * @param string $value Current value
-     * @param array $optValues Options to display (key/value pairs)
-     * @return string HTML select element
+     * @param array $options Options to display (key/value pairs)
+     * @return string HTML
      */
-    protected function renderSelectBox(string $prefix, string $value, array $optValues): string
+    protected function renderSelectBox(string $name, string $value, array &$options): string
     {
-        $opt = [];
-        $isSelFlag = 0;
-        foreach ($optValues as $k => $v) {
-            $sel = (string)$k === (string)$value ? ' selected="selected"' : '';
-            if ($sel) {
-                $isSelFlag++;
+        $optionsHtml = '';
+        $isValueInOptions = false;
+
+        foreach ($options as $k => $v) {
+            if ((string)$k === $value) {
+                $isValueInOptions = true;
+                $selectedHtml = ' selected="selected"';
+            } else {
+                $selectedHtml = '';
             }
-            $opt[] = '<option value="' . htmlspecialchars((string)$k) . '"' . $sel . '>' . htmlspecialchars((string)$v) . '</option>';
+            $optionsHtml .= sprintf('<option value="%s"%s>%s</option>',
+                htmlspecialchars((string)$k), $selectedHtml, htmlspecialchars((string)$v));
         }
-        if (!$isSelFlag && (string)$value !== '') {
-            $opt[] = '<option value="' . htmlspecialchars((string)$value) . '" selected="selected">' . htmlspecialchars('[\'' . (string)$value . '\']') . '</option>';
+
+        // Append and select the current value as an option of the form "[value]"
+        // if it is not available in the options.
+        if (!$isValueInOptions && $value !== '') {
+            $optionsHtml .= sprintf('<option value="%s" selected="selected">%s</option>',
+                htmlspecialchars($value), htmlspecialchars('[\'' . $value . '\']'));
         }
-        return '<select name="' . $prefix . '">' . implode('', $opt) . '</select>';
+
+        return '<select name="' . $name . '">' . $optionsHtml . '</select>';
     }
 
     /**
