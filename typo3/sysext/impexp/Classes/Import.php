@@ -116,6 +116,190 @@ class Import extends ImportExport
         $this->decompressionAvailable = function_exists('gzuncompress');
     }
 
+    /**************************
+     * File Input
+     *************************/
+
+    /**
+     * Loads the header section/all of the $fileName into memory
+     *
+     * @param string $fileName File path, has to be within the TYPO3's base folder
+     * @param bool $all If set, all information is loaded (header, records and files). Otherwise the default is to read only the header information
+     * @throws LoadingFileFailedException
+     */
+    public function loadFile(string $fileName, bool $all = false): void
+    {
+        $filePath = GeneralUtility::getFileAbsFileName($fileName);
+
+        if (empty($filePath)) {
+            $this->addError('File path is not valid: ' . $fileName);
+        } elseif (!@is_file($filePath)) {
+            $this->addError('File not found: ' . $filePath);
+        }
+
+        if ($this->hasErrors() === false) {
+            $pathInfo = pathinfo($filePath);
+            if (@is_dir($filePath . '.files')) {
+                if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
+                    // copy the folder lowlevel to typo3temp, because the files would be deleted after import
+                    GeneralUtility::copyDirectory($filePath . '.files', $this->getOrCreateTemporaryFolderName());
+                } else {
+                    $this->addError('External import files for the given import source is currently not supported.');
+                }
+            }
+            if (strtolower($pathInfo['extension']) === 'xml') {
+                // XML:
+                $xmlContent = (string)file_get_contents($filePath);
+                if (strlen($xmlContent)) {
+                    $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
+                    if (is_array($this->dat)) {
+                        if ($this->dat['_DOCUMENT_TAG'] === 'T3RecordDocument' && is_array($this->dat['header']) && is_array($this->dat['records'])) {
+                            $this->loadInit();
+                        } else {
+                            $this->addError('XML file did not contain proper XML for TYPO3 Import');
+                        }
+                    } else {
+                        $this->addError('XML could not be parsed: ' . $this->dat);
+                    }
+                } else {
+                    $this->addError('Error opening file: ' . $filePath);
+                }
+            } else {
+                // T3D
+                if ($fd = fopen($filePath, 'rb')) {
+                    $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
+                    if ($all) {
+                        $this->dat['records'] = $this->getNextFilePart($fd, true, 'records');
+                        $this->dat['files'] = $this->getNextFilePart($fd, true, 'files');
+                        $this->dat['files_fal'] = $this->getNextFilePart($fd, true, 'files_fal');
+                    }
+                    $this->loadInit();
+                    fclose($fd);
+                } else {
+                    $this->addError('Error opening file: ' . $filePath);
+                }
+            }
+        }
+
+        if ($this->hasErrors()) {
+            throw new LoadingFileFailedException(
+                sprintf('Loading of the import file "%s" failed.', $fileName), 1484484619
+            );
+        }
+    }
+
+    /**
+     * Returns the next content part form the fileresource (t3d), $fd
+     *
+     * @param resource $fd File pointer
+     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
+     * @param string $name For error messages this indicates the section of the problem.
+     * @return string|null Data string or NULL in case of an error
+     *
+     * @see loadFile()
+     */
+    protected function getNextFilePart($fd, bool $unserialize = false, string $name = ''): ?string
+    {
+        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
+        // Getting header data
+        $initStr = fread($fd, $initStrLen);
+        if (empty($initStr)) {
+            $this->addError('File does not contain data for "' . $name . '"');
+            return null;
+        }
+        $initStrDat = explode(':', $initStr);
+        if (strpos($initStrDat[0], 'Warning') !== false) {
+            $this->addError('File read error: Warning message in file. (' . $initStr . fgets($fd) . ')');
+            return null;
+        }
+        if ((string)$initStrDat[3] !== '') {
+            $this->addError('File read error: InitString had a wrong length. (' . $name . ')');
+            return null;
+        }
+        $datString = (string)fread($fd, (int)$initStrDat[2]);
+        fread($fd, 1);
+        if (hash_equals($initStrDat[0], md5($datString))) {
+            if ($initStrDat[1]) {
+                if ($this->decompressionAvailable) {
+                    $datString = (string)gzuncompress($datString);
+                } else {
+                    $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
+                    return null;
+                }
+            }
+            return $unserialize ? (string)unserialize($datString, ['allowed_classes' => false]) : $datString;
+        }
+        $this->addError('MD5 check failed (' . $name . ')');
+
+        return null;
+    }
+
+    /**
+     * Loads T3D file content into the $this->dat array
+     * (This function can be used to test the output strings from ->render())
+     *
+     * @param string $filecontent File content
+     */
+    public function loadContent(string $filecontent): void
+    {
+        $pointer = 0;
+        $this->dat['header'] = $this->getNextContentPart($filecontent, $pointer, true, 'header');
+        $this->dat['records'] = $this->getNextContentPart($filecontent, $pointer, true, 'records');
+        $this->dat['files'] = $this->getNextContentPart($filecontent, $pointer, true, 'files');
+        $this->loadInit();
+    }
+
+    /**
+     * Returns the next content part from the $filecontent
+     *
+     * @param string $filecontent File content string
+     * @param int $pointer File pointer (where to read from)
+     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
+     * @param string $name For error messages this indicates the section of the problem.
+     * @return string|null Data string
+     */
+    protected function getNextContentPart(string $filecontent, int &$pointer, bool $unserialize = false, string $name = ''): ?string
+    {
+        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
+        // getting header data
+        $initStr = substr($filecontent, $pointer, $initStrLen);
+        $pointer += $initStrLen;
+        $initStrDat = explode(':', $initStr);
+        if ((string)$initStrDat[3] !== '') {
+            $this->addError('Content read error: InitString had a wrong length. (' . $name . ')');
+            return null;
+        }
+        $datString = (string)substr($filecontent, $pointer, (int)$initStrDat[2]);
+        $pointer += (int)$initStrDat[2] + 1;
+        if (hash_equals($initStrDat[0], md5($datString))) {
+            if ($initStrDat[1]) {
+                if ($this->decompressionAvailable) {
+                    $datString = (string)gzuncompress($datString);
+                    return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
+                }
+                $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
+            }
+        } else {
+            $this->addError('MD5 check failed (' . $name . ')');
+        }
+        return null;
+    }
+
+    /**
+     * Setting up the object based on the recently loaded ->dat array
+     */
+    protected function loadInit(): void
+    {
+        $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
+        $this->excludeMap = (array)$this->dat['header']['excludeMap'];
+        $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
+    }
+
+    public function getMetaData(): array
+    {
+        return $this->dat['header']['meta'] ?? [];
+    }
+
     /***********************
      * Import
      ***********************/
@@ -1636,190 +1820,6 @@ class Import extends ImportExport
         foreach ($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['ext/impexp/class.tx_impexp.php'][$name] ?? [] as $hook) {
             GeneralUtility::callUserFunction($hook, $params, $this);
         }
-    }
-
-    /**************************
-     * File Input
-     *************************/
-
-    /**
-     * Loads the header section/all of the $fileName into memory
-     *
-     * @param string $fileName File path, has to be within the TYPO3's base folder
-     * @param bool $all If set, all information is loaded (header, records and files). Otherwise the default is to read only the header information
-     * @throws LoadingFileFailedException
-     */
-    public function loadFile(string $fileName, bool $all = false): void
-    {
-        $filePath = GeneralUtility::getFileAbsFileName($fileName);
-
-        if (empty($filePath)) {
-            $this->addError('File path is not valid: ' . $fileName);
-        } elseif (!@is_file($filePath)) {
-            $this->addError('File not found: ' . $filePath);
-        }
-
-        if ($this->hasErrors() === false) {
-            $pathInfo = pathinfo($filePath);
-            if (@is_dir($filePath . '.files')) {
-                if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
-                    // copy the folder lowlevel to typo3temp, because the files would be deleted after import
-                    GeneralUtility::copyDirectory($filePath . '.files', $this->getOrCreateTemporaryFolderName());
-                } else {
-                    $this->addError('External import files for the given import source is currently not supported.');
-                }
-            }
-            if (strtolower($pathInfo['extension']) === 'xml') {
-                // XML:
-                $xmlContent = (string)file_get_contents($filePath);
-                if (strlen($xmlContent)) {
-                    $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
-                    if (is_array($this->dat)) {
-                        if ($this->dat['_DOCUMENT_TAG'] === 'T3RecordDocument' && is_array($this->dat['header']) && is_array($this->dat['records'])) {
-                            $this->loadInit();
-                        } else {
-                            $this->addError('XML file did not contain proper XML for TYPO3 Import');
-                        }
-                    } else {
-                        $this->addError('XML could not be parsed: ' . $this->dat);
-                    }
-                } else {
-                    $this->addError('Error opening file: ' . $filePath);
-                }
-            } else {
-                // T3D
-                if ($fd = fopen($filePath, 'rb')) {
-                    $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
-                    if ($all) {
-                        $this->dat['records'] = $this->getNextFilePart($fd, true, 'records');
-                        $this->dat['files'] = $this->getNextFilePart($fd, true, 'files');
-                        $this->dat['files_fal'] = $this->getNextFilePart($fd, true, 'files_fal');
-                    }
-                    $this->loadInit();
-                    fclose($fd);
-                } else {
-                    $this->addError('Error opening file: ' . $filePath);
-                }
-            }
-        }
-
-        if ($this->hasErrors()) {
-            throw new LoadingFileFailedException(
-                sprintf('Loading of the import file "%s" failed.', $fileName), 1484484619
-            );
-        }
-    }
-
-    /**
-     * Returns the next content part form the fileresource (t3d), $fd
-     *
-     * @param resource $fd File pointer
-     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
-     * @param string $name For error messages this indicates the section of the problem.
-     * @return string|null Data string or NULL in case of an error
-     *
-     * @see loadFile()
-     */
-    protected function getNextFilePart($fd, bool $unserialize = false, string $name = ''): ?string
-    {
-        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
-        // Getting header data
-        $initStr = fread($fd, $initStrLen);
-        if (empty($initStr)) {
-            $this->addError('File does not contain data for "' . $name . '"');
-            return null;
-        }
-        $initStrDat = explode(':', $initStr);
-        if (strpos($initStrDat[0], 'Warning') !== false) {
-            $this->addError('File read error: Warning message in file. (' . $initStr . fgets($fd) . ')');
-            return null;
-        }
-        if ((string)$initStrDat[3] !== '') {
-            $this->addError('File read error: InitString had a wrong length. (' . $name . ')');
-            return null;
-        }
-        $datString = (string)fread($fd, (int)$initStrDat[2]);
-        fread($fd, 1);
-        if (hash_equals($initStrDat[0], md5($datString))) {
-            if ($initStrDat[1]) {
-                if ($this->decompressionAvailable) {
-                    $datString = (string)gzuncompress($datString);
-                } else {
-                    $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
-                    return null;
-                }
-            }
-            return $unserialize ? (string)unserialize($datString, ['allowed_classes' => false]) : $datString;
-        }
-        $this->addError('MD5 check failed (' . $name . ')');
-
-        return null;
-    }
-
-    /**
-     * Loads T3D file content into the $this->dat array
-     * (This function can be used to test the output strings from ->render())
-     *
-     * @param string $filecontent File content
-     */
-    public function loadContent(string $filecontent): void
-    {
-        $pointer = 0;
-        $this->dat['header'] = $this->getNextContentPart($filecontent, $pointer, true, 'header');
-        $this->dat['records'] = $this->getNextContentPart($filecontent, $pointer, true, 'records');
-        $this->dat['files'] = $this->getNextContentPart($filecontent, $pointer, true, 'files');
-        $this->loadInit();
-    }
-
-    /**
-     * Returns the next content part from the $filecontent
-     *
-     * @param string $filecontent File content string
-     * @param int $pointer File pointer (where to read from)
-     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
-     * @param string $name For error messages this indicates the section of the problem.
-     * @return string|null Data string
-     */
-    protected function getNextContentPart(string $filecontent, int &$pointer, bool $unserialize = false, string $name = ''): ?string
-    {
-        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
-        // getting header data
-        $initStr = substr($filecontent, $pointer, $initStrLen);
-        $pointer += $initStrLen;
-        $initStrDat = explode(':', $initStr);
-        if ((string)$initStrDat[3] !== '') {
-            $this->addError('Content read error: InitString had a wrong length. (' . $name . ')');
-            return null;
-        }
-        $datString = (string)substr($filecontent, $pointer, (int)$initStrDat[2]);
-        $pointer += (int)$initStrDat[2] + 1;
-        if (hash_equals($initStrDat[0], md5($datString))) {
-            if ($initStrDat[1]) {
-                if ($this->decompressionAvailable) {
-                    $datString = (string)gzuncompress($datString);
-                    return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
-                }
-                $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
-            }
-        } else {
-            $this->addError('MD5 check failed (' . $name . ')');
-        }
-        return null;
-    }
-
-    /**
-     * Setting up the object based on the recently loaded ->dat array
-     */
-    protected function loadInit(): void
-    {
-        $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
-        $this->excludeMap = (array)$this->dat['header']['excludeMap'];
-        $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
-    }
-
-    public function getMetaData(): array
-    {
-        return $this->dat['header']['meta'] ?? [];
     }
 
     /**************************
