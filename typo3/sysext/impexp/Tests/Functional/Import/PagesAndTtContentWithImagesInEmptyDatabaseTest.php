@@ -31,7 +31,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesOnCaseSensitiveFilesystems()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         if (!$this->isCaseSensitiveFilesystem()) {
@@ -57,7 +56,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesOnCaseInsensitiveFilesystems()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         if ($this->isCaseSensitiveFilesystem()) {
@@ -83,7 +81,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesButWithoutStorageOnCaseSensitiveFilesystems()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         if (!$this->isCaseSensitiveFilesystem()) {
@@ -109,7 +106,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesButWithoutStorageOnCaseInsensitiveFilesystems()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         if ($this->isCaseSensitiveFilesystem()) {
@@ -135,7 +131,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesWithSpacesInPath()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         $subject->loadFile(
@@ -159,7 +154,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImagesButNotIncluded()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         $subject->loadFile(
@@ -183,7 +177,6 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
     public function importPagesAndRelatedTtContentWithImageWithForcedUids()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         try {

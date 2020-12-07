@@ -42,8 +42,8 @@ class ExportTest extends UnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->exportMock = $this->getAccessibleMock(Export::class, ['isCompressionAvailable'], [], '', false);
-        $this->exportMock->expects(self::any())->method('isCompressionAvailable')->willReturn(true);
+        $this->exportMock = $this->getAccessibleMock(Export::class, ['dummy'], [], '', false);
+        $this->exportMock->_set('compressionAvailable', true);
     }
 
     /**

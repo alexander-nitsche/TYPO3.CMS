@@ -50,7 +50,6 @@ class ImportExportTest extends AbstractImportExportTestCase
         $recordTypesIncludeFields = include __DIR__ . '/Fixtures/IrreRecordsIncludeFields.php';
 
         $import = GeneralUtility::makeInstance(Import::class);
-        $import->init();
         $import->setPid(0);
         $import->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/irre-records.xml',

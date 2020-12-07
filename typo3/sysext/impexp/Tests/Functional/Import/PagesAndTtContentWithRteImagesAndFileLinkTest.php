@@ -38,7 +38,6 @@ class PagesAndTtContentWithRteImagesAndFileLinkTest extends AbstractImportExport
     public function importPagesAndRelatedTtContentWithRteImagesAndFileLink()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         $subject->loadFile(

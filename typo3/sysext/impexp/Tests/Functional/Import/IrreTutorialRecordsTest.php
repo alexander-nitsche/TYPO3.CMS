@@ -37,7 +37,6 @@ class IrreTutorialRecordsTest extends AbstractImportExportTestCase
     public function importIrreRecords()
     {
         $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->init();
         $subject->setPid(0);
 
         $subject->loadFile(

@@ -65,7 +65,6 @@ class ImportExportUtility
     public function importT3DFile(string $file, int $pid): int
     {
         $this->import = GeneralUtility::makeInstance(Import::class);
-        $this->import->init();
         $this->import->setPid($pid);
 
         $this->eventDispatcher->dispatch(new BeforeImportEvent($this->import));
