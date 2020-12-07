@@ -171,6 +171,7 @@ class Export extends ImportExport
      */
     public function process(): void
     {
+        $this->initializeExport();
         $this->setHeaderBasics();
         $this->setMetaData();
 
@@ -252,6 +253,17 @@ class Export extends ImportExport
         // so that files from ALL added records are included!
         $this->exportAddFilesFromRelations();
         $this->exportAddFilesFromSysFilesRecords();
+    }
+
+    /**
+     * Initialize all settings for the export
+     */
+    protected function initializeExport(): void
+    {
+        $this->dat = [
+            'header' => [],
+            'records' => [],
+        ];
     }
 
     /**

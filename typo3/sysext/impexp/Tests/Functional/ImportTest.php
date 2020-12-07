@@ -223,4 +223,47 @@ class ImportTest extends AbstractImportExportTestCase
             ]]
         ];
     }
+
+    /**
+     * @test
+     */
+    public function loadXmlSucceeds(): void
+    {
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlExports/empty.xml',
+            true
+        );
+        self::assertTrue(true);
+    }
+
+    /**
+     * @test
+     */
+    public function loadT3dSucceeds(): void
+    {
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/T3dExports/empty.t3d',
+            true
+        );
+        self::assertTrue(true);
+    }
+
+    /**
+     * @test
+     */
+    public function loadT3dCompressedSucceeds(): void
+    {
+        if (!function_exists('gzuncompress')) {
+            self::markTestSkipped('The function gzuncompress() is not available for decompression.');
+        }
+
+        $this->importMock->setPid(0);
+        $this->importMock->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/T3dExports/empty-z.t3d',
+            true
+        );
+        self::assertTrue(true);
+    }
 }
