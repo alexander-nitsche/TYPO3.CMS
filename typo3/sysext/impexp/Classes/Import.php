@@ -121,34 +121,6 @@ class Import extends ImportExport
      ***********************/
 
     /**
-     * Initialize all settings for the import
-     */
-    protected function initializeImport(): void
-    {
-        // Set this flag to indicate that an import is being/has been done.
-        $this->doesImport = 1;
-        // Initialize:
-        // These vars MUST last for the whole section not being cleared. They are used by the method setRelations() which are called at the end of the import session.
-        $this->importMapId = [];
-        $this->importNewId = [];
-        $this->importNewIdPids = [];
-        // Temporary files stack initialized:
-        $this->unlinkFiles = [];
-
-        $this->initializeStorageObjects();
-    }
-
-    /**
-     * Initialize the all present storage objects
-     */
-    protected function initializeStorageObjects(): void
-    {
-        /** @var StorageRepository $storageRepository */
-        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        $this->storageObjects = $storageRepository->findAll();
-    }
-
-    /**
      * Imports the internal data array to $pid.
      *
      * @throws ImportFailedException
@@ -178,6 +150,34 @@ class Import extends ImportExport
         if ($this->hasErrors()) {
             throw new ImportFailedException('The import has failed.', 1484484613);
         }
+    }
+
+    /**
+     * Initialize all settings for the import
+     */
+    protected function initializeImport(): void
+    {
+        // Set this flag to indicate that an import is being/has been done.
+        $this->doesImport = 1;
+        // Initialize:
+        // These vars MUST last for the whole section not being cleared. They are used by the method setRelations() which are called at the end of the import session.
+        $this->importMapId = [];
+        $this->importNewId = [];
+        $this->importNewIdPids = [];
+        // Temporary files stack initialized:
+        $this->unlinkFiles = [];
+
+        $this->initializeStorageObjects();
+    }
+
+    /**
+     * Initialize the all present storage objects
+     */
+    protected function initializeStorageObjects(): void
+    {
+        /** @var StorageRepository $storageRepository */
+        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
+        $this->storageObjects = $storageRepository->findAll();
     }
 
     /**
