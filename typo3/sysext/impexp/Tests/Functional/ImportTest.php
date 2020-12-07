@@ -51,7 +51,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $filePath = str_replace('%EnvironmentPublicPath%', Environment::getPublicPath(), $filePath);
 
-        $this->importMock->init();
         $this->importMock->loadFile($filePath);
 
         self::assertTrue(true);
@@ -76,7 +75,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $this->expectException(LoadingFileFailedException::class);
 
-        $this->importMock->init();
         $this->importMock->loadFile($filePath);
     }
 
@@ -97,7 +95,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecords.php';
 
-        $this->importMock->init();
         $this->importMock->setPid(0);
         $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
         $previewData = $this->importMock->renderPreview();
@@ -111,7 +108,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdate.php';
 
-        $this->importMock->init();
         $this->importMock->setPid(0);
         $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
         $this->importMock->importData();
@@ -127,7 +123,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithDiff.php';
 
-        $this->importMock->init();
         $this->importMock->setPid(0);
         $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
         $this->importMock->importData();
@@ -144,7 +139,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdateWithDiff.php';
 
-        $this->importMock->init();
         $this->importMock->setPid(0);
         $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
         $this->importMock->importData();
@@ -162,7 +156,6 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithSoftRefs.php';
 
-        $this->importMock->init();
         $this->importMock->setPid(0);
         $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-softrefs.xml');
         $previewData = $this->importMock->renderPreview();
@@ -186,7 +179,6 @@ class ImportTest extends AbstractImportExportTestCase
             ['addError'],
             [], '', true
         );
-        $importMock->init();
 
         $lines = [];
         $importMock->_set('dat', $dat);

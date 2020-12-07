@@ -103,22 +103,17 @@ class Import extends ImportExport
     protected $unlinkFiles = [];
 
     /**
-     * Set internally if the gzcompress function exists
-     *
      * @var bool
      */
-    protected $compress = false;
-
-    /**************************
-     * Initialize
-     *************************/
+    protected $decompressionAvailable = false;
 
     /**
-     * Init the object
+     * The constructor
      */
-    public function init(): void
+    public function __construct()
     {
-        $this->compress = function_exists('gzcompress');
+        parent::__construct();
+        $this->decompressionAvailable = function_exists('gzuncompress');
     }
 
     /***********************
@@ -1747,7 +1742,7 @@ class Import extends ImportExport
         fread($fd, 1);
         if (hash_equals($initStrDat[0], md5($datString))) {
             if ($initStrDat[1]) {
-                if ($this->compress) {
+                if ($this->decompressionAvailable) {
                     $datString = (string)gzuncompress($datString);
                 } else {
                     $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
@@ -1800,7 +1795,7 @@ class Import extends ImportExport
         $pointer += (int)$initStrDat[2] + 1;
         if (hash_equals($initStrDat[0], md5($datString))) {
             if ($initStrDat[1]) {
-                if ($this->compress) {
+                if ($this->decompressionAvailable) {
                     $datString = (string)gzuncompress($datString);
                     return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
                 }
@@ -1830,22 +1825,6 @@ class Import extends ImportExport
     /**************************
      * Getters and Setters
      *************************/
-
-    /**
-     * @return bool
-     */
-    public function isCompress(): bool
-    {
-        return $this->compress;
-    }
-
-    /**
-     * @param bool $compress
-     */
-    public function setCompress(bool $compress): void
-    {
-        $this->compress = $compress;
-    }
 
     /**
      * @return bool

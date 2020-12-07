@@ -156,11 +156,25 @@ class Export extends ImportExport
     protected $supportedFileTypes = [];
 
     /**
+     * @var bool
+     */
+    protected $compressionAvailable = false;
+
+    /**
      * Cache for checks if page is in user web mounts.
      *
      * @var array
      */
     protected $pageInWebMountCache = [];
+
+    /**
+     * The constructor
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->compressionAvailable = function_exists('gzcompress');
+    }
 
     /**************************
      * Export / Init + Meta Data
@@ -1392,20 +1406,12 @@ class Export extends ImportExport
             $supportedFileTypes = [];
             $supportedFileTypes[] = self::FILETYPE_XML;
             $supportedFileTypes[] = self::FILETYPE_T3D;
-            if ($this->isCompressionAvailable()) {
+            if ($this->compressionAvailable) {
                 $supportedFileTypes[] = self::FILETYPE_T3DZ;
             }
             $this->supportedFileTypes = $supportedFileTypes;
         }
         return $this->supportedFileTypes;
-    }
-
-    /**
-     * @return bool
-     */
-    protected function isCompressionAvailable(): bool
-    {
-        return function_exists('gzcompress');
     }
 
     /**

@@ -191,7 +191,6 @@ class ImportController extends ImportExportController
     {
         // Create import object and configure it:
         $this->import = GeneralUtility::makeInstance(Import::class);
-        $this->import->init();
         $this->import->setPid($this->id);
         $this->import->setUpdate((bool)$inData['do_update']);
         $this->import->setImportMode((array)$inData['import_mode']);

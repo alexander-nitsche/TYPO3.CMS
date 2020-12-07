@@ -96,19 +96,15 @@ class ImportCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $import = $this->getImport();
-        $import->init();
-
         try {
             $import->setPid((int)$input->getArgument('pageId'));
             $import->setUpdate((bool)$input->getOption('updateRecords'));
             $import->setGlobalIgnorePid((bool)$input->getOption('ignorePid'));
             $import->setForceAllUids((bool)$input->getOption('forceUid'));
             $import->setEnableLogging((bool)$input->getOption('enableLog'));
-
             $import->loadFile((string)$input->getArgument('file'), true);
             $import->checkImportPrerequisites();
             $import->importData();
-
             $io->success('Importing ' . $input->getArgument('file') . ' to page ' . $input->getArgument('pageId') . ' succeeded.');
             return 0;
         } catch (\Exception $e) {
