@@ -103,11 +103,6 @@ class Import extends ImportExport
     protected $unlinkFiles = [];
 
     /**
-     * @var array
-     */
-    protected $filePathMap = [];
-
-    /**
      * Set internally if the gzcompress function exists
      *
      * @var bool
