@@ -9,4 +9,5 @@
 		<extensionDependencies type="array"></extensionDependencies>
 		<charset>utf-8</charset>
 	</header>
+	<records type="array"></records>
 </T3RecordDocument>
