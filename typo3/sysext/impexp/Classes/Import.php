@@ -98,11 +98,6 @@ class Import extends ImportExport
     protected $storageObjects = [];
 
     /**
-     * @var string|null
-     */
-    protected $filesPathForImport;
-
-    /**
      * @var array
      */
     protected $unlinkFiles = [];
