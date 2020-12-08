@@ -98,6 +98,8 @@ class Import extends ImportExport
     protected $storageObjects = [];
 
     /**
+     * Temporary files stack
+     *
      * @var array
      */
     protected $unlinkFiles = [];
@@ -331,14 +333,10 @@ class Import extends ImportExport
      */
     protected function initializeImport(): void
     {
-        // Set this flag to indicate that an import is being/has been done.
         $this->doesImport = 1;
-        // Initialize:
-        // These vars MUST last for the whole section not being cleared. They are used by the method setRelations() which are called at the end of the import session.
         $this->importMapId = [];
         $this->importNewId = [];
         $this->importNewIdPids = [];
-        // Temporary files stack initialized:
         $this->unlinkFiles = [];
 
         $this->initializeStorageObjects();

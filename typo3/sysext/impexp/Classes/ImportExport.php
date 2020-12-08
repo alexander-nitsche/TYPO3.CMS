@@ -83,7 +83,7 @@ abstract class ImportExport
     protected $update = false;
 
     /**
-     * Is set by importData() when an import has been done.
+     * Set by importData() when an import is started.
      *
      * @var bool
      */
