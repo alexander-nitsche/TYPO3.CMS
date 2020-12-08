@@ -360,36 +360,38 @@ class Import extends ImportExport
         if (!isset($this->dat['header']['records']['sys_file_storage'])) {
             return;
         }
+
         $sysFileStorageUidsToBeResetToDefaultStorage = [];
-        foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => $_) {
-            $storageRecord = $this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
-            // continue with Local, writable and online storage only
+
+        foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => &$_) {
+            $storageRecord = &$this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
             if ($storageRecord['driver'] === 'Local' && $storageRecord['is_writable'] && $storageRecord['is_online']) {
-                foreach ($this->storages as $localStorage) {
-                    if ($this->isEquivalentStorage($localStorage, $storageRecord)) {
-                        $this->importMapId['sys_file_storage'][$sysFileStorageUid] = $localStorage->getUid();
+                foreach ($this->storages as &$storage) {
+                    if ($this->isEquivalentStorage($storage, $storageRecord)) {
+                        $this->importMapId['sys_file_storage'][$sysFileStorageUid] = $storage->getUid();
                         break;
                     }
                 }
 
                 if (!isset($this->importMapId['sys_file_storage'][$sysFileStorageUid])) {
-                    // Local, writable and online storage. Is allowed to be used to later write files in.
-                    // Does currently not exist so add the record.
+                    // Local, writable and online storage. May be used later for writing files.
+                    // Does not currently exist, mark the storage for import.
                     $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
                 }
             } else {
-                // Storage with non Local drivers could be imported but must not be used to saves files in, because you
-                // could not be sure, that this is supported. The default storage will be used in this case.
-                // It could happen that non writable and non online storage will be created as dupes because you could not
-                // check the detailed configuration options at this point
+                // Storage with non-local drivers can be imported, but must not be used to save files as you cannot
+                // be sure that this is supported. In this case the default storage is used. Non-writable and
+                // non-online storage may be created as duplicates because you were unable to check the detailed
+                // configuration options at that time.
                 $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
                 $sysFileStorageUidsToBeResetToDefaultStorage[] = $sysFileStorageUid;
             }
         }
 
-        // Importing the added ones
+        // Now write to database
         $tce = $this->getNewTCE();
-        // Because all records are being submitted in their correct order with positive pid numbers - and so we should reverse submission order internally.
+        // Because all records are submitted in the correct order with positive pid numbers,
+        // we should internally reverse the order of submission.
         $tce->reverseOrder = 1;
         $tce->isImporting = true;
         $tce->start($this->importData, []);
@@ -397,7 +399,6 @@ class Import extends ImportExport
         $this->addToMapId($tce->substNEWwithIDs);
 
         $defaultStorageUid = null;
-        // get default storage
         $defaultStorage = GeneralUtility::makeInstance(StorageRepository::class)->getDefaultStorage();
         if ($defaultStorage !== null) {
             $defaultStorageUid = $defaultStorage->getUid();
@@ -406,7 +407,7 @@ class Import extends ImportExport
             $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
-        // unset the sys_file_storage records to prevent an import in writeRecordsRecords
+        // Unset the sys_file_storage records to prevent an import in writeRecordsRecords()
         unset($this->dat['header']['records']['sys_file_storage']);
     }
 
