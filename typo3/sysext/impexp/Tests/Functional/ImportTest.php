@@ -32,17 +32,6 @@ class ImportTest extends AbstractImportExportTestCase
     ];
 
     /**
-     * @var Import|MockObject|AccessibleObjectInterface
-     */
-    protected $importMock;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->importMock = $this->getAccessibleMock(Import::class, ['dummy']);
-    }
-
-    /**
      * @test
      * @dataProvider loadingFileFromWithinTypo3BaseFolderSucceedsProvider
      * @param string $filePath
@@ -51,7 +40,8 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $filePath = str_replace('%EnvironmentPublicPath%', Environment::getPublicPath(), $filePath);
 
-        $this->importMock->loadFile($filePath);
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->loadFile($filePath);
 
         self::assertTrue(true);
     }
@@ -75,7 +65,10 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $this->expectException(LoadingFileFailedException::class);
 
-        $this->importMock->loadFile($filePath);
+        $importMock = $this->getAccessibleMock(Import::class, ['loadInit']);
+        $importMock->expects(self::never())->method('loadInit');
+        $importMock->loadFile($filePath);
+        self::assertEmpty($importMock->_get('dat'));
     }
 
     public function loadingFileFailsProvider(): array
@@ -84,6 +77,7 @@ class ImportTest extends AbstractImportExportTestCase
             'storage path' => ['1:/xml_imports/sys_language.xml'],
             'absolute path outside typo3 base folder' => ['/fileadmin/xml_imports/sys_language.xml'],
             'path to not existing file' => ['fileadmin/xml_imports/me_does_not_exist.xml'],
+            'unsupported file extension' => ['EXT:impexp/Tests/Functional/Fixtures/XmlImports/unsupported.json'],
             'empty path' => [''],
         ];
     }
@@ -95,9 +89,10 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecords.php';
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
-        $previewData = $this->importMock->renderPreview();
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $previewData = $importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
 
@@ -108,11 +103,12 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdate.php';
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
-        $this->importMock->importData();
-        $this->importMock->setUpdate(true);
-        $previewData = $this->importMock->renderPreview();
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $importMock->importData();
+        $importMock->setUpdate(true);
+        $previewData = $importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
 
@@ -123,12 +119,13 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithDiff.php';
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
-        $this->importMock->importData();
-        $this->importMock->setShowDiff(true);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
-        $previewData = $this->importMock->renderPreview();
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $importMock->importData();
+        $importMock->setShowDiff(true);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
+        $previewData = $importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
 
@@ -139,13 +136,14 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsByUpdateWithDiff.php';
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
-        $this->importMock->importData();
-        $this->importMock->setShowDiff(true);
-        $this->importMock->setUpdate(true);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
-        $previewData = $this->importMock->renderPreview();
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml');
+        $importMock->importData();
+        $importMock->setShowDiff(true);
+        $importMock->setUpdate(true);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml');
+        $previewData = $importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
 
@@ -156,9 +154,10 @@ class ImportTest extends AbstractImportExportTestCase
     {
         $renderPreviewImport = include __DIR__ . '/Fixtures/ArrayAssertions/RenderPreviewImportPageAndRecordsWithSoftRefs.php';
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-softrefs.xml');
-        $previewData = $this->importMock->renderPreview();
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile('EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-softrefs.xml');
+        $previewData = $importMock->renderPreview();
         self::assertEquals($renderPreviewImport, $previewData);
     }
 
@@ -221,8 +220,9 @@ class ImportTest extends AbstractImportExportTestCase
      */
     public function loadXmlSucceeds(): void
     {
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile(
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlExports/empty.xml',
             true
         );
@@ -234,8 +234,9 @@ class ImportTest extends AbstractImportExportTestCase
      */
     public function loadT3dSucceeds(): void
     {
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile(
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/T3dExports/empty.t3d',
             true
         );
@@ -251,8 +252,9 @@ class ImportTest extends AbstractImportExportTestCase
             self::markTestSkipped('The function gzuncompress() is not available for decompression.');
         }
 
-        $this->importMock->setPid(0);
-        $this->importMock->loadFile(
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/T3dExports/empty-z.t3d',
             true
         );

@@ -50,6 +50,9 @@ class ImportExportUtilityTest extends AbstractImportExportTestCase
             'path to not existing file' => [
                 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml',
             ],
+            'unsupported file extension' => [
+                'EXT:impexp/Tests/Functional/Fixtures/XmlImports/unsupported.json',
+            ],
             'missing required extension' => [
                 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',
             ],

@@ -107,7 +107,11 @@ class ImportCommandTest extends AbstractImportExportTestCase
         return [
             'path to not existing file' => [
                 'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml',
-                'expected' => 'Loading of the import file "EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml" failed.'
+                'expected' => 'File not found: '
+            ],
+            'unsupported file extension' => [
+                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/unsupported.json',
+                'expected' => 'File extension "json" is not valid. Supported file extensions are "xml", "t3d".'
             ],
             'missing required extension' => [
                 'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',

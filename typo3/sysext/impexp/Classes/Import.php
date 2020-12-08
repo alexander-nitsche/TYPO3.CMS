@@ -108,6 +108,11 @@ class Import extends ImportExport
     protected $decompressionAvailable = false;
 
     /**
+     * @var array
+     */
+    private $supportedFileExtensions = [];
+
+    /**
      * The constructor
      */
     public function __construct()
@@ -121,7 +126,7 @@ class Import extends ImportExport
      *************************/
 
     /**
-     * Loads the header section/all of the $fileName into memory
+     * Loads the TYPO3 import file $fileName into memory.
      *
      * @param string $fileName File path, has to be within the TYPO3's base folder
      * @param bool $all If set, all information is loaded (header, records and files). Otherwise the default is to read only the header information
@@ -137,8 +142,28 @@ class Import extends ImportExport
             $this->addError('File not found: ' . $filePath);
         }
 
+        if ($this->hasErrors()) {
+            throw new LoadingFileFailedException(
+                sprintf('Loading of the import file "%s" failed.', $fileName), 1484484619
+            );
+        }
+
+        $pathInfo = pathinfo($filePath);
+        $fileExtension = strtolower($pathInfo['extension']);
+
+        if (!in_array($fileExtension, $this->getSupportedFileExtensions())) {
+            $this->addError(
+                sprintf(
+                    'File extension "%s" is not valid. Supported file extensions are %s.',
+                    $fileExtension,
+                    implode(', ', array_map(function($supportedFileExtension){
+                        return '"' . $supportedFileExtension . '"';
+                    }, $this->getSupportedFileExtensions()))
+                )
+            );
+        }
+
         if ($this->hasErrors() === false) {
-            $pathInfo = pathinfo($filePath);
             if (@is_dir($filePath . '.files')) {
                 if (GeneralUtility::isAllowedAbsPath($filePath . '.files')) {
                     // copy the folder lowlevel to typo3temp, because the files would be deleted after import
@@ -147,8 +172,7 @@ class Import extends ImportExport
                     $this->addError('External import files for the given import source is currently not supported.');
                 }
             }
-            if (strtolower($pathInfo['extension']) === 'xml') {
-                // XML:
+            if ($fileExtension === 'xml') {
                 $xmlContent = (string)file_get_contents($filePath);
                 if (strlen($xmlContent)) {
                     $this->dat = GeneralUtility::xml2array($xmlContent, '', true);
@@ -164,8 +188,7 @@ class Import extends ImportExport
                 } else {
                     $this->addError('Error opening file: ' . $filePath);
                 }
-            } else {
-                // T3D
+            } elseif ($fileExtension === 't3d') {
                 if ($fd = fopen($filePath, 'rb')) {
                     $this->dat['header'] = $this->getNextFilePart($fd, true, 'header');
                     if ($all) {
@@ -186,6 +209,20 @@ class Import extends ImportExport
                 sprintf('Loading of the import file "%s" failed.', $fileName), 1484484619
             );
         }
+    }
+
+    /**
+     * @return array
+     */
+    public function getSupportedFileExtensions(): array
+    {
+        if (empty($this->supportedFileExtensions)) {
+            $supportedFileExtensions = [];
+            $supportedFileExtensions[] = 'xml';
+            $supportedFileExtensions[] = 't3d';
+            $this->supportedFileExtensions = $supportedFileExtensions;
+        }
+        return $this->supportedFileExtensions;
     }
 
     /**
