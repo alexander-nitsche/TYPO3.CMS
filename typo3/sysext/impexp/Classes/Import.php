@@ -297,6 +297,77 @@ class Import extends ImportExport
      ***********************/
 
     /**
+     * Checks any prerequisites necessary to get fulfilled before import
+     *
+     * @throws PrerequisitesNotMetException
+     */
+    public function checkImportPrerequisites(): void
+    {
+        // Check #1: Extension dependencies
+        $extKeysToInstall = [];
+        foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
+            if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
+                $extKeysToInstall[] = $extKey;
+            }
+        }
+        if (!empty($extKeysToInstall)) {
+            $this->addError(
+                sprintf(
+                    'Before you can import this file you need to install the extensions "%s".',
+                    implode('", "', $extKeysToInstall)
+                )
+            );
+        }
+
+        // Check #2: If the path for every local storage object exists.
+        // Else files can't get moved into a newly imported storage.
+        if (!empty($this->dat['header']['records']['sys_file_storage'])) {
+            foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => $_) {
+                $storageRecord = $this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
+                // continue with Local, writable and online storage only
+                if ($storageRecord['driver'] === 'Local'
+                    && $storageRecord['is_writable']
+                    && $storageRecord['is_online']
+                ) {
+                    foreach ($this->storages as $storage) {
+                        if ($this->isEquivalentStorage($storage, $storageRecord)) {
+                            // There is already an existing storage
+                            break;
+                        }
+
+                        // The storage from the import does not have an equivalent storage
+                        // in the current instance (same driver, same path, etc.). Before
+                        // the storage record can get inserted later on take care the path
+                        // it points to really exists and is accessible.
+                        $storageRecordUid = $storageRecord['uid'];
+                        // Unset the storage record UID when trying to create the storage object
+                        // as the record does not already exist in DB. The constructor of the
+                        // storage object will check whether the target folder exists and set the
+                        // isOnline flag depending on the outcome.
+                        $storageRecord['uid'] = 0;
+                        $storage = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecord);
+                        if (!$storage->isOnline()) {
+                            $configuration = $storage->getConfiguration();
+                            $this->addError(
+                                sprintf(
+                                    'The file storage "%s" does not exist. Please create the directory prior to starting the import!',
+                                    $storage->getName() . $configuration['basePath']
+                                )
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($this->hasErrors()) {
+            throw new PrerequisitesNotMetException(
+                'Prerequisites for file import are not met.', 1484484612
+            );
+        }
+    }
+
+    /**
      * Imports the internal data array to $pid.
      *
      * @throws ImportFailedException
@@ -435,77 +506,6 @@ class Import extends ImportExport
             }
         }
         return false;
-    }
-
-    /**
-     * Checks any prerequisites necessary to get fulfilled before import
-     *
-     * @throws PrerequisitesNotMetException
-     */
-    public function checkImportPrerequisites(): void
-    {
-        // Check #1: Extension dependencies
-        $extKeysToInstall = [];
-        foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
-            if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
-                $extKeysToInstall[] = $extKey;
-            }
-        }
-        if (!empty($extKeysToInstall)) {
-            $this->addError(
-                sprintf(
-                    'Before you can import this file you need to install the extensions "%s".',
-                    implode('", "', $extKeysToInstall)
-                )
-            );
-        }
-
-        // Check #2: If the path for every local storage object exists.
-        // Else files can't get moved into a newly imported storage.
-        if (!empty($this->dat['header']['records']['sys_file_storage'])) {
-            foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => $_) {
-                $storageRecord = $this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
-                // continue with Local, writable and online storage only
-                if ($storageRecord['driver'] === 'Local'
-                    && $storageRecord['is_writable']
-                    && $storageRecord['is_online']
-                ) {
-                    foreach ($this->storages as $localStorage) {
-                        if ($this->isEquivalentStorage($localStorage, $storageRecord)) {
-                            // There is already an existing storage
-                            break;
-                        }
-
-                        // The storage from the import does not have an equivalent storage
-                        // in the current instance (same driver, same path, etc.). Before
-                        // the storage record can get inserted later on take care the path
-                        // it points to really exists and is accessible.
-                        $storageRecordUid = $storageRecord['uid'];
-                        // Unset the storage record UID when trying to create the storage object
-                        // as the record does not already exist in DB. The constructor of the
-                        // storage object will check whether the target folder exists and set the
-                        // isOnline flag depending on the outcome.
-                        $storageRecord['uid'] = 0;
-                        $storage = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecord);
-                        if (!$storage->isOnline()) {
-                            $configuration = $storage->getConfiguration();
-                            $this->addError(
-                                sprintf(
-                                    'The file storage "%s" does not exist. Please create the directory prior to starting the import!',
-                                    $storage->getName() . $configuration['basePath']
-                                )
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        if ($this->hasErrors()) {
-            throw new PrerequisitesNotMetException(
-                'Prerequisites for file import are not met.', 1484484612
-            );
-        }
     }
 
     /**
