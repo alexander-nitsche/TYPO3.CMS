@@ -412,23 +412,22 @@ class Import extends ImportExport
     }
 
     /**
-     * Determines whether the passed storage object and record (sys_file_storage) can be
-     * seen as equivalent during import.
+     * Determines whether the passed storage object and the storage record (sys_file_storage) can be considered
+     * equivalent during the import.
      *
      * @param ResourceStorage $storageObject The storage object which should get compared
      * @param array $storageRecord The storage record which should get compared
-     * @return bool Returns TRUE when both object storages can be seen as equivalent
+     * @return bool Returns TRUE if both storage representations can be considered equal
      */
-    protected function isEquivalentStorage(ResourceStorage $storageObject, array $storageRecord): bool
+    protected function isEquivalentStorage(ResourceStorage &$storageObject, array &$storageRecord): bool
     {
-        // compare the properties: driver, writable and online
         if ($storageObject->getDriverType() === $storageRecord['driver']
             && (bool)$storageObject->isWritable() === (bool)$storageRecord['is_writable']
             && (bool)$storageObject->isOnline() === (bool)$storageRecord['is_online']
         ) {
-            $storageRecordConfiguration = GeneralUtility::makeInstance(FlexFormService::class)->convertFlexFormContentToArray($storageRecord['configuration'] ?? '');
+            $storageRecordConfiguration = GeneralUtility::makeInstance(FlexFormService::class)
+                ->convertFlexFormContentToArray($storageRecord['configuration'] ?? '');
             $storageObjectConfiguration = $storageObject->getConfiguration();
-            // compare the properties: pathType and basePath
             if ($storageRecordConfiguration['pathType'] === $storageObjectConfiguration['pathType']
                 && $storageRecordConfiguration['basePath'] === $storageObjectConfiguration['basePath']
             ) {
