@@ -276,57 +276,6 @@ class Import extends ImportExport
     }
 
     /**
-     * Loads T3D file content into the $this->dat array
-     * (This function can be used to test the output strings from ->render())
-     *
-     * @param string $filecontent File content
-     */
-    public function loadContent(string $filecontent): void
-    {
-        $pointer = 0;
-        $this->dat['header'] = $this->getNextContentPart($filecontent, $pointer, true, 'header');
-        $this->dat['records'] = $this->getNextContentPart($filecontent, $pointer, true, 'records');
-        $this->dat['files'] = $this->getNextContentPart($filecontent, $pointer, true, 'files');
-        $this->loadInit();
-    }
-
-    /**
-     * Returns the next content part from the $filecontent
-     *
-     * @param string $filecontent File content string
-     * @param int $pointer File pointer (where to read from)
-     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
-     * @param string $name For error messages this indicates the section of the problem.
-     * @return string|null Data string
-     */
-    protected function getNextContentPart(string $filecontent, int &$pointer, bool $unserialize = false, string $name = ''): ?string
-    {
-        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
-        // getting header data
-        $initStr = substr($filecontent, $pointer, $initStrLen);
-        $pointer += $initStrLen;
-        $initStrDat = explode(':', $initStr);
-        if ((string)$initStrDat[3] !== '') {
-            $this->addError('Content read error: InitString had a wrong length. (' . $name . ')');
-            return null;
-        }
-        $datString = (string)substr($filecontent, $pointer, (int)$initStrDat[2]);
-        $pointer += (int)$initStrDat[2] + 1;
-        if (hash_equals($initStrDat[0], md5($datString))) {
-            if ($initStrDat[1]) {
-                if ($this->decompressionAvailable) {
-                    $datString = (string)gzuncompress($datString);
-                    return $unserialize ? unserialize($datString, ['allowed_classes' => false]) : $datString;
-                }
-                $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
-            }
-        } else {
-            $this->addError('MD5 check failed (' . $name . ')');
-        }
-        return null;
-    }
-
-    /**
      * Setting up the object based on the recently loaded ->dat array
      */
     protected function loadInit(): void
