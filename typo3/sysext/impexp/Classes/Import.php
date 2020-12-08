@@ -226,10 +226,10 @@ class Import extends ImportExport
     }
 
     /**
-     * Returns the next content part form the fileresource (t3d), $fd
+     * Extracts the next content part of the T3D file
      *
-     * @param resource $fd File pointer
-     * @param bool $unserialize If set, the returned content is unserialized into an array, otherwise you get the raw string
+     * @param resource $fd Import file pointer
+     * @param bool $unserialize If set, the returned content is deserialized into an array, otherwise you get the raw string
      * @param string $name For error messages this indicates the section of the problem.
      * @return string|null Data string or NULL in case of an error
      *
@@ -237,38 +237,42 @@ class Import extends ImportExport
      */
     protected function getNextFilePart($fd, bool $unserialize = false, string $name = ''): ?string
     {
-        $initStrLen = 32 + 1 + 1 + 1 + 10 + 1;
-        // Getting header data
-        $initStr = fread($fd, $initStrLen);
-        if (empty($initStr)) {
+        $headerLength = 32 + 1 + 1 + 1 + 10 + 1;
+        $headerString = fread($fd, $headerLength);
+        if (empty($headerString)) {
             $this->addError('File does not contain data for "' . $name . '"');
             return null;
         }
-        $initStrDat = explode(':', $initStr);
-        if (strpos($initStrDat[0], 'Warning') !== false) {
-            $this->addError('File read error: Warning message in file. (' . $initStr . fgets($fd) . ')');
+
+        $header = explode(':', $headerString);
+        if (strpos($header[0], 'Warning') !== false) {
+            $this->addError('File read error: Warning message in file. (' . $headerString . fgets($fd) . ')');
             return null;
         }
-        if ((string)$initStrDat[3] !== '') {
+        if ((string)$header[3] !== '') {
             $this->addError('File read error: InitString had a wrong length. (' . $name . ')');
             return null;
         }
-        $datString = (string)fread($fd, (int)$initStrDat[2]);
-        fread($fd, 1);
-        if (hash_equals($initStrDat[0], md5($datString))) {
-            if ($initStrDat[1]) {
-                if ($this->decompressionAvailable) {
-                    $datString = (string)gzuncompress($datString);
-                } else {
-                    $this->addError('Content read error: This file requires decompression, but this server does not offer gzcompress()/gzuncompress() functions.');
-                    return null;
-                }
-            }
-            return $unserialize ? (string)unserialize($datString, ['allowed_classes' => false]) : $datString;
-        }
-        $this->addError('MD5 check failed (' . $name . ')');
 
-        return null;
+        $dataString = (string)fread($fd, (int)$header[2]);
+        $isDataCompressed = $header[1] === '1';
+        fread($fd, 1);
+        if (!hash_equals($header[0], md5($dataString))) {
+            $this->addError('MD5 check failed (' . $name . ')');
+            return null;
+        }
+
+        if ($isDataCompressed) {
+            if ($this->decompressionAvailable) {
+                $dataString = (string)gzuncompress($dataString);
+            } else {
+                $this->addError('Content read error: This file requires decompression, ' .
+                    'but this server does not offer gzcompress()/gzuncompress() functions.');
+                return null;
+            }
+        }
+
+        return $unserialize ? (string)unserialize($dataString, ['allowed_classes' => false]) : $dataString;
     }
 
     /**

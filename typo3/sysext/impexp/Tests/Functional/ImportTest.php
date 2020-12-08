@@ -246,6 +246,21 @@ class ImportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
+    public function loadT3dFails(): void
+    {
+        $this->expectException(LoadingFileFailedException::class);
+
+        $importMock = $this->getAccessibleMock(Import::class, ['dummy']);
+        $importMock->setPid(0);
+        $importMock->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/T3dExports/empty-with-wrong-checksum.t3d',
+            true
+        );
+    }
+
+    /**
+     * @test
+     */
     public function loadT3dCompressedSucceeds(): void
     {
         if (!function_exists('gzuncompress')) {
