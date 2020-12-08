@@ -95,7 +95,7 @@ class Import extends ImportExport
      *
      * @var ResourceStorage[]
      */
-    protected $storageObjects = [];
+    protected $storages = [];
 
     /**
      * Temporary files stack
@@ -339,17 +339,17 @@ class Import extends ImportExport
         $this->importNewIdPids = [];
         $this->unlinkFiles = [];
 
-        $this->initializeStorageObjects();
+        $this->initializeStorages();
     }
 
     /**
-     * Initialize the all present storage objects
+     * Fetch all available file storages
      */
-    protected function initializeStorageObjects(): void
+    protected function initializeStorages(): void
     {
         /** @var StorageRepository $storageRepository */
         $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        $this->storageObjects = $storageRepository->findAll();
+        $this->storages = $storageRepository->findAll();
     }
 
     /**
@@ -365,8 +365,8 @@ class Import extends ImportExport
             $storageRecord = $this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
             // continue with Local, writable and online storage only
             if ($storageRecord['driver'] === 'Local' && $storageRecord['is_writable'] && $storageRecord['is_online']) {
-                foreach ($this->storageObjects as $localStorage) {
-                    if ($this->isEquivalentObjectStorage($localStorage, $storageRecord)) {
+                foreach ($this->storages as $localStorage) {
+                    if ($this->isEquivalentStorage($localStorage, $storageRecord)) {
                         $this->importMapId['sys_file_storage'][$sysFileStorageUid] = $localStorage->getUid();
                         break;
                     }
@@ -418,7 +418,7 @@ class Import extends ImportExport
      * @param array $storageRecord The storage record which should get compared
      * @return bool Returns TRUE when both object storages can be seen as equivalent
      */
-    protected function isEquivalentObjectStorage(ResourceStorage $storageObject, array $storageRecord): bool
+    protected function isEquivalentStorage(ResourceStorage $storageObject, array $storageRecord): bool
     {
         // compare the properties: driver, writable and online
         if ($storageObject->getDriverType() === $storageRecord['driver']
@@ -470,8 +470,8 @@ class Import extends ImportExport
                     && $storageRecord['is_writable']
                     && $storageRecord['is_online']
                 ) {
-                    foreach ($this->storageObjects as $localStorage) {
-                        if ($this->isEquivalentObjectStorage($localStorage, $storageRecord)) {
+                    foreach ($this->storages as $localStorage) {
+                        if ($this->isEquivalentStorage($localStorage, $storageRecord)) {
                             // There is already an existing storage
                             break;
                         }
@@ -486,13 +486,13 @@ class Import extends ImportExport
                         // storage object will check whether the target folder exists and set the
                         // isOnline flag depending on the outcome.
                         $storageRecord['uid'] = 0;
-                        $resourceStorage = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecord);
-                        if (!$resourceStorage->isOnline()) {
-                            $configuration = $resourceStorage->getConfiguration();
+                        $storage = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecord);
+                        if (!$storage->isOnline()) {
+                            $configuration = $storage->getConfiguration();
                             $this->addError(
                                 sprintf(
-                                    'The resource storage "%s" does not exist. Please create the directory prior to starting the import!',
-                                    $resourceStorage->getName() . $configuration['basePath']
+                                    'The file storage "%s" does not exist. Please create the directory prior to starting the import!',
+                                    $storage->getName() . $configuration['basePath']
                                 )
                             );
                         }

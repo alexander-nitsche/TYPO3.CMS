@@ -1164,10 +1164,10 @@ abstract class ImportExport
             return $dirPrefix;
         } catch (InsufficientFolderAccessPermissionsException $e) {
             if ($checkAlternatives) {
-                $fileStorages = $this->getBackendUser()->getFileStorages();
-                foreach ($fileStorages as $fileStorage) {
+                $storagesByUser = $this->getBackendUser()->getFileStorages();
+                foreach ($storagesByUser as $storage) {
                     try {
-                        $folder = $fileStorage->getFolder(rtrim($dirPrefix, '/'));
+                        $folder = $storage->getFolder(rtrim($dirPrefix, '/'));
                         return $folder->getPublicUrl();
                     } catch (InsufficientFolderAccessPermissionsException $e) {
                     }
