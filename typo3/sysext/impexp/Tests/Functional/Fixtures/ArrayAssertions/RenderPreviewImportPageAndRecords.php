@@ -80,7 +80,7 @@ return [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
       'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Record not found!)',
+      'msg' => 'LOST RELATION (Path: /)',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
 	<span class="icon-markup">
 <span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
@@ -88,7 +88,7 @@ return [
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Record not found!)</span>',
+      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
     ],
     5 =>
     [
@@ -185,7 +185,7 @@ return [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
       'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Record not found!)',
+      'msg' => 'LOST RELATION (Path: /)',
       'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
 	<span class="icon-markup">
 <span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
@@ -193,7 +193,7 @@ return [
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Record not found!)</span>',
+      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
     ],
     2 =>
     [
