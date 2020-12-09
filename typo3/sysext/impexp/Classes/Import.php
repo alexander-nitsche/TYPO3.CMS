@@ -285,6 +285,21 @@ class Import extends ImportExport
         $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
         $this->excludeMap = (array)$this->dat['header']['excludeMap'];
         $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
+
+        $this->initializeStorages();
+    }
+
+    /**
+     * Fetch all available file storages
+     *
+     * Note: It also creates a default storage record if the database table sys_file_records is empty,
+     * e.g. during tests.
+     */
+    protected function initializeStorages(): void
+    {
+        /** @var StorageRepository $storageRepository */
+        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
+        $this->storages = $storageRepository->findAll();
     }
 
     public function getMetaData(): array
@@ -409,18 +424,6 @@ class Import extends ImportExport
         $this->importNewId = [];
         $this->importNewIdPids = [];
         $this->unlinkFiles = [];
-
-        $this->initializeStorages();
-    }
-
-    /**
-     * Fetch all available file storages
-     */
-    protected function initializeStorages(): void
-    {
-        /** @var StorageRepository $storageRepository */
-        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        $this->storages = $storageRepository->findAll();
     }
 
     /**
