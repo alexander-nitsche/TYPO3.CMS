@@ -1829,4 +1829,12 @@ class Import extends ImportExport
     {
         $this->enableLogging = $enableLogging;
     }
+
+    /**
+     * @return bool
+     */
+    public function isDecompressionAvailable(): bool
+    {
+        return $this->decompressionAvailable;
+    }
 }
