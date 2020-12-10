@@ -117,6 +117,10 @@ class ImportCommandTest extends AbstractImportExportTestCase
                 'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',
                 'expected' => 'Prerequisites for file import are not met.'
             ],
+            'missing required storage path' => [
+                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-invalid-storage.xml',
+                'expected' => 'Prerequisites for file import are not met.'
+            ],
             'forcing uids of sys_file records not supported' => [
                 'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
                 'expected' => 'The import has failed.',
