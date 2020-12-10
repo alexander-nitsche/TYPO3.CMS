@@ -362,7 +362,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Imports the internal data array to $pid.
+     * Imports the memory data into the TYPO3 database.
      *
      * @throws ImportFailedException
      */
@@ -378,10 +378,13 @@ class Import extends ImportExport
         // Fields with "hard" relations to database, files and flexform fields are kept empty during this run
         $this->writeRecordsPages();
         $this->writeRecordsRecords();
-        // Finally all the file and DB record references must be fixed. This is done after all records have supposedly been written to database:
-        // $this->importMapId will indicate two things: 1) that a record WAS written to db and 2) that it has got a new id-number.
+        // Finally all the file and DB record references must be fixed. This is done after all records have supposedly
+        // been written to database. $this->importMapId will indicate two things:
+        // 1) that a record WAS written to db and
+        // 2) that it has got a new id-number.
         $this->setRelations();
-        // And when all DB relations are in place, we can fix file and DB relations in flexform fields (since data structures often depends on relations to a DS record):
+        // And when all DB relations are in place, we can fix file and DB relations in flexform fields
+        // - since data structures often depend on relations to a DS record:
         $this->setFlexFormRelations();
         // Unlink temporary files:
         $this->unlinkTempFiles();
@@ -406,7 +409,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Imports the sys_file_storage records from internal data array.
+     * Imports the sys_file_storage records from memory data.
      */
     protected function writeSysFileStorageRecords(): void
     {
@@ -418,7 +421,10 @@ class Import extends ImportExport
 
         foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => &$_) {
             $storageRecord = &$this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
-            if ($storageRecord['driver'] === 'Local' && $storageRecord['is_writable'] && $storageRecord['is_online']) {
+            if ($storageRecord['driver'] === 'Local'
+                && $storageRecord['is_writable']
+                && $storageRecord['is_online']
+            ) {
                 foreach ($this->storages as &$storage) {
                     if ($this->isEquivalentStorage($storage, $storageRecord)) {
                         $this->importMapId['sys_file_storage'][$sysFileStorageUid] = $storage->getUid();
