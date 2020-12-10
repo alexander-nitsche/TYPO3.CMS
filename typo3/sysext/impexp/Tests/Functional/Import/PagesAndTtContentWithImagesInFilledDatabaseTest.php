@@ -145,4 +145,22 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         // two others should reference new sys_file:3
         $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/importPagesAndTtContentWithRemappingNewSysFileEntries.csv');
     }
+
+    /**
+     * @test
+     */
+    public function importImageIntoSystemAndMatchingThePathOfTheSecondStorage(): void
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_single_image.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storages.xml');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-two-images.xml',
+            true
+        );
+        $subject->checkImportPrerequisites();
+        self::assertTrue(true);
+    }
 }
