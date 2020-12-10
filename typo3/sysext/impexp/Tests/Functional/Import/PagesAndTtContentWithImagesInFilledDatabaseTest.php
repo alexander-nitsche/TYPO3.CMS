@@ -44,9 +44,6 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
      */
     public function importPagesAndRelatedTtContentWithDifferentImageToExistingData()
     {
-        $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->setPid(0);
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_language.xml');
@@ -55,6 +52,8 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_reference.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
 
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
             true
@@ -75,9 +74,6 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
      */
     public function importPagesAndRelatedTtContentWithSameImageToExistingData()
     {
-        $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->setPid(0);
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_language.xml');
@@ -86,6 +82,8 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_reference.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
 
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
         $subject->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-same-image.xml',
             true
@@ -125,13 +123,12 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
      */
     public function importPagesAndTtContentWithRemappingNewSysFileEntries()
     {
-        $subject = GeneralUtility::makeInstance(Import::class);
-        $subject->setPid(0);
-
         // Have a single sys_file entry with uid 1
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_single_image.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
 
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
         // Import file with sys_file:1 and sys_file:2, where sys_file:1 has one connected
         // content element, and sys_file:2 has two connected content elements.
         $subject->loadFile(

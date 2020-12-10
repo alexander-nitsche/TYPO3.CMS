@@ -91,13 +91,6 @@ class Import extends ImportExport
     protected $importData = [];
 
     /**
-     * Array of current registered storage objects
-     *
-     * @var ResourceStorage[]
-     */
-    protected $storages = [];
-
-    /**
      * Temporary files stack
      *
      * @var array
@@ -285,21 +278,6 @@ class Import extends ImportExport
         $this->relStaticTables = (array)$this->dat['header']['relStaticTables'];
         $this->excludeMap = (array)$this->dat['header']['excludeMap'];
         $this->softrefCfg = (array)$this->dat['header']['softrefCfg'];
-
-        $this->initializeStorages();
-    }
-
-    /**
-     * Fetch all available file storages
-     *
-     * Note: It also creates a default storage record if the database table sys_file_records is empty,
-     * e.g. during tests.
-     */
-    protected function initializeStorages(): void
-    {
-        /** @var StorageRepository $storageRepository */
-        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        $this->storages = $storageRepository->findAll();
     }
 
     public function getMetaData(): array

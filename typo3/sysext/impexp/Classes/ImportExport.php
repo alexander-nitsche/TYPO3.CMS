@@ -26,7 +26,9 @@ use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderAccessPermissionsException;
 use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Resource\Security\FileNameValidator;
+use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Type\Bitmask\Permission;
 use TYPO3\CMS\Core\Utility\DiffUtility;
 use TYPO3\CMS\Core\Utility\File\ExtendedFileUtility;
@@ -241,6 +243,13 @@ abstract class ImportExport
     protected $excludeDisabledRecords = false;
 
     /**
+     * Array of current registered storage objects
+     *
+     * @var ResourceStorage[]
+     */
+    protected $storages = [];
+
+    /**
      * The constructor
      */
     public function __construct()
@@ -249,6 +258,21 @@ abstract class ImportExport
         $this->lang = $this->getLanguageService();
         $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
+
+        $this->initializeStorages();
+    }
+
+    /**
+     * Fetch all available file storages
+     *
+     * Note: It also creates a default storage record if the database table sys_file_storage is empty,
+     * e.g. during tests.
+     */
+    protected function initializeStorages(): void
+    {
+        /** @var StorageRepository $storageRepository */
+        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
+        $this->storages = $storageRepository->findAll();
     }
 
     /********************************************************

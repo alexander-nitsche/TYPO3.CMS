@@ -59,16 +59,15 @@ return [
     [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
-      'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Path: /)',
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
+      'title' => '<span title="/">fileadmin</span>',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
-<span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
+<span class="icon-unify"><i class="fa fa-check"></i></span>
 	</span>
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
+      'message' => '',
     ],
     4 =>
     [
@@ -91,16 +90,15 @@ return [
     [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
-      'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Path: /)',
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
+      'title' => '<span title="/">fileadmin</span>',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
-<span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
+<span class="icon-unify"><i class="fa fa-check"></i></span>
 	</span>
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
+      'message' => '',
     ],
     6 =>
     [
@@ -123,18 +121,34 @@ return [
     [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
-      'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Path: /)',
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
+      'title' => '<span title="/">fileadmin</span>',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
-<span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
+<span class="icon-unify"><i class="fa fa-check"></i></span>
 	</span>
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
+      'message' => '',
     ],
     8 =>
+    [
+      'ref' => 'sys_file_storage:1',
+      'type' => 'record',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;<span title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-mimetypes-x-sys_file_storage" data-identifier="mimetypes-x-sys_file_storage">
+	<span class="icon-markup">
+<svg class="icon-color" role="img"><use xlink:href="typo3/sysext/core/Resources/Public/Icons/T3Icons/sprites/mimetypes.svg#mimetypes-x-sys_file_storage" /></svg>
+	</span>
+	
+</span></span>',
+      'title' => 'fileadmin',
+      'active' => 'active',
+      'controls' => '
+            <input type="checkbox" class="t3js-exclude-checkbox" name="tx_impexp[exclude][sys_file_storage:1]" id="checkExcludesys_file_storage:1" value="1" />
+            <label for="checkExcludesys_file_storage:1">Exclude</label>',
+      'message' => '',
+    ],
+    9 =>
     [
       'ref' => 'pages:1',
       'type' => 'record',
@@ -151,7 +165,7 @@ return [
             <label for="checkExcludepages:1">Exclude</label>',
       'message' => '',
     ],
-    9 =>
+    10 =>
     [
       'ref' => 'tt_content:1',
       'type' => 'record',
@@ -168,7 +182,7 @@ return [
             <label for="checkExcludett_content:1">Exclude</label>',
       'message' => '',
     ],
-    10 =>
+    11 =>
     [
       'ref' => 'SOFTREF',
       'type' => 'softref',
@@ -195,7 +209,7 @@ return [
       'controls' => '<select name="tx_impexp[softrefCfg][2487ce518ed56d22f20f259928ff43f1][mode]"><option value="" selected="selected"></option><option value="editable">Editable</option><option value="exclude">Exclude</option></select><br/>',
       'message' => '',
     ],
-    11 =>
+    12 =>
     [
       'ref' => 'sys_file:1',
       'type' => 'rel',
@@ -209,22 +223,21 @@ return [
       'controls' => '',
       'message' => '',
     ],
-    12 =>
+    13 =>
     [
       'ref' => 'sys_file_storage:1',
       'type' => 'rel',
-      'title' => '<span title="/">sys_file_storage:1</span>',
-      'msg' => 'LOST RELATION (Path: /)',
-      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-danger" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-dialog-warning" data-identifier="status-dialog-warning">
+      'title' => '<span title="/">fileadmin</span>',
+      'preCode' => '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="" title="sys_file_storage:1"><span class="t3js-icon icon icon-size-small icon-state-default icon-status-status-checked" data-identifier="status-status-checked">
 	<span class="icon-markup">
-<span class="icon-unify"><i class="fa fa-exclamation-triangle"></i></span>
+<span class="icon-unify"><i class="fa fa-check"></i></span>
 	</span>
 	
 </span></span>',
       'controls' => '',
-      'message' => '<span class="text-danger">LOST RELATION (Path: /)</span>',
+      'message' => '',
     ],
-    13 =>
+    14 =>
     [
       'ref' => 'pages:2',
       'type' => 'record',
@@ -241,7 +254,7 @@ return [
             <label for="checkExcludepages:2">Exclude</label>',
       'message' => '',
     ],
-    14 =>
+    15 =>
     [
       'ref' => 'pages:3',
       'type' => 'record',
