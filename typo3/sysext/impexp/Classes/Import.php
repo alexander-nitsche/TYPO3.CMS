@@ -338,7 +338,7 @@ class Import extends ImportExport
                         // isOnline flag depending on the outcome.
                         $storageRecordWithUid0 = $storageRecord;
                         $storageRecordWithUid0['uid'] = 0;
-                        $storageObject = GeneralUtility::makeInstance(StorageRepository::class)->createStorageObject($storageRecordWithUid0);
+                        $storageObject = $this->getStorageRepository()->createStorageObject($storageRecordWithUid0);
                         if (!$storageObject->isOnline()) {
                             $configuration = $storageObject->getConfiguration();
                             $this->addError(
@@ -457,11 +457,7 @@ class Import extends ImportExport
         $tce->process_datamap();
         $this->addToMapId($tce->substNEWwithIDs);
 
-        $defaultStorageUid = null;
-        $defaultStorage = GeneralUtility::makeInstance(StorageRepository::class)->getDefaultStorage();
-        if ($defaultStorage !== null) {
-            $defaultStorageUid = $defaultStorage->getUid();
-        }
+        $defaultStorageUid = $this->defaultStorage !== null ? $this->defaultStorage->getUid() : null;
         foreach ($sysFileStorageUidsToBeResetToDefaultStorage as $sysFileStorageUidToBeResetToDefaultStorage) {
             $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
@@ -506,10 +502,7 @@ class Import extends ImportExport
         }
         $this->addGeneralErrorsByTable('sys_file');
 
-        // fetch fresh storage records from database
-        $storageRecords = $this->fetchStorageRecords();
-
-        $defaultStorage = GeneralUtility::makeInstance(StorageRepository::class)->getDefaultStorage();
+        $this->fetchStorages();
 
         $sanitizedFolderMappings = [];
 
@@ -552,13 +545,12 @@ class Import extends ImportExport
 
             // using a storage from the local storage is only allowed, if the uid is present in the
             // mapping. Only in this case we could be sure, that it's a local, online and writable storage.
-            if ($useStorageFromStorageRecords && isset($storageRecords[$fileRecord['storage']])) {
-                /** @var \TYPO3\CMS\Core\Resource\ResourceStorage $storage */
-                $storage = GeneralUtility::makeInstance(StorageRepository::class)->getStorageObject($fileRecord['storage'], $storageRecords[$fileRecord['storage']]);
+            if ($useStorageFromStorageRecords && isset($this->storages[$fileRecord['storage']])) {
+                $storage = $this->storages[$fileRecord['storage']];
             } elseif ($this->isFallbackStorage($fileRecord['storage'])) {
-                $storage = GeneralUtility::makeInstance(StorageRepository::class)->findByUid(0);
-            } elseif ($defaultStorage !== null) {
-                $storage = $defaultStorage;
+                $storage = $this->getStorageRepository()->findByUid(0);
+            } elseif ($this->defaultStorage !== null) {
+                $storage = $this->defaultStorage;
             } else {
                 $this->addError('Error: No storage available for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
                 continue;
@@ -692,27 +684,6 @@ class Import extends ImportExport
                 $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data']['uid_local'] = $newFileUid;
             }
         }
-    }
-
-    /**
-     * Fetched fresh storage records from database because the new imported
-     * ones are not in cached data of the StorageRepository
-     *
-     * @return array
-     */
-    protected function fetchStorageRecords(): array
-    {
-        $result = GeneralUtility::makeInstance(ConnectionPool::class)
-            ->getQueryBuilderForTable('sys_file_storage')
-            ->select('*')
-            ->from('sys_file_storage')
-            ->orderBy('uid')
-            ->execute();
-        $rows = [];
-        while ($row = $result->fetch()) {
-            $rows[$row['uid']] = $row;
-        }
-        return $rows;
     }
 
     /**

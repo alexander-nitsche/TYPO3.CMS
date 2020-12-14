@@ -243,11 +243,23 @@ abstract class ImportExport
     protected $excludeDisabledRecords = false;
 
     /**
-     * Array of current registered storage objects
+     * Array of currently registered storage objects
      *
      * @var ResourceStorage[]
      */
     protected $storages = [];
+
+    /**
+     * Currently registered default storage object
+     *
+     * @var ResourceStorage
+     */
+    protected $defaultStorage = null;
+
+    /**
+     * @var StorageRepository
+     */
+    protected $storageRepository = null;
 
     /**
      * The constructor
@@ -259,20 +271,29 @@ abstract class ImportExport
         $this->lang->includeLLFile('EXT:impexp/Resources/Private/Language/locallang.xlf');
         $this->permsClause = $this->getBackendUser()->getPagePermsClause(Permission::PAGE_SHOW);
 
-        $this->initializeStorages();
+        $this->fetchStorages();
     }
 
     /**
-     * Fetch all available file storages
+     * Fetch all available file storages and index by storage UID
      *
      * Note: It also creates a default storage record if the database table sys_file_storage is empty,
      * e.g. during tests.
      */
-    protected function initializeStorages(): void
+    protected function fetchStorages(): void
     {
-        /** @var StorageRepository $storageRepository */
-        $storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
-        $this->storages = $storageRepository->findAll();
+        $this->storages = [];
+        $this->defaultStorage = null;
+
+        $this->getStorageRepository()->flush();
+
+        $storages = $this->getStorageRepository()->findAll();
+        foreach ($storages as &$storage) {
+            $this->storages[$storage->getUid()] = &$storage;
+            if ($storage->isDefault()) {
+                $this->defaultStorage = &$storage;
+            }
+        }
     }
 
     /********************************************************
@@ -1380,6 +1401,19 @@ abstract class ImportExport
             $this->fileProcObj->setActionPermissions();
         }
         return $this->fileProcObj;
+    }
+
+    /**
+     * Returns storage repository object, initialized only once.
+     *
+     * @return StorageRepository Storage repository object
+     */
+    protected function getStorageRepository(): StorageRepository
+    {
+        if ($this->storageRepository === null) {
+            $this->storageRepository = GeneralUtility::makeInstance(StorageRepository::class);
+        }
+        return $this->storageRepository;
     }
 
     /*****************************
