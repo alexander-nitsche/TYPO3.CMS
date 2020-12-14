@@ -462,6 +462,9 @@ class Import extends ImportExport
             $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
+        // Refresh internal storage representation after potential storage import
+        $this->fetchStorages();
+
         // Unset the sys_file_storage records to prevent an import in writeRecordsRecords()
         unset($this->dat['header']['records']['sys_file_storage']);
     }
@@ -501,8 +504,6 @@ class Import extends ImportExport
             return;
         }
         $this->addGeneralErrorsByTable('sys_file');
-
-        $this->fetchStorages();
 
         $sanitizedFolderMappings = [];
 
