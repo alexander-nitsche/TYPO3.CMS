@@ -1128,9 +1128,11 @@ abstract class ImportExport
      */
     protected function createTemporaryFolderName(): void
     {
-        $temporaryPath = Environment::getVarPath() . '/transient/';
+        $temporaryPath = Environment::getVarPath() . '/transient';
         do {
-            $temporaryFolderName = $temporaryPath . 'export_temp_files_' . random_int(1, PHP_INT_MAX);
+            $temporaryFolderName = sprintf('%s/impexp_%s_files_%d',
+                $temporaryPath, $this->mode, random_int(1, PHP_INT_MAX)
+            );
         } while (is_dir($temporaryFolderName));
         GeneralUtility::mkdir($temporaryFolderName);
         $this->temporaryFolderName = $temporaryFolderName;
