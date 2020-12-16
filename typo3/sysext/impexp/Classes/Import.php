@@ -1055,7 +1055,13 @@ class Import extends ImportExport
                         // In the meantime we set NO value for flexforms - this is mainly because file references
                         // inside will not be processed properly; In fact references will point to no file
                         // or existing files (in which case there will be double-references which is a big problem of course!)
-                        $this->importData[$table][$ID][$field] = '';
+                        //
+                        // BUT for the field "configuration" of the table "sys_file_storage" the relation MUST NOT be
+                        // cleared, because the configuration array contains only string values, which are furthermore
+                        // important for the further import, e.g. the base path.
+                        if (!($table === 'sys_file_storage' && $field === 'configuration')) {
+                            $this->importData[$table][$ID][$field] = '';
+                        }
                         break;
                 }
             }

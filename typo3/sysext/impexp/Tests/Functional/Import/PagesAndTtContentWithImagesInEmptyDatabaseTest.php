@@ -200,4 +200,25 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
         $errors = $subject->getErrorLog();
         self::assertSame($expectedErrors, $errors);
     }
+
+    /**
+     * @test
+     */
+    public function importPagesAndRelatedTtContentWithImagesAndNewStorage()
+    {
+        GeneralUtility::mkdir(Environment::getPublicPath() . '/fileadmin_invalid_path');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-invalid-storage.xml',
+            true
+        );
+        $subject->importData();
+
+        self::assertFileEquals(
+            __DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg',
+            Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image2.jpg'
+        );
+    }
 }
