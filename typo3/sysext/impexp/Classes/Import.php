@@ -1478,10 +1478,11 @@ class Import extends ImportExport
      * @param string $dataValue_ext1 Not used
      * @param string $dataValue_ext2 Not used
      * @param string $path Path of where the data structure where the element is found
+     * @param array $workspaceOptions Not used
      * @return array Array where the "value" key carries the value.
      * @see setFlexFormRelations()
      */
-    public function processSoftReferencesFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, string $dataValue_ext1, string $dataValue_ext2, string $path): array
+    public function processSoftReferencesFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, $dataValue_ext1, $dataValue_ext2, string $path, array $workspaceOptions): array
     {
         // Extract parameters:
         [$table, $origUid, $field, $softRefCfgs] = $pParams;
@@ -1498,7 +1499,7 @@ class Import extends ImportExport
                 // Get tokenizedContent string and proceed only if that is not blank:
                 $tokenizedContent = $this->dat['records'][$table . ':' . $origUid]['rels'][$field]['flexFormRels']['softrefs'][$path]['tokenizedContent'];
                 if (strlen($tokenizedContent)) {
-                    $dataValue = $this->processSoftReferencesSubstTokens($tokenizedContent, $thisSoftRefCfgList, $table, $origUid);
+                    $dataValue = $this->processSoftReferencesSubstTokens($tokenizedContent, $thisSoftRefCfgList, $table, (string)$origUid);
                 }
             }
         }
