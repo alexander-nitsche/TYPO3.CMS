@@ -108,6 +108,11 @@ class Import extends ImportExport
     private $supportedFileExtensions = [];
 
     /**
+     * @var bool
+     */
+    protected $isFilesSavedOutsideImportFile = false;
+
+    /**
      * The constructor
      */
     public function __construct()
@@ -166,6 +171,9 @@ class Import extends ImportExport
                 } else {
                     $this->addError('External import files for the given import source is currently not supported.');
                 }
+                $this->isFilesSavedOutsideImportFile = true;
+            } else {
+                $this->isFilesSavedOutsideImportFile = false;
             }
             if ($fileExtension === 'xml') {
                 $xmlContent = (string)file_get_contents($filePath);
@@ -503,28 +511,44 @@ class Import extends ImportExport
         if (!isset($this->dat['header']['records']['sys_file'])) {
             return;
         }
+
         $this->addGeneralErrorsByTable('sys_file');
 
+        $temporaryFolder = $this->getOrCreateTemporaryFolderName();
         $sanitizedFolderMappings = [];
 
-        foreach ($this->dat['header']['records']['sys_file'] as $sysFileUid => $_) {
-            $fileRecord = $this->dat['records']['sys_file:' . $sysFileUid]['data'];
+        foreach ($this->dat['header']['records']['sys_file'] as $sysFileUid => &$_) {
+            $fileRecord = &$this->dat['records']['sys_file:' . $sysFileUid]['data'];
 
             $temporaryFile = null;
-            $temporaryFolder = $this->getTemporaryFolderName();
-            // check if there is the right file already in the local folder
-            if ($temporaryFolder !== null) {
-                if (is_file($temporaryFolder . '/' . $fileRecord['sha1']) && sha1_file($temporaryFolder . '/' . $fileRecord['sha1']) === $fileRecord['sha1']) {
-                    $temporaryFile = $temporaryFolder . '/' . $fileRecord['sha1'];
+            $temporaryFilePath = $temporaryFolder . '/' . $fileRecord['sha1'];
+
+            if ($this->isFilesSavedOutsideImportFile) {
+                if (is_file($temporaryFilePath) && sha1_file($temporaryFilePath) === $fileRecord['sha1']) {
+                    $temporaryFile = $temporaryFilePath;
+                } else {
+                    $this->addError(sprintf('Error: Temporary file %s could not be found or does not match the checksum!',
+                        $temporaryFilePath
+                    ));
+                    continue;
                 }
             }
-
-            // save file to disk
-            if ($temporaryFile === null) {
+            else {
                 $fileId = md5($fileRecord['storage'] . ':' . $fileRecord['identifier_hash']);
-                $temporaryFile = $this->writeTemporaryFileFromData($fileId);
-                if ($temporaryFile === null) {
-                    // error on writing the file. Error message was already added
+                if (isset($this->dat['files_fal'][$fileId]['content'])) {
+                    $fileInfo = &$this->dat['files_fal'][$fileId];
+                    if (GeneralUtility::writeFile($temporaryFilePath, $fileInfo['content'])) {
+                        clearstatcache();
+                        $this->unlinkFiles[] = $temporaryFilePath;
+                        $temporaryFile = $temporaryFilePath;
+                    } else {
+                        $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
+                            $temporaryFilePath
+                        ));
+                        continue;
+                    }
+                } else {
+                    $this->addError('Error: No file found for ID ' . $fileId);
                     continue;
                 }
             }
@@ -685,32 +709,6 @@ class Import extends ImportExport
                 $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data']['uid_local'] = $newFileUid;
             }
         }
-    }
-
-    /**
-     * Writes the file from import array to temp dir and returns the filename of it.
-     *
-     * @param string $fileId
-     * @param string $dataKey
-     * @return string Absolute filename of the temporary filename of the file
-     */
-    protected function writeTemporaryFileFromData(string $fileId, string $dataKey = 'files_fal'): ?string
-    {
-        $temporaryFilePath = null;
-        if (is_array($this->dat[$dataKey][$fileId])) {
-            $temporaryFilePathInternal = GeneralUtility::tempnam('import_temp_');
-            GeneralUtility::writeFile($temporaryFilePathInternal, $this->dat[$dataKey][$fileId]['content']);
-            clearstatcache();
-            if (@is_file($temporaryFilePathInternal)) {
-                $this->unlinkFiles[] = $temporaryFilePathInternal;
-                $temporaryFilePath = $temporaryFilePathInternal;
-            } else {
-                $this->addError('Error: temporary file ' . $temporaryFilePathInternal . ' was not written as it should have been!');
-            }
-        } else {
-            $this->addError('Error: No file found for ID ' . $fileId);
-        }
-        return $temporaryFilePath;
     }
 
     /**
