@@ -1046,7 +1046,7 @@ class Import extends ImportExport
                         // @see fixUidLocalInSysFileReferenceRecords()
                         // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
                         // delete the reference record if the file extension of the related record doesn't match.
-                        if ($table !== 'sys_file_reference' && $field !== 'uid_local') {
+                        if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
                             $this->importData[$table][$ID][$field] = '';
                         }
                         break;
