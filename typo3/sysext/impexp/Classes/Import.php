@@ -465,13 +465,14 @@ class Import extends ImportExport
         $tce->process_datamap();
         $this->addToMapId($tce->substNEWwithIDs);
 
+        // Refresh internal storage representation after potential storage import
+        $this->fetchStorages();
+
+        // Map references of non-local / non-writable / non-online storages to the default storage
         $defaultStorageUid = $this->defaultStorage !== null ? $this->defaultStorage->getUid() : null;
         foreach ($sysFileStorageUidsToBeResetToDefaultStorage as $sysFileStorageUidToBeResetToDefaultStorage) {
             $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
-
-        // Refresh internal storage representation after potential storage import
-        $this->fetchStorages();
 
         // Unset the sys_file_storage records to prevent an import in writeRecordsRecords()
         unset($this->dat['header']['records']['sys_file_storage']);
