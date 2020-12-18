@@ -290,7 +290,7 @@ abstract class ImportExport
         $storages = $this->getStorageRepository()->findAll();
         foreach ($storages as &$storage) {
             $this->storages[$storage->getUid()] = &$storage;
-            if ($storage->isDefault()) {
+            if ($this->defaultStorage === null && $storage->isDefault()) {
                 $this->defaultStorage = &$storage;
             }
         }
