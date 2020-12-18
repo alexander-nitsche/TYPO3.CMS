@@ -425,7 +425,7 @@ class Import extends ImportExport
             return;
         }
 
-        $sysFileStorageUidsToBeResetToDefaultStorage = [];
+        $storageUidsToBeResetToDefaultStorage = [];
 
         foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => &$_) {
             $storageRecord = &$this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
@@ -451,11 +451,11 @@ class Import extends ImportExport
                 // non-online storage may be created as duplicates because you were unable to check the detailed
                 // configuration options at that time.
                 $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
-                $sysFileStorageUidsToBeResetToDefaultStorage[] = $sysFileStorageUid;
+                $storageUidsToBeResetToDefaultStorage[] = $sysFileStorageUid;
             }
         }
 
-        // Now write to database
+        // Write new storages to the database
         $tce = $this->getNewTCE();
         // Because all records are submitted in the correct order with positive pid numbers,
         // we should internally reverse the order of submission.
@@ -470,8 +470,8 @@ class Import extends ImportExport
 
         // Map references of non-local / non-writable / non-online storages to the default storage
         $defaultStorageUid = $this->defaultStorage !== null ? $this->defaultStorage->getUid() : null;
-        foreach ($sysFileStorageUidsToBeResetToDefaultStorage as $sysFileStorageUidToBeResetToDefaultStorage) {
-            $this->importMapId['sys_file_storage'][$sysFileStorageUidToBeResetToDefaultStorage] = $defaultStorageUid;
+        foreach ($storageUidsToBeResetToDefaultStorage as $storageUidToBeResetToDefaultStorage) {
+            $this->importMapId['sys_file_storage'][$storageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
         // Unset the sys_file_storage records to prevent an import in writeRecordsRecords()
