@@ -55,5 +55,6 @@
         <is_public>1</is_public>
         <is_writable>1</is_writable>
         <is_online>1</is_online>
+        <is_default>1</is_default>
     </sys_file_storage>
 </dataset>

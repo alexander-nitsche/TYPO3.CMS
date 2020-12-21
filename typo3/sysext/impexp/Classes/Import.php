@@ -29,7 +29,6 @@ use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\Resource\ResourceStorage;
 use TYPO3\CMS\Core\Resource\Security\FileNameValidator;
-use TYPO3\CMS\Core\Resource\StorageRepository;
 use TYPO3\CMS\Core\Service\FlexFormService;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -554,26 +553,10 @@ class Import extends ImportExport
                 }
             }
 
-            $originalStorageUid = $fileRecord['storage'];
-            $useStorageFromStorageRecords = false;
-
-            // replace storage id, if an alternative one was registered
-            if (isset($this->importMapId['sys_file_storage'][$fileRecord['storage']])) {
-                $fileRecord['storage'] = $this->importMapId['sys_file_storage'][$fileRecord['storage']];
-                $useStorageFromStorageRecords = true;
-            }
-
-            if (empty($fileRecord['storage']) && !$this->isFallbackStorage($fileRecord['storage'])) {
-                // no storage for the file is defined, mostly because of a missing default storage.
-                $this->addError('Error: No storage for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $originalStorageUid . '"');
-                continue;
-            }
-
-            // using a storage from the local storage is only allowed, if the uid is present in the
-            // mapping. Only in this case we could be sure, that it's a local, online and writable storage.
-            if ($useStorageFromStorageRecords && isset($this->storages[$fileRecord['storage']])) {
-                $storage = $this->storages[$fileRecord['storage']];
-            } elseif ($this->isFallbackStorage($fileRecord['storage'])) {
+            $storageUid = $this->importMapId['sys_file_storage'][$fileRecord['storage']] ?? $fileRecord['storage'];
+            if (isset($this->storagesAvailableForImport[$storageUid])) {
+                $storage = $this->storagesAvailableForImport[$storageUid];
+            } elseif ($this->isFallbackStorage($storageUid)) {
                 $storage = $this->getStorageRepository()->findByUid(0);
             } elseif ($this->defaultStorage !== null) {
                 $storage = $this->defaultStorage;

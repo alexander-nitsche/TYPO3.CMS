@@ -47,4 +47,24 @@ class ImagesWithStoragesTest extends AbstractImportExportTestCase
         self::assertFileExists(Environment::getPublicPath() . '/fileadmin-1/user_upload/typo3_image3.jpg');
         self::assertFileExists(Environment::getPublicPath() . '/fileadmin-3/user_upload/typo3_image2.jpg');
     }
+
+    /**
+     * @test
+     */
+    public function importImagesWithStaticStorages(): void
+    {
+        GeneralUtility::mkdir(Environment::getPublicPath() . '/fileadmin_invalid_path');
+
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storages.xml');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/images-with-static-storages.xml',
+            true
+        );
+        $subject->importData();
+
+        self::assertFileExists(Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image2.jpg');
+    }
 }

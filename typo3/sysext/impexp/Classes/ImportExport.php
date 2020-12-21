@@ -251,6 +251,13 @@ abstract class ImportExport
     protected $storages = [];
 
     /**
+     * Array of currently registered storage objects available for importing files to
+     *
+     * @var ResourceStorage[]
+     */
+    protected $storagesAvailableForImport = [];
+
+    /**
      * Currently registered default storage object
      *
      * @var ResourceStorage
@@ -284,6 +291,7 @@ abstract class ImportExport
     protected function fetchStorages(): void
     {
         $this->storages = [];
+        $this->storagesAvailableForImport = [];
         $this->defaultStorage = null;
 
         $this->getStorageRepository()->flush();
@@ -291,6 +299,9 @@ abstract class ImportExport
         $storages = $this->getStorageRepository()->findAll();
         foreach ($storages as &$storage) {
             $this->storages[$storage->getUid()] = &$storage;
+            if ($storage->isOnline() && $storage->isWritable() && $storage->getDriverType() === 'Local') {
+                $this->storagesAvailableForImport[$storage->getUid()] = &$storage;
+            }
             if ($this->defaultStorage === null && $storage->isDefault()) {
                 $this->defaultStorage = &$storage;
             }
