@@ -548,7 +548,7 @@ class Import extends ImportExport
                         continue;
                     }
                 } else {
-                    $this->addError('Error: No file found for ID ' . $fileId);
+                    $this->addError(sprintf('Error: No file found for ID %s' , $fileId));
                     continue;
                 }
             }
@@ -561,25 +561,26 @@ class Import extends ImportExport
             } elseif ($this->defaultStorage !== null) {
                 $storage = $this->defaultStorage;
             } else {
-                $this->addError('Error: No storage available for the file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                $this->addError(sprintf('Error: No storage available for the file "%s" with storage uid "%s"',
+                    $fileRecord['identifier'], $fileRecord['storage']
+                ));
                 continue;
             }
 
-            $newFile = null;
-
-            // check, if there is an identical file
+            /** @var File $file */
+            $file = null;
             try {
                 if ($storage->hasFile($fileRecord['identifier'])) {
-                    /** @var File $file */
                     $file = $storage->getFile($fileRecord['identifier']);
-                    if ($file->getSha1() === $fileRecord['sha1']) {
-                        $newFile = $file;
+                    if ($file->getSha1() !== $fileRecord['sha1']) {
+                        $file = null;
                     }
                 }
             } catch (Exception $e) {
+                $file = null;
             }
 
-            if ($newFile === null) {
+            if ($file === null) {
                 $folderName = PathUtility::dirname(ltrim($fileRecord['identifier'], '/'));
                 if (in_array($folderName, $sanitizedFolderMappings)) {
                     $folderName = $sanitizedFolderMappings[$folderName];
@@ -591,7 +592,9 @@ class Import extends ImportExport
                             $sanitizedFolderMappings[$folderName] = $importFolder->getIdentifier();
                         }
                     } catch (Exception $e) {
-                        $this->addError('Error: Folder "' . $folderName . '" could not be created for file "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                        $this->addError(sprintf('Error: Folder "%s" could not be created for file "%s" with storage uid "%s"',
+                            $folderName, $fileRecord['identifier'], $fileRecord['storage']
+                        ));
                         continue;
                     }
                 } else {
@@ -605,21 +608,25 @@ class Import extends ImportExport
                 ]);
 
                 try {
-                    /** @var File $newFile */
-                    $newFile = $storage->addFile($temporaryFile, $importFolder, $fileRecord['name']);
+                    $file = $storage->addFile($temporaryFile, $importFolder, $fileRecord['name']);
                 } catch (Exception $e) {
-                    $this->addError('Error: File could not be added to the storage: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                    $this->addError(sprintf('Error: File could not be added to the storage: "%s" with storage uid "%s"',
+                        $fileRecord['identifier'], $fileRecord['storage']
+                    ));
                     continue;
                 }
 
-                if ($newFile->getSha1() !== $fileRecord['sha1']) {
-                    $this->addError('Error: The hash of the written file is not identical to the import data! File could be corrupted! File: "' . $fileRecord['identifier'] . '" with storage uid "' . $fileRecord['storage'] . '"');
+                if ($file->getSha1() !== $fileRecord['sha1']) {
+                    $this->addError(sprintf('Error: The hash of the written file is not identical to the import data! ' .
+                        'File could be corrupted! File: "%s" with storage uid "%s"',
+                        $fileRecord['identifier'], $fileRecord['storage']
+                    ));
                 }
             }
 
             // save the new uid in the import id map
-            $this->importMapId['sys_file'][$fileRecord['uid']] = $newFile->getUid();
-            $this->fixUidLocalInSysFileReferenceRecords((int)$fileRecord['uid'], $newFile->getUid());
+            $this->importMapId['sys_file'][$fileRecord['uid']] = $file->getUid();
+            $this->fixUidLocalInSysFileReferenceRecords((int)$fileRecord['uid'], $file->getUid());
         }
 
         // unset the sys_file records to prevent an import in writeRecordsRecords
