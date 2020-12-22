@@ -51,7 +51,7 @@ class ImagesWithStoragesTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function importImagesWithStaticStorages(): void
+    public function importImagesWithStaticAndFallbackStorages(): void
     {
         GeneralUtility::mkdir(Environment::getPublicPath() . '/fileadmin_invalid_path');
 
@@ -60,11 +60,14 @@ class ImagesWithStoragesTest extends AbstractImportExportTestCase
         $subject = GeneralUtility::makeInstance(Import::class);
         $subject->setPid(0);
         $subject->loadFile(
-            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/images-with-static-storages.xml',
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/images-with-static-and-fallback-storages.xml',
             true
         );
         $subject->importData();
 
         self::assertFileExists(Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image2.jpg');
+        self::assertFileExists(Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image3.jpg');
+        self::assertFileExists(Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image5.jpg');
+        self::assertFileExists(Environment::getPublicPath() . '/typo3conf/ext/template_extension/Resources/Public/Templates/Empty.html');
     }
 }

@@ -556,7 +556,7 @@ class Import extends ImportExport
             $storageUid = $this->importMapId['sys_file_storage'][$fileRecord['storage']] ?? $fileRecord['storage'];
             if (isset($this->storagesAvailableForImport[$storageUid])) {
                 $storage = $this->storagesAvailableForImport[$storageUid];
-            } elseif ($this->isFallbackStorage($storageUid)) {
+            } elseif ($storageUid === 0 || $storageUid === '0') {
                 $storage = $this->getStorageRepository()->findByUid(0);
             } elseif ($this->defaultStorage !== null) {
                 $storage = $this->defaultStorage;
@@ -658,17 +658,6 @@ class Import extends ImportExport
                 );
             }
         }
-    }
-
-    /**
-     * Checks if the $storageId is the id of the fallback storage
-     *
-     * @param int|string $storageId
-     * @return bool
-     */
-    protected function isFallbackStorage($storageId): bool
-    {
-        return $storageId === 0 || $storageId === '0';
     }
 
     /**
