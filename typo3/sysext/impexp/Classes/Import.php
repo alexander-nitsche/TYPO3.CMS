@@ -679,7 +679,7 @@ class Import extends ImportExport
      * In step 2 the saving fields of type "relation to sys_file_reference" checks the related sys_file_reference
      * record (created in step 1) with the FileExtensionFilter for matching file extensions of the related file.
      * To make this work correct, the uid_local of sys_file_reference records has to be not empty AND has to
-     * relate to the correct (imported) sys_file record uid!!!
+     * relate to the correct (imported) sys_file record uid!
      *
      * This is fixed here.
      *
@@ -692,7 +692,7 @@ class Import extends ImportExport
             return;
         }
 
-        foreach ($this->dat['header']['records']['sys_file_reference'] as $sysFileReferenceUid => $_) {
+        foreach ($this->dat['header']['records']['sys_file_reference'] as $sysFileReferenceUid => &$_) {
             if (!isset($this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['hasBeenMapped'])
                 && $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data']['uid_local'] == $oldFileUid
             ) {
