@@ -700,49 +700,49 @@ class Import extends ImportExport
      */
     protected function writeRecordsPages(): void
     {
-        // First, write page structure if any:
-        if (is_array($this->dat['header']['records']['pages'])) {
-            $this->addGeneralErrorsByTable('pages');
-            // $pageRecords is a copy of the pages array in the imported file. Records here are unset one by one when the addSingle function is called.
-            $pageRecords = $this->dat['header']['records']['pages'];
-            $this->importData = [];
-            // First add page tree if any
-            if (is_array($this->dat['header']['pagetree'])) {
-                $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
-                foreach ($pageList as $uid) {
-                    $thisRec = $this->dat['header']['records']['pages'][$uid];
-                    // PID: Set the main $this->pid, unless a NEW-id is found
-                    $setPid = $this->importNewIdPids[$thisRec['pid']] ?? $this->pid;
-                    $this->addSingle('pages', (int)$uid, $setPid);
-                    unset($pageRecords[$uid]);
-                }
+        if (!isset($this->dat['header']['records']['pages'])) {
+            return;
+        }
+
+        $this->importData = [];
+        $remainingPages = $this->dat['header']['records']['pages'];
+
+        // Add page tree
+        if (is_array($this->dat['header']['pagetree'])) {
+            $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
+            foreach ($pageList as $pageUid) {
+                $pid = $this->dat['header']['records']['pages'][$pageUid]['pid'];
+                $pid = $this->importNewIdPids[$pid] ?? $this->pid;
+                $this->addSingle('pages', (int)$pageUid, $pid);
+                unset($remainingPages[$pageUid]);
             }
-            // Then add all remaining pages not in tree on root level:
-            if (!empty($pageRecords)) {
-                $remainingPageUids = array_keys($pageRecords);
-                foreach ($remainingPageUids as $pUid) {
-                    $this->addSingle('pages', (int)$pUid, $this->pid);
-                }
+        }
+
+        // Add remaining pages on root level
+        if (!empty($remainingPages)) {
+            foreach ($remainingPages as $pageUid => &$pageInfo) {
+                $this->addSingle('pages', (int)$pageUid, $this->pid);
             }
-            // Now write to database:
-            $tce = $this->getNewTCE();
-            $tce->isImporting = true;
-            $this->callHook('before_writeRecordsPages', [
-                'tce' => &$tce,
-                'data' => &$this->importData
-            ]);
-            $tce->suggestedInsertUids = $this->suggestedInsertUids;
-            $tce->start($this->importData, []);
-            $tce->process_datamap();
-            $this->callHook('after_writeRecordsPages', [
-                'tce' => &$tce
-            ]);
-            // post-processing: Registering new ids (end all DataHandler sessions with this)
-            $this->addToMapId($tce->substNEWwithIDs);
-            // In case of an update, order pages from the page tree correctly:
-            if ($this->update && is_array($this->dat['header']['pagetree'])) {
-                $this->writeRecordsPagesOrder();
-            }
+        }
+
+        // Write pages to the database
+        $tce = $this->getNewTCE();
+        $tce->isImporting = true;
+        $this->callHook('before_writeRecordsPages', [
+            'tce' => &$tce,
+            'data' => &$this->importData
+        ]);
+        $tce->suggestedInsertUids = $this->suggestedInsertUids;
+        $tce->start($this->importData, []);
+        $tce->process_datamap();
+        $this->callHook('after_writeRecordsPages', [
+            'tce' => &$tce
+        ]);
+        $this->addToMapId($tce->substNEWwithIDs);
+
+        // In case of an update, order pages from the page tree correctly
+        if ($this->update && is_array($this->dat['header']['pagetree'])) {
+            $this->writeRecordsPagesOrder();
         }
     }
 
