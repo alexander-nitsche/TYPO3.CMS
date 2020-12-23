@@ -383,8 +383,8 @@ class Import extends ImportExport
         $this->writeSysFileRecords();
         // Write records, first pages, then the rest
         // Fields with "hard" relations to database, files and flexform fields are kept empty during this run
-        $this->writeRecordsPages();
-        $this->writeRecordsRecords();
+        $this->writePages();
+        $this->writeRecords();
         // Finally all the file and DB record references must be fixed. This is done after all records have supposedly
         // been written to database. $this->importMapId will indicate two things:
         // 1) that a record WAS written to db and
@@ -473,7 +473,7 @@ class Import extends ImportExport
             $this->importMapId['sys_file_storage'][$storageUidToBeResetToDefaultStorage] = $defaultStorageUid;
         }
 
-        // Unset the sys_file_storage records to prevent an import in writeRecordsRecords()
+        // Unset the sys_file_storage records to prevent an import in writeRecords()
         unset($this->dat['header']['records']['sys_file_storage']);
     }
 
@@ -629,7 +629,7 @@ class Import extends ImportExport
             $this->fixUidLocalInSysFileReferenceRecords((int)$fileRecord['uid'], $file->getUid());
         }
 
-        // unset the sys_file records to prevent an import in writeRecordsRecords
+        // unset the sys_file records to prevent an import in writeRecords()
         unset($this->dat['header']['records']['sys_file']);
         // remove all sys_file_reference records that point to file records which are unknown
         // in the system to prevent exceptions
@@ -696,9 +696,9 @@ class Import extends ImportExport
      * If the operation is an update operation, the root of the page tree inside will be moved to $this->pid
      * unless it is the same as the root page from the import.
      *
-     * @see writeRecordsRecords()
+     * @see writeRecords()
      */
-    protected function writeRecordsPages(): void
+    protected function writePages(): void
     {
         if (!isset($this->dat['header']['records']['pages'])) {
             return;
@@ -742,7 +742,7 @@ class Import extends ImportExport
 
         // In case of an update, order pages from the page tree correctly
         if ($this->update && is_array($this->dat['header']['pagetree'])) {
-            $this->writeRecordsPagesOrder();
+            $this->writePagesOrder();
         }
     }
 
@@ -750,10 +750,10 @@ class Import extends ImportExport
      * Organize all updated pages in page tree so they are related like in the import file
      * Only used for updates and when $this->dat['header']['pagetree'] is an array.
      *
-     * @see writeRecordsPages()
-     * @see writeRecordsRecordsOrder()
+     * @see writePages()
+     * @see writeRecordsOrder()
      */
-    protected function writeRecordsPagesOrder(): void
+    protected function writePagesOrder(): void
     {
         $cmd_data = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
@@ -820,11 +820,11 @@ class Import extends ImportExport
     }
 
     /**
-     * Write all database records except pages (written in writeRecordsPages())
+     * Write all database records except pages (written in writePages())
      *
-     * @see writeRecordsPages()
+     * @see writePages()
      */
-    protected function writeRecordsRecords(): void
+    protected function writeRecords(): void
     {
         // Write the rest of the records
         $this->importData = [];
@@ -874,7 +874,7 @@ class Import extends ImportExport
         $this->addToMapId($tce->substNEWwithIDs);
         // In case of an update, order pages from the page tree correctly:
         if ($this->update) {
-            $this->writeRecordsRecordsOrder($this->pid);
+            $this->writeRecordsOrder($this->pid);
         }
     }
 
@@ -884,10 +884,10 @@ class Import extends ImportExport
      *
      * @param int $mainPid Main PID into which we import.
      *
-     * @see writeRecordsRecords()
-     * @see writeRecordsPagesOrder()
+     * @see writeRecords()
+     * @see writePagesOrder()
      */
-    protected function writeRecordsRecordsOrder(int $mainPid): void
+    protected function writeRecordsOrder(int $mainPid): void
     {
         $cmd_data = [];
         if (is_array($this->dat['header']['pagetree'])) {
