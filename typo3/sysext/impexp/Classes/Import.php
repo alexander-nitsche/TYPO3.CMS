@@ -633,31 +633,7 @@ class Import extends ImportExport
         unset($this->dat['header']['records']['sys_file']);
         // remove all sys_file_reference records that point to file records which are unknown
         // in the system to prevent exceptions
-        $this->removeSysFileReferenceRecordsFromImportDataWithRelationToMissingFile();
-    }
-
-    /**
-     * Removes all sys_file_reference records from the import data array that are pointing to sys_file records which
-     * are missing not in the import data to prevent exceptions on checking the related file started by the Datahandler.
-     */
-    protected function removeSysFileReferenceRecordsFromImportDataWithRelationToMissingFile(): void
-    {
-        if (!isset($this->dat['header']['records']['sys_file_reference'])) {
-            return;
-        }
-
-        foreach ($this->dat['header']['records']['sys_file_reference'] as $sysFileReferenceUid => $_) {
-            $fileReferenceRecord = $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data'];
-            if (!in_array($fileReferenceRecord['uid_local'], $this->importMapId['sys_file'])) {
-                unset($this->dat['header']['records']['sys_file_reference'][$sysFileReferenceUid]);
-                unset($this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]);
-                $this->addError(
-                    'Error: sys_file_reference record ' . (int)$sysFileReferenceUid
-                    . ' with relation to sys_file record ' . (int)$fileReferenceRecord['uid_local']
-                    . ', which is not part of the import data, was not imported.'
-                );
-            }
-        }
+        $this->removeSysFileReferenceRecordsWithRelationToMissingFile();
     }
 
     /**
@@ -687,6 +663,30 @@ class Import extends ImportExport
             ) {
                 $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['hasBeenMapped'] = true;
                 $this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data']['uid_local'] = $newFileUid;
+            }
+        }
+    }
+
+    /**
+     * Removes all sys_file_reference records from the import data array that are pointing to sys_file records which
+     * are missing in the import data to prevent exceptions on checking the related file started by the DataHandler.
+     */
+    protected function removeSysFileReferenceRecordsWithRelationToMissingFile(): void
+    {
+        if (!isset($this->dat['header']['records']['sys_file_reference'])) {
+            return;
+        }
+
+        foreach ($this->dat['header']['records']['sys_file_reference'] as $sysFileReferenceUid => &$_) {
+            $fileReferenceRecord = &$this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]['data'];
+            if (!in_array($fileReferenceRecord['uid_local'], (array)$this->importMapId['sys_file'])) {
+                unset($this->dat['header']['records']['sys_file_reference'][$sysFileReferenceUid]);
+                unset($this->dat['records']['sys_file_reference:' . $sysFileReferenceUid]);
+                $this->addError(sprintf(
+                    'Error: sys_file_reference record "%s" with relation to sys_file record "%s"'
+                    . ', which is not part of the import data, was not imported.',
+                    $sysFileReferenceUid, $fileReferenceRecord['uid_local']
+                ));
             }
         }
     }

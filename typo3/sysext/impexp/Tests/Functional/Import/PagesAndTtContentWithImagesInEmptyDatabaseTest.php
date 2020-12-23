@@ -221,4 +221,29 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
             Environment::getPublicPath() . '/fileadmin_invalid_path/user_upload/typo3_image2.jpg'
         );
     }
+
+    /**
+     * @test
+     */
+    public function importPagesAndRelatedTtContentWithMissingImageRemovesSysFileReferenceToo()
+    {
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
+        try {
+            $subject->loadFile(
+                'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-missing-image.xml',
+                true
+            );
+            $subject->importData();
+        } catch (\Exception $e) {}
+
+        $expectedErrors = [
+            'Error: No file found for ID 4a705ca3ef43b53dc00de861ba2c86af',
+            'Error: sys_file_reference record "1" with relation to sys_file record "1", which is not part of the import data, was not imported.',
+            'Lost relation: sys_file_reference:1',
+            'Lost relation: sys_file:1',
+        ];
+        $errors = $subject->getErrorLog();
+        self::assertSame($expectedErrors, $errors);
+    }
 }
