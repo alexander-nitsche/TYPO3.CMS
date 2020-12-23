@@ -83,13 +83,6 @@ class Import extends ImportExport
     protected $importNewIdPids = [];
 
     /**
-     * Internal data accumulation for writing records during import
-     *
-     * @var array
-     */
-    protected $importData = [];
-
-    /**
      * Temporary files stack
      *
      * @var array
@@ -424,8 +417,9 @@ class Import extends ImportExport
             return;
         }
 
-        $storageUidsToBeResetToDefaultStorage = [];
+        $importData = [];
 
+        $storageUidsToBeResetToDefaultStorage = [];
         foreach ($this->dat['header']['records']['sys_file_storage'] as $sysFileStorageUid => &$_) {
             $storageRecord = &$this->dat['records']['sys_file_storage:' . $sysFileStorageUid]['data'];
             if ($storageRecord['driver'] === 'Local'
@@ -442,14 +436,14 @@ class Import extends ImportExport
                 if (!isset($this->importMapId['sys_file_storage'][$sysFileStorageUid])) {
                     // Local, writable and online storage. May be used later for writing files.
                     // Does not currently exist, mark the storage for import.
-                    $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
+                    $this->addSingle($importData, 'sys_file_storage', $sysFileStorageUid, 0);
                 }
             } else {
                 // Storage with non-local drivers can be imported, but must not be used to save files as you cannot
                 // be sure that this is supported. In this case the default storage is used. Non-writable and
                 // non-online storage may be created as duplicates because you were unable to check the detailed
                 // configuration options at that time.
-                $this->addSingle('sys_file_storage', $sysFileStorageUid, 0);
+                $this->addSingle($importData, 'sys_file_storage', $sysFileStorageUid, 0);
                 $storageUidsToBeResetToDefaultStorage[] = $sysFileStorageUid;
             }
         }
@@ -460,9 +454,9 @@ class Import extends ImportExport
         // we should internally reverse the order of submission.
         $tce->reverseOrder = 1;
         $tce->isImporting = true;
-        $tce->start($this->importData, []);
+        $tce->start($importData, []);
         $tce->process_datamap();
-        $this->addToMapId($tce->substNEWwithIDs);
+        $this->addToMapId($importData, $tce->substNEWwithIDs);
 
         // Refresh internal storage representation after potential storage import
         $this->fetchStorages();
@@ -704,16 +698,16 @@ class Import extends ImportExport
             return;
         }
 
-        $this->importData = [];
-        $remainingPages = $this->dat['header']['records']['pages'];
+        $importData = [];
 
         // Add page tree
+        $remainingPages = $this->dat['header']['records']['pages'];
         if (is_array($this->dat['header']['pagetree'])) {
             $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
             foreach ($pageList as $pageUid) {
                 $pid = $this->dat['header']['records']['pages'][$pageUid]['pid'];
                 $pid = $this->importNewIdPids[$pid] ?? $this->pid;
-                $this->addSingle('pages', (int)$pageUid, $pid);
+                $this->addSingle($importData, 'pages', (int)$pageUid, $pid);
                 unset($remainingPages[$pageUid]);
             }
         }
@@ -721,7 +715,7 @@ class Import extends ImportExport
         // Add remaining pages on root level
         if (!empty($remainingPages)) {
             foreach ($remainingPages as $pageUid => &$pageInfo) {
-                $this->addSingle('pages', (int)$pageUid, $this->pid);
+                $this->addSingle($importData, 'pages', (int)$pageUid, $this->pid);
             }
         }
 
@@ -730,15 +724,15 @@ class Import extends ImportExport
         $tce->isImporting = true;
         $this->callHook('before_writeRecordsPages', [
             'tce' => &$tce,
-            'data' => &$this->importData
+            'data' => &$importData
         ]);
         $tce->suggestedInsertUids = $this->suggestedInsertUids;
-        $tce->start($this->importData, []);
+        $tce->start($importData, []);
         $tce->process_datamap();
         $this->callHook('after_writeRecordsPages', [
             'tce' => &$tce
         ]);
-        $this->addToMapId($tce->substNEWwithIDs);
+        $this->addToMapId($importData, $tce->substNEWwithIDs);
 
         // In case of an update, order pages from the page tree correctly
         if ($this->update && is_array($this->dat['header']['pagetree'])) {
@@ -826,8 +820,9 @@ class Import extends ImportExport
      */
     protected function writeRecords(): void
     {
+        $importData = [];
+
         // Write the rest of the records
-        $this->importData = [];
         if (is_array($this->dat['header']['records'])) {
             foreach ($this->dat['header']['records'] as $table => $recs) {
                 $table = (string)$table;
@@ -848,7 +843,7 @@ class Import extends ImportExport
                             }
                         }
                         // Add record:
-                        $this->addSingle($table, $uid, $setPid);
+                        $this->addSingle($importData, $table, $uid, $setPid);
                     }
                 }
             }
@@ -859,19 +854,19 @@ class Import extends ImportExport
         $tce = $this->getNewTCE();
         $this->callHook('before_writeRecordsRecords', [
             'tce' => &$tce,
-            'data' => &$this->importData
+            'data' => &$importData
         ]);
         $tce->suggestedInsertUids = $this->suggestedInsertUids;
-        // Because all records are being submitted in their correct order with positive pid numbers - and so we should reverse submission order internally.
+        // Because all records are submitted in the correct order with positive pid numbers,
+        // we should internally reverse the order of submission.
         $tce->reverseOrder = 1;
         $tce->isImporting = true;
-        $tce->start($this->importData, []);
+        $tce->start($importData, []);
         $tce->process_datamap();
         $this->callHook('after_writeRecordsRecords', [
             'tce' => &$tce
         ]);
-        // post-processing: Removing files and registering new ids (end all DataHandler sessions with this)
-        $this->addToMapId($tce->substNEWwithIDs);
+        $this->addToMapId($importData, $tce->substNEWwithIDs);
         // In case of an update, order pages from the page tree correctly:
         if ($this->update) {
             $this->writeRecordsOrder($this->pid);
@@ -934,12 +929,13 @@ class Import extends ImportExport
      * However all File/DB-references and flexform field contents are set to blank for now!
      * That is done with setRelations() later
      *
+     * @param array $importData Data to be modified or inserted in the database during import
      * @param string $table Table name (from import memory)
      * @param int $uid Record UID (from import memory)
      * @param int|string $pid Page id or NEW-id, e.g. "NEW5fb3c2641281c885267727"
      * @see writeRecords()
      */
-    protected function addSingle(string $table, int $uid, $pid): void
+    protected function addSingle(array &$importData, string $table, int $uid, $pid): void
     {
         if ($this->importMode[$table . ':' . $uid] === 'exclude') {
             return;
@@ -991,24 +987,24 @@ class Import extends ImportExport
                 $this->importNewIdPids[$uid] = $ID;
             }
             // Set main record data:
-            $this->importData[$table][$ID] = $record;
-            $this->importData[$table][$ID]['tx_impexp_origuid'] = $this->importData[$table][$ID]['uid'];
+            $importData[$table][$ID] = $record;
+            $importData[$table][$ID]['tx_impexp_origuid'] = $importData[$table][$ID]['uid'];
             // Reset permission data:
             if ($table === 'pages') {
                 // Have to reset the user/group IDs so pages are owned by importing user. Otherwise strange things may happen for non-admins!
-                unset($this->importData[$table][$ID]['perms_userid']);
-                unset($this->importData[$table][$ID]['perms_groupid']);
+                unset($importData[$table][$ID]['perms_userid']);
+                unset($importData[$table][$ID]['perms_groupid']);
             }
             // PID and UID:
-            unset($this->importData[$table][$ID]['uid']);
+            unset($importData[$table][$ID]['uid']);
             // Updates:
             if (MathUtility::canBeInterpretedAsInteger($ID)) {
-                unset($this->importData[$table][$ID]['pid']);
+                unset($importData[$table][$ID]['pid']);
             } else {
                 // Inserts:
-                $this->importData[$table][$ID]['pid'] = $pid;
+                $importData[$table][$ID]['pid'] = $pid;
                 if (($this->importMode[$table . ':' . $uid] === 'force_uid' && $this->update || $this->forceAllUids) && $this->getBackendUser()->isAdmin()) {
-                    $this->importData[$table][$ID]['uid'] = $uid;
+                    $importData[$table][$ID]['uid'] = $uid;
                     $this->suggestedInsertUids[$table . ':' . $uid] = 'DELETE';
                 }
             }
@@ -1027,7 +1023,7 @@ class Import extends ImportExport
                         // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
                         // delete the reference record if the file extension of the related record doesn't match.
                         if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
-                            $this->importData[$table][$ID][$field] = '';
+                            $importData[$table][$ID][$field] = '';
                         }
                         break;
                     case 'flex':
@@ -1040,7 +1036,7 @@ class Import extends ImportExport
                         // cleared, because the configuration array contains only string values, which are furthermore
                         // important for the further import, e.g. the base path.
                         if (!($table === 'sys_file_storage' && $field === 'configuration')) {
-                            $this->importData[$table][$ID][$field] = '';
+                            $importData[$table][$ID][$field] = '';
                         }
                         break;
                 }
@@ -1054,12 +1050,13 @@ class Import extends ImportExport
     /**
      * Registers the substNEWids in memory.
      *
+     * @param array $importData Data to be modified or inserted in the database during import
      * @param array $substNEWwithIDs From DataHandler to be merged into internal mapping variable in this object
      * @see writeRecords()
      */
-    protected function addToMapId(array $substNEWwithIDs): void
+    protected function addToMapId(array &$importData, array $substNEWwithIDs): void
     {
-        foreach ($this->importData as $table => $recs) {
+        foreach ($importData as $table => $recs) {
             foreach ($recs as $id => $value) {
                 $old_uid = $this->importNewId[$table . ':' . $id]['uid'];
                 if (isset($substNEWwithIDs[$id])) {
