@@ -749,7 +749,7 @@ class Import extends ImportExport
      */
     protected function writePagesOrder(): void
     {
-        $cmd_data = [];
+        $importCmd = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
         $pageList = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
         foreach ($pageList as $origPid => $newPid) {
@@ -758,21 +758,21 @@ class Import extends ImportExport
                 if (strpos($this->importNewIdPids[$origPid], 'NEW') === 0) {
                     if ($this->importMapId['pages'][$origPid]) {
                         $mappedPid = $this->importMapId['pages'][$origPid];
-                        $cmd_data['pages'][$mappedPid]['move'] = $newPid;
+                        $importCmd['pages'][$mappedPid]['move'] = $newPid;
                     }
                 } else {
-                    $cmd_data['pages'][$origPid]['move'] = $newPid;
+                    $importCmd['pages'][$origPid]['move'] = $newPid;
                 }
             }
         }
         // Execute the move commands if any:
-        if (!empty($cmd_data)) {
+        if (!empty($importCmd)) {
             $tce = $this->getNewTCE();
             $this->callHook('before_writeRecordsPagesOrder', [
                 'tce' => &$tce,
-                'data' => &$cmd_data
+                'data' => &$importCmd
             ]);
-            $tce->start([], $cmd_data);
+            $tce->start([], $importCmd);
             $tce->process_cmdmap();
             $this->callHook('after_writeRecordsPagesOrder', [
                 'tce' => &$tce
@@ -884,7 +884,7 @@ class Import extends ImportExport
      */
     protected function writeRecordsOrder(int $mainPid): void
     {
-        $cmd_data = [];
+        $importCmd = [];
         if (is_array($this->dat['header']['pagetree'])) {
             $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
         } else {
@@ -901,7 +901,7 @@ class Import extends ImportExport
                             $uidList = array_reverse(array_keys($uidList));
                             foreach ($uidList as $uid) {
                                 if ($this->dontIgnorePid($tableName, $uid)) {
-                                    $cmd_data[$tableName][$uid]['move'] = $newPid;
+                                    $importCmd[$tableName][$uid]['move'] = $newPid;
                                 }
                             }
                         }
@@ -910,13 +910,13 @@ class Import extends ImportExport
             }
         }
         // Execute the move commands if any:
-        if (!empty($cmd_data)) {
+        if (!empty($importCmd)) {
             $tce = $this->getNewTCE();
             $this->callHook('before_writeRecordsRecordsOrder', [
                 'tce' => &$tce,
-                'data' => &$cmd_data
+                'data' => &$importCmd
             ]);
-            $tce->start([], $cmd_data);
+            $tce->start([], $importCmd);
             $tce->process_cmdmap();
             $this->callHook('after_writeRecordsRecordsOrder', [
                 'tce' => &$tce
