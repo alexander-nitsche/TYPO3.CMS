@@ -795,7 +795,7 @@ class Import extends ImportExport
         foreach ($pageTree as $page) {
             $list[$page['uid']] = $pid;
             if (is_array($page['subrow'])) {
-                $list = $this->flatInversePageTreePid($page['subrow'], $list, $page['uid']);
+                $list = $this->flatInversePageTreePid($page['subrow'], $list, (int)$page['uid']);
             }
         }
         return $list;
@@ -984,7 +984,7 @@ class Import extends ImportExport
             }
             $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
             if ($table === 'pages') {
-                $this->importNewIdPids[$uid] = $ID;
+                $this->importNewIdPids[$uid] = (string)$ID;
             }
             // Set main record data:
             $importData[$table][$ID] = $record;

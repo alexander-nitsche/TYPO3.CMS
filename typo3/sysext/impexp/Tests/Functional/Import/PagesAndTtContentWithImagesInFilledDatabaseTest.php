@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /*
  * This file is part of the TYPO3 CMS project.
  *
@@ -60,10 +62,89 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         );
         $subject->importData();
 
-        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg';
 
         $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/importPagesAndRelatedTtContentWithDifferentImageToExistingData.csv');
+
+        self::assertFileEquals(__DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg');
+        self::assertFileEquals(__DIR__ . '/../Fixtures/FileAssertions/typo3_image2_01.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg');
+    }
+
+    /**
+     * @test
+     */
+    public function updatePagesAndRelatedTtContentWithDifferentImageToExistingData()
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_language.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_metadata.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_reference.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        try {
+            $subject->setPid(0);
+            $subject->setUpdate(true);
+            $subject->loadFile(
+                'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
+                true
+            );
+            $subject->importData();
+        } catch (\Exception $e) {
+            // This warning is expected, but the import is completed anyway
+            self::assertEquals(
+                ['Updating sys_file records is not supported! They will be imported as new records!'],
+                $subject->getErrorLog()
+            );
+        }
+
+        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg';
+
+        $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/updatePagesAndRelatedTtContentWithDifferentImageToExistingData.csv');
+
+        self::assertFileEquals(__DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg');
+        self::assertFileEquals(__DIR__ . '/../Fixtures/FileAssertions/typo3_image2_01.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg');
+    }
+
+    /**
+     * @test
+     */
+    public function updatePagesAndRelatedTtContentWithDifferentImageToExistingDataAndPagesAsNew()
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_language.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_metadata.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_reference.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        try {
+            $subject->setPid(0);
+            $subject->setUpdate(true);
+            $subject->setImportMode([
+                'pages:1' => 'as_new',
+                'pages:2' => 'as_new',
+            ]);
+            $subject->loadFile(
+                'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
+                true
+            );
+            $subject->importData();
+        } catch (\Exception $e) {
+            // This warning is expected, but the import is completed anyway
+            self::assertEquals(
+                ['Updating sys_file records is not supported! They will be imported as new records!'],
+                $subject->getErrorLog()
+            );
+        }
+
+        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg';
+
+        $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/updatePagesAndRelatedTtContentWithDifferentImageToExistingDataAndPagesAsNew.csv');
 
         self::assertFileEquals(__DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg');
         self::assertFileEquals(__DIR__ . '/../Fixtures/FileAssertions/typo3_image2_01.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg');
@@ -89,8 +170,6 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
             true
         );
         $subject->importData();
-
-        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
 
         $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/importPagesAndRelatedTtContentWithSameImageToExistingData.csv');
 
@@ -137,7 +216,6 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         );
         $subject->importData();
 
-        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg';
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/used-1.jpg';
         $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/used-2.jpg';
 
