@@ -811,33 +811,33 @@ class Import extends ImportExport
 
         // Write the rest of the records
         if (is_array($this->dat['header']['records'])) {
-            foreach ($this->dat['header']['records'] as $table => $recs) {
-                $table = (string)$table;
+            foreach ($this->dat['header']['records'] as $table => &$records) {
                 $this->addGeneralErrorsByTable($table);
                 if ($table !== 'pages') {
-                    foreach ($recs as $uid => $thisRec) {
+                    foreach ($records as $uid => &$record) {
                         // PID: Set the main $this->pid, unless a NEW-id is found
-                        $setPid = isset($this->importMapId['pages'][$thisRec['pid']])
-                            ? (int)$this->importMapId['pages'][$thisRec['pid']]
-                            : (int)$this->pid;
-                        if (is_array($GLOBALS['TCA'][$table]) && isset($GLOBALS['TCA'][$table]['ctrl']['rootLevel'])) {
+                        $pid = isset($this->importMapId['pages'][$record['pid']])
+                            ? (int)$this->importMapId['pages'][$record['pid']]
+                            : $this->pid;
+                        if (isset($GLOBALS['TCA'][$table]['ctrl']['rootLevel'])) {
                             $rootLevelSetting = (int)$GLOBALS['TCA'][$table]['ctrl']['rootLevel'];
                             if ($rootLevelSetting === 1) {
-                                $setPid = 0;
-                            } elseif ($rootLevelSetting === 0 && $setPid === 0) {
+                                $pid = 0;
+                            } elseif ($rootLevelSetting === 0 && $pid === 0) {
                                 $this->addError('Error: Record type ' . $table . ' is not allowed on pid 0');
                                 continue;
                             }
                         }
-                        // Add record:
-                        $this->addSingle($importData, $table, $uid, $setPid);
+                        // Add record
+                        $this->addSingle($importData, $table, $uid, $pid);
                     }
                 }
             }
         } else {
             $this->addError('Error: No records defined in internal data array.');
         }
-        // Now write to database:
+
+        // Write records to the database
         $tce = $this->getNewTCE();
         $this->callHook('before_writeRecordsRecords', [
             'tce' => &$tce,
