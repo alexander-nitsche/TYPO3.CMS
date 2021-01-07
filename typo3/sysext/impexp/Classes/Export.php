@@ -243,9 +243,10 @@ class Export extends ImportExport
             // In most cases, we should have a multi-level array, $pageTree, with the page tree
             // structure here (and the HTML code loaded into memory for a nice display...)
             if (is_array($pageTree)) {
+                $pageList = [];
                 $this->removeExcludedPagesFromPageTree($pageTree);
                 $this->setPageTree($pageTree);
-                $pageList = $this->flatInversePageTree($pageTree);
+                $this->flatInversePageTree($pageTree, $pageList);
                 foreach ($pageList as $pageUid => &$_) {
                     $record = BackendUtility::getRecord('pages', $pageUid);
                     if (is_array($record)) {

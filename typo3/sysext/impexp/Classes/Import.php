@@ -703,7 +703,8 @@ class Import extends ImportExport
         // Add page tree
         $remainingPages = $this->dat['header']['records']['pages'];
         if (is_array($this->dat['header']['pagetree'])) {
-            $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
+            $pageList = [];
+            $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
             foreach ($pageList as $pageUid => &$_) {
                 $pid = $this->dat['header']['records']['pages'][$pageUid]['pid'];
                 $pid = $this->importNewIdPids[$pid] ?? $this->pid;
@@ -751,7 +752,8 @@ class Import extends ImportExport
     {
         $importCmd = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
-        $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
+        $pageList = [];
+        $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
         foreach ($pageList as $pageUid => $pagePid) {
             if ($pagePid >= 0 && $this->dontIgnorePid('pages', $pageUid)) {
                 // If the page has been assigned a new ID (because it was created), use that instead!
@@ -864,10 +866,10 @@ class Import extends ImportExport
     protected function writeRecordsOrder(int $mainPid): void
     {
         $importCmd = [];
+
+        $pageList = [];
         if (is_array($this->dat['header']['pagetree'])) {
-            $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
-        } else {
-            $pageList = [];
+            $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
         }
         if (is_array($this->dat['header']['pid_lookup'])) {
             foreach ($this->dat['header']['pid_lookup'] as $pid => $recList) {
