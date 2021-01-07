@@ -704,7 +704,7 @@ class Import extends ImportExport
         $remainingPages = $this->dat['header']['records']['pages'];
         if (is_array($this->dat['header']['pagetree'])) {
             $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
-            foreach ($pageList as $pageUid) {
+            foreach ($pageList as $pageUid => &$_) {
                 $pid = $this->dat['header']['records']['pages'][$pageUid]['pid'];
                 $pid = $this->importNewIdPids[$pid] ?? $this->pid;
                 $this->addSingle($importData, 'pages', (int)$pageUid, $pid);
@@ -751,7 +751,7 @@ class Import extends ImportExport
     {
         $importCmd = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
-        $pageList = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
+        $pageList = $this->flatInversePageTree($this->dat['header']['pagetree']);
         foreach ($pageList as $pageUid => $pagePid) {
             if ($pagePid >= 0 && $this->dontIgnorePid('pages', $pageUid)) {
                 // If the page has been assigned a new ID (because it was created), use that instead!
@@ -778,27 +778,6 @@ class Import extends ImportExport
                 'tce' => &$tce
             ]);
         }
-    }
-
-    /**
-     * Recursively flattening the $pageTree array to a one-dimensional array with uid-pid pairs.
-     *
-     * @param array $pageTree Page tree array
-     * @param array $list List of pages (internal, don't set from outside)
-     * @param int $pid PID value (internal)
-     * @return array List with uid-pid pairs for all pages in the page tree.
-     * @see ImportExport::flatInversePageTree()
-     */
-    protected function flatInversePageTreePid(array $pageTree, array $list = [], int $pid = -1): array
-    {
-        $pageTree = array_reverse($pageTree);
-        foreach ($pageTree as &$page) {
-            $list[$page['uid']] = $pid;
-            if (is_array($page['subrow'])) {
-                $list = $this->flatInversePageTreePid($page['subrow'], $list, (int)$page['uid']);
-            }
-        }
-        return $list;
     }
 
     /**

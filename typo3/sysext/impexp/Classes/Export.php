@@ -246,7 +246,7 @@ class Export extends ImportExport
                 $this->removeExcludedPagesFromPageTree($pageTree);
                 $this->setPageTree($pageTree);
                 $pageList = $this->flatInversePageTree($pageTree);
-                foreach ($pageList as $pageUid) {
+                foreach ($pageList as $pageUid => &$_) {
                     $record = BackendUtility::getRecord('pages', $pageUid);
                     if (is_array($record)) {
                         $this->exportAddRecord('pages', $record);
