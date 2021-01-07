@@ -1236,7 +1236,7 @@ abstract class ImportExport
     }
 
     /**
-     * Recursively flattening the page tree array to a one-dimensional array.
+     * Recursively flattening the page tree array to a one-dimensional array with uid-uid pairs.
      *
      * @param array $pageTree Page tree array
      * @param array $list List of pages (internal, don't set from outside)
@@ -1246,7 +1246,7 @@ abstract class ImportExport
     protected function flatInversePageTree(array $pageTree, array $list = []): array
     {
         $pageTree = array_reverse($pageTree);
-        foreach ($pageTree as $pageUid => $page) {
+        foreach ($pageTree as &$page) {
             $list[$page['uid']] = $page['uid'];
             if (is_array($page['subrow'])) {
                 $list = $this->flatInversePageTree($page['subrow'], $list);
