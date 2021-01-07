@@ -752,16 +752,16 @@ class Import extends ImportExport
         $importCmd = [];
         // Get uid-pid relations and traverse them in order to map to possible new IDs
         $pageList = $this->flatInversePageTreePid($this->dat['header']['pagetree']);
-        foreach ($pageList as $origPid => $newPid) {
-            if ($newPid >= 0 && $this->dontIgnorePid('pages', $origPid)) {
-                // If the page had a new id (because it was created) use that instead!
-                if (strpos($this->importNewIdPids[$origPid], 'NEW') === 0) {
-                    if ($this->importMapId['pages'][$origPid]) {
-                        $mappedPid = $this->importMapId['pages'][$origPid];
-                        $importCmd['pages'][$mappedPid]['move'] = $newPid;
+        foreach ($pageList as $pageUid => $pagePid) {
+            if ($pagePid >= 0 && $this->dontIgnorePid('pages', $pageUid)) {
+                // If the page has been assigned a new ID (because it was created), use that instead!
+                if (strpos($this->importNewIdPids[$pageUid], 'NEW') === 0) {
+                    if ($this->importMapId['pages'][$pageUid]) {
+                        $mappedUid = $this->importMapId['pages'][$pageUid];
+                        $importCmd['pages'][$mappedUid]['move'] = $pagePid;
                     }
                 } else {
-                    $importCmd['pages'][$origPid]['move'] = $newPid;
+                    $importCmd['pages'][$pageUid]['move'] = $pagePid;
                 }
             }
         }
@@ -781,9 +781,9 @@ class Import extends ImportExport
     }
 
     /**
-     * Recursively flattening the $pageTree array, setting PIDs as values
+     * Recursively flattening the $pageTree array to a one-dimensional array with uid-pid pairs.
      *
-     * @param array $pageTree Page uid hierarchy
+     * @param array $pageTree Page tree array
      * @param array $list List of pages (internal, don't set from outside)
      * @param int $pid PID value (internal)
      * @return array List with uid-pid pairs for all pages in the page tree.
@@ -792,7 +792,7 @@ class Import extends ImportExport
     protected function flatInversePageTreePid(array $pageTree, array $list = [], int $pid = -1): array
     {
         $pageTree = array_reverse($pageTree);
-        foreach ($pageTree as $page) {
+        foreach ($pageTree as &$page) {
             $list[$page['uid']] = $pid;
             if (is_array($page['subrow'])) {
                 $list = $this->flatInversePageTreePid($page['subrow'], $list, (int)$page['uid']);
@@ -897,7 +897,7 @@ class Import extends ImportExport
                     foreach ($recList as $tableName => $uidList) {
                         // If $mainPid===$newPid then we are on root level and we can consider to move pages as well!
                         // (they will not be in the page tree!)
-                        if (($tableName !== 'pages' || !$pageList[$pid]) && is_array($uidList)) {
+                        if (($tableName !== 'pages' || !isset($pageList[$pid])) && is_array($uidList)) {
                             $uidList = array_reverse(array_keys($uidList));
                             foreach ($uidList as $uid) {
                                 if ($this->dontIgnorePid($tableName, $uid)) {
