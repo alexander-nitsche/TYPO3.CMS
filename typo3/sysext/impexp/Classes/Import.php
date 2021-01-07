@@ -735,22 +735,25 @@ class Import extends ImportExport
         ]);
         $this->addToMapId($importData, $tce->substNEWwithIDs);
 
-        // In case of an update, order pages from the page tree correctly
-        if ($this->update && is_array($this->dat['header']['pagetree'])) {
-            $this->writePagesOrder();
-        }
+        // Sort pages
+        $this->writePagesOrder();
     }
 
     /**
-     * Organize all updated pages in page tree so they are related like in the import file
-     * Only used for updates and when $this->dat['header']['pagetree'] is an array.
+     * Organize all updated pages in page tree so they are related like in the import file.
+     * Only used for updates.
      *
      * @see writePages()
      * @see writeRecordsOrder()
      */
     protected function writePagesOrder(): void
     {
+        if (!$this->update || !is_array($this->dat['header']['pagetree'])) {
+            return;
+        }
+
         $importCmd = [];
+
         // Get uid-pid relations and traverse them in order to map to possible new IDs
         $pageList = [];
         $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
@@ -767,7 +770,8 @@ class Import extends ImportExport
                 }
             }
         }
-        // Execute the move commands if any:
+
+        // Move pages in the database
         if (!empty($importCmd)) {
             $tce = $this->getNewTCE();
             $this->callHook('before_writeRecordsPagesOrder', [
