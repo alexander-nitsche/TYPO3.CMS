@@ -787,15 +787,17 @@ class Import extends ImportExport
     }
 
     /**
-     * Checks if the position of an updated record is configured to be corrected. This can be disabled globally and changed for elements individually.
+     * Checks if the position of an updated record is configured to be corrected.
+     * This can be disabled globally and changed individually for elements.
      *
      * @param string $table Table name
-     * @param int $uid Uid or record
+     * @param int $uid Record UID
      * @return bool TRUE if the position of the record should be updated to match the one in the import structure
      */
     protected function dontIgnorePid(string $table, int $uid): bool
     {
-        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' && (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
+        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' &&
+            (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
     }
 
     /**
