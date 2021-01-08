@@ -758,7 +758,7 @@ class Import extends ImportExport
         $pageList = [];
         $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
         foreach ($pageList as $pageUid => $pagePid) {
-            if ($pagePid >= 0 && $this->dontIgnorePid('pages', $pageUid)) {
+            if ($pagePid >= 0 && $this->doRespectPid('pages', $pageUid)) {
                 // If the page has been assigned a new ID (because it was created), use that instead!
                 if (strpos($this->importNewIdPids[$pageUid], 'NEW') === 0) {
                     if ($this->importMapId['pages'][$pageUid]) {
@@ -794,7 +794,7 @@ class Import extends ImportExport
      * @param int $uid Record UID
      * @return bool TRUE if the position of the record should be updated to match the one in the import structure
      */
-    protected function dontIgnorePid(string $table, int $uid): bool
+    protected function doRespectPid(string $table, int $uid): bool
     {
         return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' &&
             (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
@@ -887,7 +887,7 @@ class Import extends ImportExport
                         // (they will not be in the page tree!)
                         if (($table !== 'pages' || !isset($pageList[$pid])) && is_array($records)) {
                             foreach (array_reverse(array_keys($records)) as $uid) {
-                                if ($this->dontIgnorePid($table, $uid)) {
+                                if ($this->doRespectPid($table, $uid)) {
                                     $importCmd[$table][$uid]['move'] = $mappedPid;
                                 }
                             }
