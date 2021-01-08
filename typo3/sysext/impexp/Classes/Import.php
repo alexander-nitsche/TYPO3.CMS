@@ -854,23 +854,24 @@ class Import extends ImportExport
             'tce' => &$tce
         ]);
         $this->addToMapId($importData, $tce->substNEWwithIDs);
-        // In case of an update, order pages from the page tree correctly:
-        if ($this->update) {
-            $this->writeRecordsOrder($this->pid);
-        }
+
+        // Sort records
+        $this->writeRecordsOrder();
     }
 
     /**
-     * Organize all updated record to their new positions.
-     * Only used for updates
-     *
-     * @param int $mainPid Main PID into which we import.
+     * Organize all updated records so they are related like in the import file.
+     * Only used for updates.
      *
      * @see writeRecords()
      * @see writePagesOrder()
      */
-    protected function writeRecordsOrder(int $mainPid): void
+    protected function writeRecordsOrder(): void
     {
+        if (!$this->update) {
+            return;
+        }
+
         $importCmd = [];
 
         $pageList = [];
@@ -878,17 +879,16 @@ class Import extends ImportExport
             $this->flatInversePageTree($this->dat['header']['pagetree'], $pageList);
         }
         if (is_array($this->dat['header']['pid_lookup'])) {
-            foreach ($this->dat['header']['pid_lookup'] as $pid => $recList) {
-                $newPid = $this->importMapId['pages'][$pid] ?? $mainPid;
-                if (MathUtility::canBeInterpretedAsInteger($newPid)) {
-                    foreach ($recList as $tableName => $uidList) {
-                        // If $mainPid===$newPid then we are on root level and we can consider to move pages as well!
+            foreach ($this->dat['header']['pid_lookup'] as $pid => &$recordsByPid) {
+                $mappedPid = $this->importMapId['pages'][$pid] ?? $this->pid;
+                if (MathUtility::canBeInterpretedAsInteger($mappedPid)) {
+                    foreach ($recordsByPid as $table => &$records) {
+                        // If $mappedPid === $this->pid then we are on root level and we can consider to move pages as well!
                         // (they will not be in the page tree!)
-                        if (($tableName !== 'pages' || !isset($pageList[$pid])) && is_array($uidList)) {
-                            $uidList = array_reverse(array_keys($uidList));
-                            foreach ($uidList as $uid) {
-                                if ($this->dontIgnorePid($tableName, $uid)) {
-                                    $importCmd[$tableName][$uid]['move'] = $newPid;
+                        if (($table !== 'pages' || !isset($pageList[$pid])) && is_array($records)) {
+                            foreach (array_reverse(array_keys($records)) as $uid) {
+                                if ($this->dontIgnorePid($table, $uid)) {
+                                    $importCmd[$table][$uid]['move'] = $mappedPid;
                                 }
                             }
                         }
@@ -896,7 +896,8 @@ class Import extends ImportExport
                 }
             }
         }
-        // Execute the move commands if any:
+
+        // Move records in the database
         if (!empty($importCmd)) {
             $tce = $this->getNewTCE();
             $this->callHook('before_writeRecordsRecordsOrder', [
