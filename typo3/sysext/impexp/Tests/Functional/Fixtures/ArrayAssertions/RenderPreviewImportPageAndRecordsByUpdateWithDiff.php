@@ -17,7 +17,7 @@ return [
       'title' => '',
       'active' => 'active',
       'updatePath' => '<strong>NEW!</strong>',
-      'updateMode' => '<select name="tx_impexp[import_mode][pages:0]"><option value="0">Insert</option><option value="force_uid">Force UID [0] (Admin)</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][pages:0]"><option value="0">Insert</option><option value="%s">Force UID [0] (Admin)</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_FORCE_UID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => 'ERROR: One of the inputs were not an array!',
       'controls' => '',
       'message' => '',
@@ -114,7 +114,7 @@ return [
       'active' => 'active',
       'msg' => 'TABLE \'sys_file_storage\' will be inserted on ROOT LEVEL! ',
       'updatePath' => '/',
-      'updateMode' => '<select name="tx_impexp[import_mode][sys_file_storage:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][sys_file_storage:1]"><option value="0">Update</option><option value="%s">Import as new</option><option value="%s">Ignore PID</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_AS_NEW, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_IGNORE_PID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => '<strong class="text-nowrap">[sys_file_storage:1 =&gt; 1]:</strong>
 <table class="table table-striped table-hover">
 <tr><td>Driver Configuration (configuration)</td><td>
@@ -154,7 +154,7 @@ return [
       'title' => 'CE 1 first image',
       'active' => 'active',
       'updatePath' => '/Root/',
-      'updateMode' => '<select name="tx_impexp[import_mode][tt_content:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][tt_content:1]"><option value="0">Update</option><option value="%s">Import as new</option><option value="%s">Ignore PID</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_AS_NEW, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_IGNORE_PID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => '<strong class="text-nowrap">[tt_content:1 =&gt; 2]:</strong>
 <table class="table table-striped table-hover">
 <tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
@@ -219,7 +219,7 @@ return [
       'title' => 'CE 2 second image',
       'active' => 'active',
       'updatePath' => '/Root/',
-      'updateMode' => '<select name="tx_impexp[import_mode][tt_content:2]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][tt_content:2]"><option value="0">Update</option><option value="%s">Import as new</option><option value="%s">Ignore PID</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_AS_NEW, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_IGNORE_PID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => '<strong class="text-nowrap">[tt_content:2 =&gt; 1]:</strong>
 <table class="table table-striped table-hover">
 <tr><td>Type (CType)</td><td><del>Text &amp; Images</del><ins>Text</ins></td></tr>
@@ -284,7 +284,7 @@ return [
       'title' => 'CE 3 second image',
       'active' => 'active',
       'updatePath' => '<strong>NEW!</strong>',
-      'updateMode' => '<select name="tx_impexp[import_mode][tt_content:3]"><option value="0">Insert</option><option value="force_uid">Force UID [3] (Admin)</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][tt_content:3]"><option value="0">Insert</option><option value="%s">Force UID [3] (Admin)</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_FORCE_UID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => 'ERROR: One of the inputs were not an array!',
       'controls' => '',
       'message' => '',
@@ -344,7 +344,7 @@ return [
       'title' => 'used-1.jpg',
       'active' => 'active',
       'updatePath' => '<strong>NEW!</strong>',
-      'updateMode' => '<select name="tx_impexp[import_mode][sys_file_reference:1]"><option value="0">Insert</option><option value="force_uid">Force UID [1] (Admin)</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][sys_file_reference:1]"><option value="0">Insert</option><option value="%s">Force UID [1] (Admin)</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_FORCE_UID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => 'ERROR: One of the inputs were not an array!',
       'controls' => '',
       'message' => '',
@@ -390,7 +390,7 @@ return [
       'title' => 'used-2.jpg',
       'active' => 'active',
       'updatePath' => '<strong>NEW!</strong>',
-      'updateMode' => '<select name="tx_impexp[import_mode][sys_file_reference:2]"><option value="0">Insert</option><option value="force_uid">Force UID [2] (Admin)</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][sys_file_reference:2]"><option value="0">Insert</option><option value="%s">Force UID [2] (Admin)</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_FORCE_UID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => 'ERROR: One of the inputs were not an array!',
       'controls' => '',
       'message' => '',
@@ -436,7 +436,7 @@ return [
       'title' => 'used-2.jpg',
       'active' => 'active',
       'updatePath' => '<strong>NEW!</strong>',
-      'updateMode' => '<select name="tx_impexp[import_mode][sys_file_reference:3]"><option value="0">Insert</option><option value="force_uid">Force UID [3] (Admin)</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][sys_file_reference:3]"><option value="0">Insert</option><option value="%s">Force UID [3] (Admin)</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_FORCE_UID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => 'ERROR: One of the inputs were not an array!',
       'controls' => '',
       'message' => '',
@@ -482,7 +482,7 @@ return [
       'title' => '<a href="#" onclick="return false;">Root</a>',
       'active' => 'active',
       'updatePath' => '/',
-      'updateMode' => '<select name="tx_impexp[import_mode][pages:1]"><option value="0">Update</option><option value="as_new">Import as new</option><option value="ignore_pid">Ignore PID</option><option value="exclude">Exclude</option></select>',
+      'updateMode' => sprintf('<select name="tx_impexp[import_mode][pages:1]"><option value="0">Update</option><option value="%s">Import as new</option><option value="%s">Ignore PID</option><option value="%s">Exclude</option></select>', \TYPO3\CMS\Impexp\Import::IMPORT_MODE_AS_NEW, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_IGNORE_PID, \TYPO3\CMS\Impexp\Import::IMPORT_MODE_EXCLUDE),
       'showDiffContent' => '<strong class="text-nowrap">[pages:1 =&gt; 1]:</strong>
 Match',
       'controls' => '',

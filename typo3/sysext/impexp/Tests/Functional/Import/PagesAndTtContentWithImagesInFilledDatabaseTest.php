@@ -126,8 +126,8 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
             $subject->setPid(0);
             $subject->setUpdate(true);
             $subject->setImportMode([
-                'pages:1' => 'as_new',
-                'pages:2' => 'as_new',
+                'pages:1' => Import::IMPORT_MODE_AS_NEW,
+                'pages:2' => Import::IMPORT_MODE_AS_NEW,
             ]);
             $subject->loadFile(
                 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-existing-different-image.xml',
