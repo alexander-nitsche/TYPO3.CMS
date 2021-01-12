@@ -298,9 +298,11 @@ class Import extends ImportExport
     {
         // Check #1: Extension dependencies
         $extKeysToInstall = [];
-        foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
-            if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
-                $extKeysToInstall[] = $extKey;
+        if (isset($this->dat['header']['extensionDependencies'])) {
+            foreach ($this->dat['header']['extensionDependencies'] as $extKey) {
+                if (!empty($extKey) && !ExtensionManagementUtility::isLoaded($extKey)) {
+                    $extKeysToInstall[] = $extKey;
+                }
             }
         }
         if (!empty($extKeysToInstall)) {
