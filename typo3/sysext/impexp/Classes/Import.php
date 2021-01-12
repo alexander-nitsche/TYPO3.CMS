@@ -888,7 +888,10 @@ class Import extends ImportExport
                         if (($table !== 'pages' || !isset($pageList[$pid])) && is_array($records)) {
                             foreach (array_reverse(array_keys($records)) as $uid) {
                                 if ($this->doRespectPid($table, $uid)) {
-                                    $importCmd[$table][$uid]['move'] = $mappedPid;
+                                    if (isset($this->importMapId[$table][$uid])) {
+                                        $mappedUid = $this->importMapId[$table][$uid];
+                                        $importCmd[$table][$mappedUid]['move'] = $mappedPid;
+                                    }
                                 }
                             }
                         }
