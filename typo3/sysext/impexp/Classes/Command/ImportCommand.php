@@ -74,6 +74,16 @@ class ImportCommand extends Command
                 'If set, UIDs from file will be forced.'
             )
             ->addOption(
+                'importMode',
+                'm',
+                InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
+                'Set the import mode of this specific record. ' . PHP_EOL .
+                'Pattern is "{table}:{record}={mode}". ' . PHP_EOL .
+                'Available modes for new records are "force_uid" and "exclude" ' .
+                'and for existing records "as_new", "ignore_pid", "respect_pid" and "exclude".' . PHP_EOL .
+                'Examples are "pages:987=force_uid", "tt_content:1=as_new", etc.'
+            )
+            ->addOption(
                 'enableLog',
                 null,
                 InputOption::VALUE_NONE,
@@ -101,6 +111,7 @@ class ImportCommand extends Command
             $import->setUpdate((bool)$input->getOption('updateRecords'));
             $import->setGlobalIgnorePid((bool)$input->getOption('ignorePid'));
             $import->setForceAllUids((bool)$input->getOption('forceUid'));
+            $import->setImportMode($this->parseAssociativeArray($input, 'importMode', '='));
             $import->setEnableLogging((bool)$input->getOption('enableLog'));
             $import->loadFile((string)$input->getArgument('file'), true);
             $import->checkImportPrerequisites();
@@ -126,5 +137,33 @@ class ImportCommand extends Command
             $this->import = GeneralUtility::makeInstance(Import::class);
         }
         return $this->import;
+    }
+
+    /**
+     * Parse a basic commandline option array into an associative array by splitting each entry into a key part and
+     * a value part using a specific separator.
+     *
+     * @param InputInterface $input
+     * @param string $optionName
+     * @param string $separator
+     * @return array
+     */
+    protected function parseAssociativeArray(InputInterface &$input, string $optionName, string $separator): array
+    {
+        $array = [];
+
+        foreach ($input->getOption($optionName) as &$value) {
+            $parts = GeneralUtility::trimExplode($separator, $value, true, 2);
+            if (count($parts) === 2) {
+                $array[$parts[0]] = $parts[1];
+            } else {
+                throw new \InvalidArgumentException(
+                    sprintf('Command line option "%s" has invalid entry "%s".', $optionName, $value),
+                    1610464090
+                );
+            }
+        }
+
+        return $array;
     }
 }

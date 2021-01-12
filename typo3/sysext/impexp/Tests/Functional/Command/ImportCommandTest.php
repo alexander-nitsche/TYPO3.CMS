@@ -66,10 +66,15 @@ class ImportCommandTest extends AbstractImportExportTestCase
             '--ignorePid' => true,
             '--forceUid' => true,
             '--enableLog' => true,
+            '--importMode' => [
+                'pages:987=force_uid',
+                'tt_content:1=as_new'
+            ],
         ];
 
         $importMock = $this->getAccessibleMock(Import::class, [
-            'setPid', 'setUpdate', 'setGlobalIgnorePid', 'setForceAllUids', 'setEnableLogging', 'loadFile'
+            'setPid', 'setUpdate', 'setGlobalIgnorePid', 'setForceAllUids', 'setEnableLogging', 'loadFile',
+            'setImportMode'
         ]);
         GeneralUtility::addInstance(Import::class, $importMock);
 
@@ -79,6 +84,10 @@ class ImportCommandTest extends AbstractImportExportTestCase
         $importMock->expects(self::once())->method('setForceAllUids')->with(self::equalTo($input['--forceUid']));
         $importMock->expects(self::once())->method('setEnableLogging')->with(self::equalTo($input['--enableLog']));
         $importMock->expects(self::once())->method('loadFile')->with(self::equalTo($input['file']));
+        $importMock->expects(self::once())->method('setImportMode')->with(self::equalTo([
+            'pages:987' => 'force_uid',
+            'tt_content:1' => 'as_new',
+        ]));
 
         $tester = new CommandTester(new ImportCommand());
         $tester->execute($input);
@@ -87,14 +96,14 @@ class ImportCommandTest extends AbstractImportExportTestCase
     /**
      * @test
      * @dataProvider importCommandFailsDataProvider
-     * @param string $filePath
+     * @param array $input
      * @param string $expected
      */
-    public function importCommandFails(string $filePath, string $expected): void
+    public function importCommandFails(array $input, string $expected): void
     {
         $tester = new CommandTester(new ImportCommand());
         $tester->execute(
-            ['file' => $filePath, '--forceUid' => true],
+            $input,
             ['verbosity' => Output::VERBOSITY_VERBOSE]
         );
 
@@ -106,24 +115,46 @@ class ImportCommandTest extends AbstractImportExportTestCase
     {
         return [
             'path to not existing file' => [
-                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml',
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/me_does_not_exist.xml',
+                    '--forceUid' => true
+                ],
                 'expected' => 'File not found: '
             ],
             'unsupported file extension' => [
-                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/unsupported.json',
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/unsupported.json',
+                    '--forceUid' => true
+                ],
                 'expected' => 'File extension "json" is not valid. Supported file extensions are "xml", "t3d".'
             ],
             'missing required extension' => [
-                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/sys_category_table_with_news.xml',
+                    '--forceUid' => true
+                ],
                 'expected' => 'Prerequisites for file import are not met.'
             ],
             'missing required storage path' => [
-                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-invalid-storage.xml',
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-invalid-storage.xml',
+                    '--forceUid' => true
+                ],
                 'expected' => 'Prerequisites for file import are not met.'
             ],
             'forcing uids of sys_file records not supported' => [
-                'filePath' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
+                    '--forceUid' => true
+                ],
                 'expected' => 'The import has failed.',
+            ],
+            'import mode does not match associative array pattern of cli' => [
+                [
+                    'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml',
+                    '--importMode' => ['pages:987:force_uid']
+                ],
+                'expected' => 'Command line option "importMode" has invalid entry "pages:987:force_uid".',
             ],
         ];
     }
