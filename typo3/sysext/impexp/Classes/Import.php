@@ -885,7 +885,7 @@ class Import extends ImportExport
                     foreach ($recordsByPid as $table => &$records) {
                         // If $mappedPid === $this->pid then we are on root level and we can consider to move pages as well!
                         // (they will not be in the page tree!)
-                        if (($table !== 'pages' || !isset($pageList[$pid])) && is_array($records)) {
+                        if ($table !== 'pages' || !isset($pageList[$pid])) {
                             foreach (array_reverse(array_keys($records)) as $uid) {
                                 if ($this->doRespectPid($table, $uid)) {
                                     if (isset($this->importMapId[$table][$uid])) {
