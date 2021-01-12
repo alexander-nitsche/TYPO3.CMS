@@ -760,7 +760,7 @@ class Import extends ImportExport
         foreach ($pageList as $pageUid => $pagePid) {
             if ($pagePid >= 0 && $this->doRespectPid('pages', $pageUid)) {
                 // If the page has been assigned a new ID (because it was created), use that instead!
-                if (strpos($this->importNewIdPids[$pageUid], 'NEW') === 0) {
+                if (!MathUtility::canBeInterpretedAsInteger($this->importNewIdPids[$pageUid])) {
                     if ($this->importMapId['pages'][$pageUid]) {
                         $mappedUid = $this->importMapId['pages'][$pageUid];
                         $importCmd['pages'][$mappedUid]['move'] = $pagePid;
