@@ -153,6 +153,43 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
     /**
      * @test
      */
+    public function updatePagesAndRelatedTtContentKeepsRelationsBetweenImportedPagesAndRecords(): void
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-image.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_language.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_metadata.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_reference.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file_storage.xml');
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        try {
+            $subject->setPid(0);
+            $subject->setUpdate(true);
+            $subject->loadFile(
+                'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-with-forced-uids.xml',
+                true
+            );
+            $subject->importData();
+        } catch (\Exception $e) {
+            // This warning is expected, but the import is completed anyway
+            self::assertEquals(
+                ['Updating sys_file records is not supported! They will be imported as new records!'],
+                $subject->getErrorLog()
+            );
+        }
+
+        $this->testFilesToDelete[] = Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2_01.jpg';
+
+        $this->assertCSVDataSet('EXT:impexp/Tests/Functional/Fixtures/DatabaseAssertions/updatePagesAndRelatedTtContentKeepsRelationsBetweenImportedPagesAndRecords.csv');
+
+        self::assertFileEquals(__DIR__ . '/../Fixtures/Folders/fileadmin/user_upload/typo3_image2.jpg', Environment::getPublicPath() . '/fileadmin/user_upload/typo3_image2.jpg');
+    }
+
+    /**
+     * @test
+     */
     public function importPagesAndRelatedTtContentWithSameImageToExistingData()
     {
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
