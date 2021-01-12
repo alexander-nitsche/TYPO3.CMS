@@ -77,11 +77,16 @@ class ImportCommand extends Command
                 'importMode',
                 'm',
                 InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY,
-                'Set the import mode of this specific record. ' . PHP_EOL .
+                sprintf('Set the import mode of this specific record. ' . PHP_EOL .
                 'Pattern is "{table}:{record}={mode}". ' . PHP_EOL .
-                'Available modes for new records are "force_uid" and "exclude" ' .
-                'and for existing records "as_new", "ignore_pid", "respect_pid" and "exclude".' . PHP_EOL .
-                'Examples are "pages:987=force_uid", "tt_content:1=as_new", etc.'
+                'Available modes for new records are "%1$s" and "%3$s" ' .
+                'and for existing records "%2$s", "%4$s", "%5$s" and "%3$s".' . PHP_EOL .
+                'Examples are "pages:987=%1$s", "tt_content:1=%2$s", etc.',
+                Import::IMPORT_MODE_FORCE_UID,
+                Import::IMPORT_MODE_AS_NEW,
+                Import::IMPORT_MODE_EXCLUDE,
+                Import::IMPORT_MODE_IGNORE_PID,
+                Import::IMPORT_MODE_RESPECT_PID)
             )
             ->addOption(
                 'enableLog',

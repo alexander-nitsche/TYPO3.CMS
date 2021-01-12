@@ -92,7 +92,8 @@ abstract class ImportExport
     protected $doesImport = false;
 
     /**
-     * Setting import modes during update state: as_new, exclude, force_uid
+     * Setting the import mode for specific import records.
+     * Available options are: force_uid, as_new, exclude, ignore_pid, respect_pid
      *
      * @var array
      */
@@ -1043,18 +1044,18 @@ abstract class ImportExport
         if (!$doesRecordExist) {
             $options[] = $this->lang->getLL('impexpcore_singlereco_insert');
             if ($this->getBackendUser()->isAdmin()) {
-                $options['force_uid'] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
+                $options[Import::IMPORT_MODE_FORCE_UID] = sprintf($this->lang->getLL('impexpcore_singlereco_forceUidSAdmin'), $uid);
             }
         } else {
             $options[] = $this->lang->getLL('impexpcore_singlereco_update');
-            $options['as_new'] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
+            $options[Import::IMPORT_MODE_AS_NEW] = $this->lang->getLL('impexpcore_singlereco_importAsNew');
             if (!$this->globalIgnorePid) {
-                $options['ignore_pid'] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
+                $options[Import::IMPORT_MODE_IGNORE_PID] = $this->lang->getLL('impexpcore_singlereco_ignorePid');
             } else {
-                $options['respect_pid'] = $this->lang->getLL('impexpcore_singlereco_respectPid');
+                $options[Import::IMPORT_MODE_RESPECT_PID] = $this->lang->getLL('impexpcore_singlereco_respectPid');
             }
         }
-        $options['exclude'] = $this->lang->getLL('impexpcore_singlereco_exclude');
+        $options[Import::IMPORT_MODE_EXCLUDE] = $this->lang->getLL('impexpcore_singlereco_exclude');
         return $this->renderSelectBox(
             'tx_impexp[import_mode][' . $table . ':' . $uid . ']',
             (string)$this->importMode[$table . ':' . $uid],

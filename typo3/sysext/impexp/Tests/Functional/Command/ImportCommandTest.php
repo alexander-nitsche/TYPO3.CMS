@@ -67,8 +67,8 @@ class ImportCommandTest extends AbstractImportExportTestCase
             '--forceUid' => true,
             '--enableLog' => true,
             '--importMode' => [
-                'pages:987=force_uid',
-                'tt_content:1=as_new'
+                sprintf('pages:987=%s', Import::IMPORT_MODE_FORCE_UID),
+                sprintf('tt_content:1=%s', Import::IMPORT_MODE_AS_NEW)
             ],
         ];
 
@@ -85,8 +85,8 @@ class ImportCommandTest extends AbstractImportExportTestCase
         $importMock->expects(self::once())->method('setEnableLogging')->with(self::equalTo($input['--enableLog']));
         $importMock->expects(self::once())->method('loadFile')->with(self::equalTo($input['file']));
         $importMock->expects(self::once())->method('setImportMode')->with(self::equalTo([
-            'pages:987' => 'force_uid',
-            'tt_content:1' => 'as_new',
+            'pages:987' => Import::IMPORT_MODE_FORCE_UID,
+            'tt_content:1' => Import::IMPORT_MODE_AS_NEW,
         ]));
 
         $tester = new CommandTester(new ImportCommand());
@@ -152,9 +152,9 @@ class ImportCommandTest extends AbstractImportExportTestCase
             'import mode does not match associative array pattern of cli' => [
                 [
                     'file' => 'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml',
-                    '--importMode' => ['pages:987:force_uid']
+                    '--importMode' => [sprintf('pages:987:%s', Import::IMPORT_MODE_FORCE_UID)]
                 ],
-                'expected' => 'Command line option "importMode" has invalid entry "pages:987:force_uid".',
+                'expected' => sprintf('Command line option "importMode" has invalid entry "pages:987:%s".', Import::IMPORT_MODE_FORCE_UID),
             ],
         ];
     }

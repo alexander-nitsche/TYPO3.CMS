@@ -46,6 +46,12 @@ use TYPO3\CMS\Impexp\Exception\PrerequisitesNotMetException;
  */
 class Import extends ImportExport
 {
+    const IMPORT_MODE_FORCE_UID = 'force_uid';
+    const IMPORT_MODE_AS_NEW = 'as_new';
+    const IMPORT_MODE_EXCLUDE = 'exclude';
+    const IMPORT_MODE_IGNORE_PID = 'ignore_pid';
+    const IMPORT_MODE_RESPECT_PID = 'respect_pid';
+
     /**
      * @var string
      */
@@ -798,8 +804,8 @@ class Import extends ImportExport
      */
     protected function doRespectPid(string $table, int $uid): bool
     {
-        return $this->importMode[$table . ':' . $uid] !== 'ignore_pid' &&
-            (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === 'respect_pid');
+        return $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_IGNORE_PID &&
+            (!$this->globalIgnorePid || $this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_RESPECT_PID);
     }
 
     /**
@@ -930,13 +936,13 @@ class Import extends ImportExport
      */
     protected function addSingle(array &$importData, string $table, int $uid, $pid): void
     {
-        if ($this->importMode[$table . ':' . $uid] === 'exclude') {
+        if ($this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_EXCLUDE) {
             return;
         }
         $record = $this->dat['records'][$table . ':' . $uid]['data'];
         if (is_array($record)) {
             $databaseRecord = $this->getRecordFromDatabase($table, $uid);
-            if ($this->update && $databaseRecord !== null && $this->importMode[$table . ':' . $uid] !== 'as_new') {
+            if ($this->update && $databaseRecord !== null && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW) {
                 $ID = $uid;
             } elseif ($table === 'sys_file_metadata' && $record['sys_language_uid'] == '0' && $this->importMapId['sys_file'][$record['file']]) {
                 // on adding sys_file records the belonging sys_file_metadata record was also created
@@ -996,7 +1002,7 @@ class Import extends ImportExport
             } else {
                 // Inserts:
                 $importData[$table][$ID]['pid'] = $pid;
-                if (($this->importMode[$table . ':' . $uid] === 'force_uid' && $this->update || $this->forceAllUids) && $this->getBackendUser()->isAdmin()) {
+                if (($this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_FORCE_UID && $this->update || $this->forceAllUids) && $this->getBackendUser()->isAdmin()) {
                     $importData[$table][$ID]['uid'] = $uid;
                     $this->suggestedInsertUids[$table . ':' . $uid] = 'DELETE';
                 }
@@ -1589,7 +1595,7 @@ class Import extends ImportExport
         $dirPrefix = $this->resolveStoragePath($origDirPrefix);
         if ($dirPrefix !== null && (!$this->update || $origDirPrefix === $dirPrefix) && $this->checkOrCreateDir($dirPrefix)) {
             $fileHeaderInfo = $this->dat['header']['files'][$fileID];
-            $updMode = $this->update && $this->importMapId[$table][$uid] === $uid && $this->importMode[$table . ':' . $uid] !== 'as_new';
+            $updMode = $this->update && $this->importMapId[$table][$uid] === $uid && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW;
             // Create new name for file:
             // Must have same ID in map array (just for security, is not really needed) and NOT be set "as_new".
 
