@@ -941,46 +941,28 @@ class Import extends ImportExport
         }
         $record = $this->dat['records'][$table . ':' . $uid]['data'];
         if (is_array($record)) {
-            $databaseRecord = $this->getRecordFromDatabase($table, $uid);
-            if ($this->update && $databaseRecord !== null && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW) {
+            $ID = StringUtility::getUniqueId('NEW');
+            if ($this->update
+                && $this->getRecordFromDatabase($table, $uid) !== null
+                && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW
+            ) {
                 $ID = $uid;
-            } elseif ($table === 'sys_file_metadata' && $record['sys_language_uid'] == '0' && $this->importMapId['sys_file'][$record['file']]) {
-                // on adding sys_file records the belonging sys_file_metadata record was also created
-                // if there is one the record need to be overwritten instead of creating a new one.
-                $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-                    ->getQueryBuilderForTable('sys_file_metadata');
-                $recordInDatabase = $queryBuilder->select('uid')
-                    ->from('sys_file_metadata')
-                    ->where(
-                        $queryBuilder->expr()->eq(
-                            'file',
-                            $queryBuilder->createNamedParameter(
-                                $this->importMapId['sys_file'][$record['file']],
-                                \PDO::PARAM_INT
-                            )
-                        ),
-                        $queryBuilder->expr()->eq(
-                            'sys_language_uid',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
-                        ),
-                        $queryBuilder->expr()->eq(
-                            'pid',
-                            $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
-                        )
-                    )
-                    ->execute()
-                    ->fetch();
-                // if no record could be found, $this->importMapId['sys_file'][$record['file']] is pointing
-                // to a file, that was already there, thus a new metadata record should be created
-                if (is_array($recordInDatabase)) {
-                    $this->importMapId['sys_file_metadata'][$record['uid']] = $recordInDatabase['uid'];
-                    $ID = $recordInDatabase['uid'];
-                } else {
-                    $ID = StringUtility::getUniqueId('NEW');
-                }
-            } else {
-                $ID = StringUtility::getUniqueId('NEW');
             }
+            elseif ($table === 'sys_file_metadata'
+                && $record['sys_language_uid'] === '0'
+                && isset($this->importMapId['sys_file'][$record['file']])
+            ) {
+                // On adding sys_file records the belonging sys_file_metadata record was also created:
+                // If there is one, the record needs to be overwritten instead of a new one created.
+                $databaseRecord = $this->getSysFileMetaDataFromDatabase(
+                    0, $this->importMapId['sys_file'][$record['file']], 0
+                );
+                if (is_array($databaseRecord)) {
+                    $this->importMapId['sys_file_metadata'][$record['uid']] = $databaseRecord['uid'];
+                    $ID = $databaseRecord['uid'];
+                }
+            }
+
             $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
             if ($table === 'pages') {
                 $this->importNewIdPids[$uid] = (string)$ID;
@@ -1044,6 +1026,41 @@ class Import extends ImportExport
             // On root level we don't want this error message.
             $this->addError('Error: no record was found in data array!');
         }
+    }
+
+    /**
+     * Selects sys_file_metadata database record.
+     *
+     * @param int $pid
+     * @param int $file
+     * @param int $sysLanguageUid
+     * @return array|null
+     */
+    protected function getSysFileMetaDataFromDatabase(int $pid, int $file, int $sysLanguageUid): ?array
+    {
+        $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+            ->getQueryBuilderForTable('sys_file_metadata');
+
+        $databaseRecord = $queryBuilder->select('uid')
+            ->from('sys_file_metadata')
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'file',
+                    $queryBuilder->createNamedParameter($file, \PDO::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'sys_language_uid',
+                    $queryBuilder->createNamedParameter($sysLanguageUid, \PDO::PARAM_INT)
+                ),
+                $queryBuilder->expr()->eq(
+                    'pid',
+                    $queryBuilder->createNamedParameter($pid, \PDO::PARAM_INT)
+                )
+            )
+            ->execute()
+            ->fetch();
+
+        return is_array($databaseRecord) ? $databaseRecord : null;
     }
 
     /**
