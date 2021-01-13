@@ -457,14 +457,14 @@ class Import extends ImportExport
         }
 
         // Write new storages to the database
-        $tce = $this->getNewTCE();
+        $dataHandler = $this->createDataHandler();
         // Because all records are submitted in the correct order with positive pid numbers,
         // we should internally reverse the order of submission.
-        $tce->reverseOrder = 1;
-        $tce->isImporting = true;
-        $tce->start($importData, []);
-        $tce->process_datamap();
-        $this->addToMapId($importData, $tce->substNEWwithIDs);
+        $dataHandler->reverseOrder = 1;
+        $dataHandler->isImporting = true;
+        $dataHandler->start($importData, []);
+        $dataHandler->process_datamap();
+        $this->addToMapId($importData, $dataHandler->substNEWwithIDs);
 
         // Refresh internal storage representation after potential storage import
         $this->fetchStorages();
@@ -729,19 +729,19 @@ class Import extends ImportExport
         }
 
         // Write pages to the database
-        $tce = $this->getNewTCE();
-        $tce->isImporting = true;
+        $dataHandler = $this->createDataHandler();
+        $dataHandler->isImporting = true;
         $this->callHook('before_writeRecordsPages', [
-            'tce' => &$tce,
+            'tce' => &$dataHandler,
             'data' => &$importData
         ]);
-        $tce->suggestedInsertUids = $this->suggestedInsertUids;
-        $tce->start($importData, []);
-        $tce->process_datamap();
+        $dataHandler->suggestedInsertUids = $this->suggestedInsertUids;
+        $dataHandler->start($importData, []);
+        $dataHandler->process_datamap();
         $this->callHook('after_writeRecordsPages', [
-            'tce' => &$tce
+            'tce' => &$dataHandler
         ]);
-        $this->addToMapId($importData, $tce->substNEWwithIDs);
+        $this->addToMapId($importData, $dataHandler->substNEWwithIDs);
 
         // Sort pages
         $this->writePagesOrder();
@@ -781,15 +781,15 @@ class Import extends ImportExport
 
         // Move pages in the database
         if (!empty($importCmd)) {
-            $tce = $this->getNewTCE();
+            $dataHandler = $this->createDataHandler();
             $this->callHook('before_writeRecordsPagesOrder', [
-                'tce' => &$tce,
+                'tce' => &$dataHandler,
                 'data' => &$importCmd
             ]);
-            $tce->start([], $importCmd);
-            $tce->process_cmdmap();
+            $dataHandler->start([], $importCmd);
+            $dataHandler->process_cmdmap();
             $this->callHook('after_writeRecordsPagesOrder', [
-                'tce' => &$tce
+                'tce' => &$dataHandler
             ]);
         }
     }
@@ -846,22 +846,22 @@ class Import extends ImportExport
         }
 
         // Write records to the database
-        $tce = $this->getNewTCE();
+        $dataHandler = $this->createDataHandler();
         $this->callHook('before_writeRecordsRecords', [
-            'tce' => &$tce,
+            'tce' => &$dataHandler,
             'data' => &$importData
         ]);
-        $tce->suggestedInsertUids = $this->suggestedInsertUids;
+        $dataHandler->suggestedInsertUids = $this->suggestedInsertUids;
         // Because all records are submitted in the correct order with positive pid numbers,
         // we should internally reverse the order of submission.
-        $tce->reverseOrder = 1;
-        $tce->isImporting = true;
-        $tce->start($importData, []);
-        $tce->process_datamap();
+        $dataHandler->reverseOrder = 1;
+        $dataHandler->isImporting = true;
+        $dataHandler->start($importData, []);
+        $dataHandler->process_datamap();
         $this->callHook('after_writeRecordsRecords', [
-            'tce' => &$tce
+            'tce' => &$dataHandler
         ]);
-        $this->addToMapId($importData, $tce->substNEWwithIDs);
+        $this->addToMapId($importData, $dataHandler->substNEWwithIDs);
 
         // Sort records
         $this->writeRecordsOrder();
@@ -910,15 +910,15 @@ class Import extends ImportExport
 
         // Move records in the database
         if (!empty($importCmd)) {
-            $tce = $this->getNewTCE();
+            $dataHandler = $this->createDataHandler();
             $this->callHook('before_writeRecordsRecordsOrder', [
-                'tce' => &$tce,
+                'tce' => &$dataHandler,
                 'data' => &$importCmd
             ]);
-            $tce->start([], $importCmd);
-            $tce->process_cmdmap();
+            $dataHandler->start([], $importCmd);
+            $dataHandler->process_cmdmap();
             $this->callHook('after_writeRecordsRecordsOrder', [
-                'tce' => &$tce
+                'tce' => &$dataHandler
             ]);
         }
     }
@@ -1116,16 +1116,16 @@ class Import extends ImportExport
     }
 
     /**
-     * Returns a new $TCE object
+     * Returns a new DataHandler object
      *
-     * @return DataHandler $TCE object
+     * @return DataHandler DataHandler object
      */
-    protected function getNewTCE(): DataHandler
+    protected function createDataHandler(): DataHandler
     {
-        $tce = GeneralUtility::makeInstance(DataHandler::class);
-        $tce->dontProcessTransformations = 1;
-        $tce->enableLogging = $this->enableLogging;
-        return $tce;
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->dontProcessTransformations = 1;
+        $dataHandler->enableLogging = $this->enableLogging;
+        return $dataHandler;
     }
 
     /**
@@ -1203,16 +1203,16 @@ class Import extends ImportExport
             }
         }
         if (!empty($updateData)) {
-            $tce = $this->getNewTCE();
-            $tce->isImporting = true;
+            $dataHandler = $this->createDataHandler();
+            $dataHandler->isImporting = true;
             $this->callHook('before_setRelation', [
-                'tce' => &$tce,
+                'tce' => &$dataHandler,
                 'data' => &$updateData
             ]);
-            $tce->start($updateData, []);
-            $tce->process_datamap();
+            $dataHandler->start($updateData, []);
+            $dataHandler->process_datamap();
             $this->callHook('after_setRelations', [
-                'tce' => &$tce
+                'tce' => &$dataHandler
             ]);
         }
     }
@@ -1361,16 +1361,16 @@ class Import extends ImportExport
             }
         }
         if (!empty($updateData)) {
-            $tce = $this->getNewTCE();
-            $tce->isImporting = true;
+            $dataHandler = $this->createDataHandler();
+            $dataHandler->isImporting = true;
             $this->callHook('before_setFlexFormRelations', [
-                'tce' => &$tce,
+                'tce' => &$dataHandler,
                 'data' => &$updateData
             ]);
-            $tce->start($updateData, []);
-            $tce->process_datamap();
+            $dataHandler->start($updateData, []);
+            $dataHandler->process_datamap();
             $this->callHook('after_setFlexFormRelations', [
-                'tce' => &$tce
+                'tce' => &$dataHandler
             ]);
         }
     }
@@ -1478,17 +1478,17 @@ class Import extends ImportExport
             }
         }
         // Now write to database:
-        $tce = $this->getNewTCE();
-        $tce->isImporting = true;
+        $dataHandler = $this->createDataHandler();
+        $dataHandler->isImporting = true;
         $this->callHook('before_processSoftReferences', [
-            'tce' => $tce,
+            'tce' => $dataHandler,
             'data' => &$inData
         ]);
-        $tce->enableLogging = true;
-        $tce->start($inData, []);
-        $tce->process_datamap();
+        $dataHandler->enableLogging = true;
+        $dataHandler->start($inData, []);
+        $dataHandler->process_datamap();
         $this->callHook('after_processSoftReferences', [
-            'tce' => $tce
+            'tce' => $dataHandler
         ]);
     }
 
