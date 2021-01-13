@@ -1081,27 +1081,34 @@ class Import extends ImportExport
     }
 
     /**
-     * Registers the substNEWids in memory.
+     * Store the mapping between the import file record UIDs and the final record UIDs in the database after import.
      *
      * @param array $importData Data to be modified or inserted in the database during import
-     * @param array $substNEWwithIDs From DataHandler to be merged into internal mapping variable in this object
+     * @param array $substNEWwithIDs A map between the "NEW..." string IDs and the eventual record UID in database
      * @see writeRecords()
      */
     protected function addToMapId(array &$importData, array $substNEWwithIDs): void
     {
-        foreach ($importData as $table => $recs) {
-            foreach ($recs as $id => $value) {
-                $old_uid = $this->importNewId[$table . ':' . $id]['uid'];
-                if (isset($substNEWwithIDs[$id])) {
-                    $this->importMapId[$table][$old_uid] = $substNEWwithIDs[$id];
+        foreach ($importData as $table => &$records) {
+            foreach ($records as $ID => &$_) {
+                $oldUid = $this->importNewId[$table . ':' . $ID]['uid'];
+                if (isset($substNEWwithIDs[$ID])) {
+                    $this->importMapId[$table][$oldUid] = $substNEWwithIDs[$ID];
                 } elseif ($this->update) {
                     // Map same ID to same ID....
-                    $this->importMapId[$table][$old_uid] = $id;
+                    $this->importMapId[$table][$oldUid] = $ID;
                 } else {
-                    // if $this->importMapId contains already the right mapping, skip the error msg.
-                    // See special handling of sys_file_metadata in addSingle() => nothing to do
-                    if (!($table === 'sys_file_metadata' && isset($this->importMapId[$table][$old_uid]) && $this->importMapId[$table][$old_uid] == $id)) {
-                        $this->addError('Possible error: ' . $table . ':' . $old_uid . ' had no new id assigned to it. This indicates that the record was not added to database during import. Please check changelog!');
+                    // If $this->importMapId contains already the right mapping, skip the error message.
+                    // See special handling of sys_file_metadata in addSingle() => nothing to do.
+                    if (!($table === 'sys_file_metadata'
+                        && isset($this->importMapId[$table][$oldUid])
+                        && $this->importMapId[$table][$oldUid] == $ID)
+                    ) {
+                        $this->addError(
+                            'Possible error: ' . $table . ':' . $oldUid . ' had no new id assigned to it. ' .
+                            'This indicates that the record was not added to database during import. ' .
+                            'Please check changelog!'
+                        );
                     }
                 }
             }
