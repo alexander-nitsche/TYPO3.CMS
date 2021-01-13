@@ -58,7 +58,7 @@ class Import extends ImportExport
     protected $mode = 'import';
 
     /**
-     * Used to register the forged UID values for imported records that we want
+     * Used to register the forced UID values for imported records that we want
      * to create with the same UIDs as in the import file. Admin-only feature.
      *
      * @var array
@@ -924,107 +924,124 @@ class Import extends ImportExport
     }
 
     /**
-     * Adds a single record to the $importData array. Also copies files to tempfolder.
-     * However all File/DB-references and flexform field contents are set to blank for now!
-     * That is done with setRelations() later
+     * Adds a single record to the $importData array. Also copies files to the temporary folder.
+     * However all file and database references and flexform fields are set to blank for now!
+     * That is processed with setRelations() later.
      *
      * @param array $importData Data to be modified or inserted in the database during import
-     * @param string $table Table name (from import memory)
-     * @param int $uid Record UID (from import memory)
+     * @param string $table Table name
+     * @param int $uid Record UID
      * @param int|string $pid Page id or NEW-id, e.g. "NEW5fb3c2641281c885267727"
-     * @see writeRecords()
+     * @see setRelations()
      */
     protected function addSingle(array &$importData, string $table, int $uid, $pid): void
     {
         if ($this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_EXCLUDE) {
             return;
         }
+
         $record = $this->dat['records'][$table . ':' . $uid]['data'];
-        if (is_array($record)) {
-            $ID = StringUtility::getUniqueId('NEW');
-            if ($this->update
-                && $this->getRecordFromDatabase($table, $uid) !== null
-                && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW
-            ) {
-                $ID = $uid;
-            }
-            elseif ($table === 'sys_file_metadata'
-                && $record['sys_language_uid'] === '0'
-                && isset($this->importMapId['sys_file'][$record['file']])
-            ) {
-                // On adding sys_file records the belonging sys_file_metadata record was also created:
-                // If there is one, the record needs to be overwritten instead of a new one created.
-                $databaseRecord = $this->getSysFileMetaDataFromDatabase(
-                    0, $this->importMapId['sys_file'][$record['file']], 0
-                );
-                if (is_array($databaseRecord)) {
-                    $this->importMapId['sys_file_metadata'][$record['uid']] = $databaseRecord['uid'];
-                    $ID = $databaseRecord['uid'];
-                }
-            }
 
-            $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
-            if ($table === 'pages') {
-                $this->importNewIdPids[$uid] = $ID;
+        if (!is_array($record)) {
+            if (!($table === 'pages' && $uid === 0)) {
+                // On root level we don't want this error message.
+                $this->addError('Error: No record was found in data array!');
             }
-            // Set main record data:
-            $importData[$table][$ID] = $record;
-            $importData[$table][$ID]['tx_impexp_origuid'] = $importData[$table][$ID]['uid'];
-            // Reset permission data:
-            if ($table === 'pages') {
-                // Have to reset the user/group IDs so pages are owned by importing user. Otherwise strange things may happen for non-admins!
-                unset($importData[$table][$ID]['perms_userid']);
-                unset($importData[$table][$ID]['perms_groupid']);
-            }
-            // PID and UID:
-            unset($importData[$table][$ID]['uid']);
-            // Updates:
-            if (MathUtility::canBeInterpretedAsInteger($ID)) {
-                unset($importData[$table][$ID]['pid']);
-            } else {
-                // Inserts:
-                $importData[$table][$ID]['pid'] = $pid;
-                if (($this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_FORCE_UID && $this->update || $this->forceAllUids) && $this->getBackendUser()->isAdmin()) {
-                    $importData[$table][$ID]['uid'] = $uid;
-                    $this->suggestedInsertUids[$table . ':' . $uid] = 'DELETE';
-                }
-            }
-            // Setting db/file blank:
-            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
-                switch ((string)$config['type']) {
-                    case 'db':
+            return;
+        }
 
-                    case 'file':
-                        // Fixed later in ->setRelations() [because we need to know ALL newly created IDs before we can map relations!]
-                        // In the meantime we set NO values for relations.
-                        //
-                        // BUT for field uid_local of table sys_file_reference the relation MUST not be cleared here,
-                        // because the value is already the uid of the right imported sys_file record.
-                        // @see fixUidLocalInSysFileReferenceRecords()
-                        // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
-                        // delete the reference record if the file extension of the related record doesn't match.
-                        if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
-                            $importData[$table][$ID][$field] = '';
-                        }
-                        break;
-                    case 'flex':
-                        // Fixed later in setFlexFormRelations()
-                        // In the meantime we set NO value for flexforms - this is mainly because file references
-                        // inside will not be processed properly; In fact references will point to no file
-                        // or existing files (in which case there will be double-references which is a big problem of course!)
-                        //
-                        // BUT for the field "configuration" of the table "sys_file_storage" the relation MUST NOT be
-                        // cleared, because the configuration array contains only string values, which are furthermore
-                        // important for the further import, e.g. the base path.
-                        if (!($table === 'sys_file_storage' && $field === 'configuration')) {
-                            $importData[$table][$ID][$field] = '';
-                        }
-                        break;
-                }
+        // Generate record ID
+        $ID = StringUtility::getUniqueId('NEW');
+        if ($this->update
+            && $this->getRecordFromDatabase($table, $uid) !== null
+            && $this->importMode[$table . ':' . $uid] !== self::IMPORT_MODE_AS_NEW
+        ) {
+            $ID = $uid;
+        }
+        elseif ($table === 'sys_file_metadata'
+            && $record['sys_language_uid'] === '0'
+            && isset($this->importMapId['sys_file'][$record['file']])
+        ) {
+            // On adding sys_file records the belonging sys_file_metadata record was also created:
+            // If there is one, the record needs to be overwritten instead of a new one created.
+            $databaseRecord = $this->getSysFileMetaDataFromDatabase(
+                0, $this->importMapId['sys_file'][$record['file']], 0
+            );
+            if (is_array($databaseRecord)) {
+                $this->importMapId['sys_file_metadata'][$record['uid']] = $databaseRecord['uid'];
+                $ID = $databaseRecord['uid'];
             }
-        } elseif ($table . ':' . $uid != 'pages:0') {
-            // On root level we don't want this error message.
-            $this->addError('Error: no record was found in data array!');
+        }
+
+        // Mapping of generated record ID to original record UID
+        $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
+        if ($table === 'pages') {
+            $this->importNewIdPids[$uid] = $ID;
+        }
+
+        // Record data
+        $importData[$table][$ID] = $record;
+        $importData[$table][$ID]['tx_impexp_origuid'] = $importData[$table][$ID]['uid'];
+
+        // Record permissions
+        if ($table === 'pages') {
+            // Have to reset the user/group IDs so pages are owned by the importing user.
+            // Otherwise strange things may happen for non-admins!
+            unset($importData[$table][$ID]['perms_userid']);
+            unset($importData[$table][$ID]['perms_groupid']);
+        }
+
+        // Record UID and PID
+        unset($importData[$table][$ID]['uid']);
+        // - for existing record
+        if (MathUtility::canBeInterpretedAsInteger($ID)) {
+            unset($importData[$table][$ID]['pid']);
+        }
+        // - for new record
+        else {
+            $importData[$table][$ID]['pid'] = $pid;
+            if (($this->importMode[$table . ':' . $uid] === self::IMPORT_MODE_FORCE_UID && $this->update
+                || $this->forceAllUids)
+                && $this->getBackendUser()->isAdmin()
+            ) {
+                $importData[$table][$ID]['uid'] = $uid;
+                $this->suggestedInsertUids[$table . ':' . $uid] = 'DELETE';
+            }
+        }
+
+        // Record relations
+        foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
+            switch ((string)$config['type']) {
+                case 'db':
+                case 'file':
+                    // Set blank now, fix later in setRelations(),
+                    // because we need to know ALL newly created IDs before we can map relations!
+                    // In the meantime we set NO values for relations.
+                    //
+                    // BUT for field uid_local of table sys_file_reference the relation MUST not be cleared here,
+                    // because the value is already the uid of the right imported sys_file record.
+                    // @see fixUidLocalInSysFileReferenceRecords()
+                    // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
+                    // delete the reference record if the file extension of the related record doesn't match.
+                    if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
+                        $importData[$table][$ID][$field] = '';
+                    }
+                    break;
+                case 'flex':
+                    // Set blank now, fix later in setFlexFormRelations().
+                    // In the meantime we set NO values for flexforms - this is mainly because file references
+                    // inside will not be processed properly. In fact references will point to no file
+                    // or existing files (in which case there will be double-references which is a big problem of
+                    // course!).
+                    //
+                    // BUT for the field "configuration" of the table "sys_file_storage" the relation MUST NOT be
+                    // cleared, because the configuration array contains only string values, which are furthermore
+                    // important for the further import, e.g. the base path.
+                    if (!($table === 'sys_file_storage' && $field === 'configuration')) {
+                        $importData[$table][$ID][$field] = '';
+                    }
+                    break;
+            }
         }
     }
 
