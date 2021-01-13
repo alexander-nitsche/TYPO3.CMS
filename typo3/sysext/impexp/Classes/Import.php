@@ -965,7 +965,7 @@ class Import extends ImportExport
 
             $this->importNewId[$table . ':' . $ID] = ['table' => $table, 'uid' => $uid];
             if ($table === 'pages') {
-                $this->importNewIdPids[$uid] = (string)$ID;
+                $this->importNewIdPids[$uid] = $ID;
             }
             // Set main record data:
             $importData[$table][$ID] = $record;
