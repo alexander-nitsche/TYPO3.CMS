@@ -1289,6 +1289,7 @@ class Export extends ImportExport
     {
         $saveFolder = $this->getOrCreateDefaultImportExportFolder();
         $fileName = $this->getOrGenerateExportFileNameWithFileExtension();
+        $filesFolderName = $fileName . '.files';
         $fileContent = $this->render();
 
         if (!($saveFolder instanceof Folder && $saveFolder->checkActionPermission('write'))) {
@@ -1298,12 +1299,15 @@ class Export extends ImportExport
             );
         }
 
+        if ($saveFolder->hasFolder($filesFolderName)) {
+            $saveFolder->getSubfolder($filesFolderName)->delete(true);
+        }
+
         $temporaryFileName = GeneralUtility::tempnam('export');
         GeneralUtility::writeFile($temporaryFileName, $fileContent);
         $file = $saveFolder->addFile($temporaryFileName, $fileName, 'replace');
 
         if ($this->saveFilesOutsideExportFile) {
-            $filesFolderName = $fileName . '.files';
             $filesFolder = $saveFolder->createFolder($filesFolderName);
             $temporaryFilesForExport = GeneralUtility::getFilesInDir($this->getOrCreateTemporaryFolderName(), '', true);
             foreach ($temporaryFilesForExport as $temporaryFileForExport) {

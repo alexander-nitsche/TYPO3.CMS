@@ -17,6 +17,7 @@ namespace TYPO3\CMS\Impexp\Tests\Functional;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Resource\Folder;
 use TYPO3\CMS\Impexp\Export;
 use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 
@@ -361,5 +362,37 @@ class ExportTest extends AbstractImportExportTestCase
 
         self::assertStringEndsWith('export-z.t3d', $filePath);
         self::assertEquals($expected, $actual);
+    }
+
+    /**
+     * @test
+     */
+    public function saveToFileCleansUpFormerExportsOfSameName(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
+
+        $this->exportMock->setPid(1);
+        $this->exportMock->setLevels(1);
+        $this->exportMock->setTables(['_ALL']);
+        $this->exportMock->setRelOnlyTables(['sys_file']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->setSaveFilesOutsideExportFile(true);
+        $this->exportMock->setExportFileName('export');
+        $this->exportMock->process();
+        $this->exportMock->saveToFile();
+
+        /** @var Folder $importExportFolder */
+        $importExportFolder = $this->exportMock->_get('defaultImportExportFolder');
+        $filesFolderName = 'export.xml.files';
+        self::assertTrue($importExportFolder->hasFolder($filesFolderName));
+
+        $this->exportMock->setSaveFilesOutsideExportFile(false);
+        $this->exportMock->process();
+        $this->exportMock->saveToFile();
+
+        self::assertFalse($importExportFolder->hasFolder($filesFolderName));
     }
 }
