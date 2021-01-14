@@ -1129,7 +1129,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Cleaning up all the temporary files stored in typo3temp/ folder
+     * Cleaning up all the temporary files stored in the temporary folder
      */
     protected function unlinkTempFiles(): void
     {
@@ -1137,7 +1137,9 @@ class Import extends ImportExport
             GeneralUtility::unlink_tempfile($fileName);
             clearstatcache();
             if (is_file($fileName)) {
-                $this->addError('Error: ' . $fileName . ' was NOT unlinked as it should have been!');
+                $this->addError(sprintf(
+                    'Error: Temporary file %s could NOT be removed as it should have been!', $fileName
+                ));
             }
         }
         $this->unlinkFiles = [];
