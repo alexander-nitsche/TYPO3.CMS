@@ -89,13 +89,6 @@ class Import extends ImportExport
     protected $importNewIdPids = [];
 
     /**
-     * Temporary files stack
-     *
-     * @var array
-     */
-    protected $unlinkFiles = [];
-
-    /**
      * @var bool
      */
     protected $decompressionAvailable = false;
@@ -394,10 +387,10 @@ class Import extends ImportExport
         // And when all DB relations are in place, we can fix file and DB relations in flexform fields
         // - since data structures often depend on relations to a DS record:
         $this->setFlexFormRelations();
-        // Unlink temporary files:
-        $this->unlinkTempFiles();
         // Finally, traverse all records and process soft references with substitution attributes.
         $this->processSoftReferences();
+        // Cleanup
+        $this->removeTemporaryFolderName();
 
         if ($this->hasErrors()) {
             throw new ImportFailedException('The import has failed.', 1484484613);
@@ -413,7 +406,6 @@ class Import extends ImportExport
         $this->importMapId = [];
         $this->importNewId = [];
         $this->importNewIdPids = [];
-        $this->unlinkFiles = [];
     }
 
     /**
@@ -541,7 +533,6 @@ class Import extends ImportExport
                     $fileInfo = &$this->dat['files_fal'][$fileId];
                     if (GeneralUtility::writeFile($temporaryFilePath, $fileInfo['content'])) {
                         clearstatcache();
-                        $this->unlinkFiles[] = $temporaryFilePath;
                         $temporaryFile = $temporaryFilePath;
                     } else {
                         $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
@@ -1128,29 +1119,6 @@ class Import extends ImportExport
         return $dataHandler;
     }
 
-    /**
-     * Cleaning up all the temporary files stored in the temporary folder
-     */
-    protected function unlinkTempFiles(): void
-    {
-        foreach ($this->unlinkFiles as $fileName) {
-            if (GeneralUtility::isFirstPartOfStr($fileName, Environment::getVarPath() . '/transient/')) {
-                GeneralUtility::unlink_tempfile($fileName);
-                clearstatcache();
-                if (is_file($fileName)) {
-                    $this->addError(sprintf(
-                        'Error: Temporary file %s could NOT be removed as it should have been!', $fileName
-                    ));
-                }
-            } else {
-                $this->addError(sprintf(
-                    'Error: Temporary file %s was not in the temporary folder. Not removed!', $fileName
-                ));
-            }
-        }
-        $this->unlinkFiles = [];
-    }
-
     /***************************
      * Import / Relations setting
      ***************************/
@@ -1283,7 +1251,6 @@ class Import extends ImportExport
             } else {
                 if (GeneralUtility::writeFile($temporaryFilePath, $fileRecord['content'])) {
                     clearstatcache();
-                    $this->unlinkFiles[] = $temporaryFile;
                     $temporaryFile = $temporaryFilePath;
                 } else {
                     $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
