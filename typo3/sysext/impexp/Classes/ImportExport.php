@@ -1155,6 +1155,7 @@ abstract class ImportExport
     {
         if (!empty($this->temporaryFolderName)) {
             GeneralUtility::rmdir($this->temporaryFolderName, true);
+            $this->temporaryFolderName = null;
         }
     }
 
