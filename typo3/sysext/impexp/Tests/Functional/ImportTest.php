@@ -279,7 +279,7 @@ class ImportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
-    public function importDataCleansUpTemporaryFilesButLeavesTemporaryFolder(): void
+    public function importDataCleansUpTemporaryFolder(): void
     {
         $fileDirectory = Environment::getVarPath() . '/transient';
         $numTemporaryFilesAndFoldersBeforeImport = iterator_count(new \FilesystemIterator($fileDirectory, \FilesystemIterator::SKIP_DOTS));
@@ -311,9 +311,7 @@ class ImportTest extends AbstractImportExportTestCase
         );
         $importMock->importData();
 
-        $temporaryFolder = $importMock->_get('temporaryFolderName');
-        self::assertNotEmpty($temporaryFolder);
-        self::assertTrue(is_dir($temporaryFolder));
-        self::assertCount($numTemporaryFilesAndFoldersBeforeImport + 1, new \FilesystemIterator($fileDirectory, \FilesystemIterator::SKIP_DOTS));
+        self::assertCount($numTemporaryFilesAndFoldersBeforeImport, new \FilesystemIterator($fileDirectory, \FilesystemIterator::SKIP_DOTS));
+        self::assertEmpty($importMock->_get('temporaryFolderName'));
     }
 }
