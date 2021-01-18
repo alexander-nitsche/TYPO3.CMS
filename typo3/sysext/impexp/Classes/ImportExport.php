@@ -1117,14 +1117,6 @@ abstract class ImportExport
     }
 
     /**
-     * @return string|null
-     */
-    protected function getTemporaryFolderName(): ?string
-    {
-        return $this->temporaryFolderName;
-    }
-
-    /**
      * @return string
      */
     public function getOrCreateTemporaryFolderName(): string

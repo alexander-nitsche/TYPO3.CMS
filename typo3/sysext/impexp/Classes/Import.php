@@ -1263,37 +1263,39 @@ class Import extends ImportExport
     }
 
     /**
-     * Writes the file from import array to temp dir and returns the filename of it.
+     * Writes the file from the import array to the temporary folder and returns the filename of it.
      *
      * @param array $fileInfo File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
      * @return string|null Absolute filename of the temporary filename of the file.
      */
-    protected function importAddFileNameToBeCopied(array $fileInfo): ?string
+    public function importAddFileNameToBeCopied(array $fileInfo): ?string
     {
+        $temporaryFile = null;
+
         if (is_array($this->dat['files'][$fileInfo['ID']])) {
-            $tmpFile = null;
-            $tmpFolder = $this->getTemporaryFolderName();
-            // check if there is the right file already in the local folder
-            if ($tmpFolder !== null) {
-                if (is_file($tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5']) &&
-                    md5_file($tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5']) === $this->dat['files'][$fileInfo['ID']]['content_md5']) {
-                    $tmpFile = $tmpFolder . '/' . $this->dat['files'][$fileInfo['ID']]['content_md5'];
+            $fileRecord = &$this->dat['files'][$fileInfo['ID']];
+
+            $temporaryFolder = $this->getOrCreateTemporaryFolderName();
+            $temporaryFilePath = $temporaryFolder . '/' . $fileRecord['content_md5'];
+
+            if (is_file($temporaryFilePath) && md5_file($temporaryFilePath) === $fileRecord['content_md5']) {
+                $temporaryFile = $temporaryFilePath;
+            } else {
+                if (GeneralUtility::writeFile($temporaryFilePath, $fileRecord['content'])) {
+                    clearstatcache();
+                    $this->unlinkFiles[] = $temporaryFile;
+                    $temporaryFile = $temporaryFilePath;
+                } else {
+                    $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
+                        $temporaryFilePath
+                    ));
                 }
             }
-            if ($tmpFile === null) {
-                $tmpFile = GeneralUtility::tempnam('import_temp_');
-                GeneralUtility::writeFile($tmpFile, $this->dat['files'][$fileInfo['ID']]['content']);
-            }
-            clearstatcache();
-            if (@is_file($tmpFile)) {
-                $this->unlinkFiles[] = $tmpFile;
-                return $tmpFile;
-            }
-            $this->addError('Error: temporary file ' . $tmpFile . ' was not written as it should have been!');
         } else {
-            $this->addError('Error: No file found for ID ' . $fileInfo['ID']);
+            $this->addError(sprintf('Error: No file found for ID %s' , $fileInfo['ID']));
         }
-        return null;
+
+        return $temporaryFile;
     }
 
     /**

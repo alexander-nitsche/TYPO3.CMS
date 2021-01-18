@@ -367,6 +367,33 @@ class ExportTest extends AbstractImportExportTestCase
     /**
      * @test
      */
+    public function saveToFileCleansUpTemporaryFolder(): void
+    {
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/sys_file-export-pages-and-tt-content.xml');
+
+        $fileDirectory = Environment::getVarPath() . '/transient';
+        $numTemporaryFilesAndFoldersBeforeImport = iterator_count(new \FilesystemIterator($fileDirectory, \FilesystemIterator::SKIP_DOTS));
+
+        $this->exportMock->setPid(1);
+        $this->exportMock->setLevels(1);
+        $this->exportMock->setTables(['_ALL']);
+        $this->exportMock->setRelOnlyTables(['sys_file']);
+        $this->exportMock->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $this->exportMock->setSaveFilesOutsideExportFile(true);
+        $this->exportMock->setExportFileName('export');
+        $this->exportMock->process();
+        $this->exportMock->saveToFile();
+
+        self::assertCount($numTemporaryFilesAndFoldersBeforeImport, new \FilesystemIterator($fileDirectory, \FilesystemIterator::SKIP_DOTS));
+        self::assertEmpty($this->exportMock->_get('temporaryFolderName'));
+    }
+
+    /**
+     * @test
+     */
     public function saveToFileCleansUpFormerExportsOfSameName(): void
     {
         $this->importDataSet(__DIR__ . '/Fixtures/DatabaseImports/pages.xml');
