@@ -1082,21 +1082,21 @@ class Import extends ImportExport
     {
         foreach ($importData as $table => &$records) {
             foreach ($records as $ID => &$_) {
-                $oldUid = $this->importNewId[$table . ':' . $ID]['uid'];
+                $uid = $this->importNewId[$table . ':' . $ID]['uid'];
                 if (isset($substNEWwithIDs[$ID])) {
-                    $this->importMapId[$table][$oldUid] = $substNEWwithIDs[$ID];
+                    $this->importMapId[$table][$uid] = $substNEWwithIDs[$ID];
                 } elseif ($this->update) {
                     // Map same ID to same ID....
-                    $this->importMapId[$table][$oldUid] = $ID;
+                    $this->importMapId[$table][$uid] = $ID;
                 } else {
                     // If $this->importMapId contains already the right mapping, skip the error message.
                     // See special handling of sys_file_metadata in addSingle() => nothing to do.
                     if (!($table === 'sys_file_metadata'
-                        && isset($this->importMapId[$table][$oldUid])
-                        && $this->importMapId[$table][$oldUid] == $ID)
+                        && isset($this->importMapId[$table][$uid])
+                        && $this->importMapId[$table][$uid] == $ID)
                     ) {
                         $this->addError(
-                            'Possible error: ' . $table . ':' . $oldUid . ' had no new id assigned to it. ' .
+                            'Possible error: ' . $table . ':' . $uid . ' had no new id assigned to it. ' .
                             'This indicates that the record was not added to database during import. ' .
                             'Please check changelog!'
                         );
