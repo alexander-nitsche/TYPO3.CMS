@@ -1001,7 +1001,7 @@ class Import extends ImportExport
         }
 
         // Record relations
-        foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
+        foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
             switch ((string)$relation['type']) {
                 case 'db':
                 case 'file':
@@ -1142,7 +1142,7 @@ class Import extends ImportExport
                 $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                 if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
                     // Traverse relation fields of each record
-                    foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
+                    foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
                         // uid_local of sys_file_reference needs no update because the correct reference uid was already written
                         // @see ImportExport::fixUidLocalInSysFileReferenceRecords()
                         if ($table === 'sys_file_reference' && $field === 'uid_local') {
@@ -1291,7 +1291,7 @@ class Import extends ImportExport
             }
             $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
             // Traverse relation fields of each record
-            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
+            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
                 switch ((string)$relation['type']) {
                     case 'flex':
                         // Get XML content and set as default value (string, non-processed):
