@@ -1139,7 +1139,7 @@ class Import extends ImportExport
             // original UID - NOT the new one!
             // If the record has been written and received a new id, then proceed:
             if (is_array($this->importMapId[$table]) && isset($this->importMapId[$table][$uid])) {
-                $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
+                $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                 if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
                     // Traverse relation fields of each record
                     foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
@@ -1153,7 +1153,7 @@ class Import extends ImportExport
                                 if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
                                     $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
                                     $valArray = $this->setRelationsDb($relation['itemArray'], $fieldTca['config']);
-                                    $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
+                                    $updateData[$table][$actualUid][$field] = implode(',', $valArray);
                                 }
                                 break;
                             case 'file':
@@ -1162,7 +1162,7 @@ class Import extends ImportExport
                                     foreach ($relation['newValueFiles'] as $fileInfo) {
                                         $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
                                     }
-                                    $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
+                                    $updateData[$table][$actualUid][$field] = implode(',', $valArray);
                                 }
                                 break;
                         }
@@ -1289,16 +1289,16 @@ class Import extends ImportExport
                 $this->addError('Error: no record was found in data array!');
                 continue;
             }
-            $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
+            $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
             // Traverse relation fields of each record
             foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
                 switch ((string)$relation['type']) {
                     case 'flex':
                         // Get XML content and set as default value (string, non-processed):
-                        $updateData[$table][$thisNewUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
+                        $updateData[$table][$actualUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
                         // If there has been registered relations inside the flex form field, run processing on the content:
                         if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
-                            $origRecordRow = BackendUtility::getRecord($table, $thisNewUid, '*');
+                            $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
                             // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
                             $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
                             if (is_array($origRecordRow) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
@@ -1311,7 +1311,7 @@ class Import extends ImportExport
                                     $origRecordRow
                                 );
                                 $dataStructureArray = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
-                                $currentValueArray = GeneralUtility::xml2array($updateData[$table][$thisNewUid][$field]);
+                                $currentValueArray = GeneralUtility::xml2array($updateData[$table][$actualUid][$field]);
                                 // Do recursive processing of the XML data:
                                 $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
                                 $iteratorObj->callBackObj = $this;
@@ -1320,12 +1320,12 @@ class Import extends ImportExport
                                     [],
                                     [],
                                     $dataStructureArray,
-                                    [$table, $thisNewUid, $field, $relation],
+                                    [$table, $actualUid, $field, $relation],
                                     'remapListedDbRecordsFlexFormCallBack'
                                 );
                                 // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
                                 if (is_array($currentValueArray['data'])) {
-                                    $updateData[$table][$thisNewUid][$field] = $currentValueArray;
+                                    $updateData[$table][$actualUid][$field] = $currentValueArray;
                                 }
                             }
                         }
@@ -1409,14 +1409,14 @@ class Import extends ImportExport
                             }
                         }
                         // The new id:
-                        $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
+                        $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                         // Now, if there are any fields that require substitution to be done, lets go for that:
                         foreach ($fieldsIndex as $field => $softRefCfgs) {
                             if (is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
                                 $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
                                 if ($fieldTca['config']['type'] === 'flex') {
                                     // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
-                                    $origRecordRow = BackendUtility::getRecord($table, $thisNewUid, '*');
+                                    $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
                                     if (is_array($origRecordRow)) {
                                         // Get current data structure and value array:
                                         $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
@@ -1435,14 +1435,14 @@ class Import extends ImportExport
                                         $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], [], [], $dataStructureArray, [$table, $uid, $field, $softRefCfgs], 'processSoftReferencesFlexFormCallBack');
                                         // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
                                         if (is_array($currentValueArray['data'])) {
-                                            $inData[$table][$thisNewUid][$field] = $currentValueArray;
+                                            $inData[$table][$actualUid][$field] = $currentValueArray;
                                         }
                                     }
                                 } else {
                                     // Get tokenizedContent string and proceed only if that is not blank:
                                     $tokenizedContent = $this->dat['records'][$table . ':' . $uid]['rels'][$field]['softrefs']['tokenizedContent'];
                                     if (strlen($tokenizedContent) && is_array($softRefCfgs)) {
-                                        $inData[$table][$thisNewUid][$field] = $this->processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, (string)$uid);
+                                        $inData[$table][$actualUid][$field] = $this->processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, (string)$uid);
                                     }
                                 }
                             }
