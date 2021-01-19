@@ -1121,31 +1121,32 @@ class Import extends ImportExport
         return $dataHandler;
     }
 
-    /***************************
-     * Import / Relations setting
-     ***************************/
+    /********************
+     * Import relations
+     *******************/
+
     /**
-     * At the end of the import process all file and DB relations should be set properly (that is relations
-     * to imported records are all re-created so imported records are correctly related again)
-     * Relations in flexform fields are processed in setFlexFormRelations() after this function
+     * At the end of the import process all file and database relations should be set properly.
+     * This means that the relations to imported records are all recreated so that the imported
+     * records are correctly related again.
+     * Relations in flexform fields are processed in setFlexFormRelations() after this function.
      *
      * @see setFlexFormRelations()
      */
     protected function setRelations(): void
     {
         $updateData = [];
-        // importNewId contains a register of all records that was in the import memory's "records" key
-        foreach ($this->importNewId as $nId => $dat) {
-            $table = $dat['table'];
-            $uid = $dat['uid'];
-            // original UID - NOT the new one!
-            // If the record has been written and received a new id, then proceed:
-            if (is_array($this->importMapId[$table]) && isset($this->importMapId[$table][$uid])) {
-                $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
+
+        foreach ($this->importNewId as &$original) {
+            $table = $original['table'];
+            $uid = $original['uid'];
+
+            if (isset($this->importMapId[$table][$uid])) {
                 if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
-                    // Traverse relation fields of each record
+                    $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                     foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
-                        // uid_local of sys_file_reference needs no update because the correct reference uid was already written
+                        // Field "uid_local" of sys_file_reference needs no update because the correct reference uid
+                        // was already written.
                         // @see ImportExport::fixUidLocalInSysFileReferenceRecords()
                         if (isset($relation['type']) && !($table === 'sys_file_reference' && $field === 'uid_local')) {
                             switch ($relation['type']) {
@@ -1169,12 +1170,13 @@ class Import extends ImportExport
                         }
                     }
                 } else {
-                    $this->addError('Error: no record was found in data array!');
+                    $this->addError(sprintf('Error: This record does not appear to have a relation array! (%s:%s)', $table, $uid));
                 }
             } else {
-                $this->addError('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
+                $this->addError(sprintf('Error: This record does not appear to have been created! (%s:%s)', $table, $uid));
             }
         }
+
         if (!empty($updateData)) {
             $dataHandler = $this->createDataHandler();
             $dataHandler->isImporting = true;
