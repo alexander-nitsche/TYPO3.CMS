@@ -1158,11 +1158,11 @@ class Import extends ImportExport
                                 break;
                             case 'file':
                                 if (is_array($relation['newValueFiles']) && !empty($relation['newValueFiles'])) {
-                                    $valArr = [];
+                                    $valArray = [];
                                     foreach ($relation['newValueFiles'] as $fileInfo) {
-                                        $valArr[] = $this->importAddFileNameToBeCopied($fileInfo);
+                                        $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
                                     }
-                                    $updateData[$table][$thisNewUid][$field] = implode(',', $valArr);
+                                    $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
                                 }
                                 break;
                         }
@@ -1373,11 +1373,11 @@ class Import extends ImportExport
             $dataValue = implode(',', $valArray);
         }
         if (is_array($config['flexFormRels']['file'][$path])) {
-            $valArr = [];
+            $valArray = [];
             foreach ($config['flexFormRels']['file'][$path] as $fileInfo) {
-                $valArr[] = $this->importAddFileNameToBeCopied($fileInfo);
+                $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
             }
-            $dataValue = implode(',', $valArr);
+            $dataValue = implode(',', $valArray);
         }
         return ['value' => $dataValue];
     }
