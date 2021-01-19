@@ -1001,8 +1001,8 @@ class Import extends ImportExport
         }
 
         // Record relations
-        foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
-            switch ((string)$config['type']) {
+        foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
+            switch ((string)$relation['type']) {
                 case 'db':
                 case 'file':
                     // Set blank now, fix later in setRelations(),
@@ -1142,24 +1142,24 @@ class Import extends ImportExport
                 $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                 if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
                     // Traverse relation fields of each record
-                    foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
+                    foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
                         // uid_local of sys_file_reference needs no update because the correct reference uid was already written
                         // @see ImportExport::fixUidLocalInSysFileReferenceRecords()
                         if ($table === 'sys_file_reference' && $field === 'uid_local') {
                             continue;
                         }
-                        switch ((string)$config['type']) {
+                        switch ((string)$relation['type']) {
                             case 'db':
-                                if (is_array($config['itemArray']) && !empty($config['itemArray'])) {
+                                if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
                                     $itemConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
-                                    $valArray = $this->setRelationsDb($config['itemArray'], $itemConfig);
+                                    $valArray = $this->setRelationsDb($relation['itemArray'], $itemConfig);
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
                                 }
                                 break;
                             case 'file':
-                                if (is_array($config['newValueFiles']) && !empty($config['newValueFiles'])) {
+                                if (is_array($relation['newValueFiles']) && !empty($relation['newValueFiles'])) {
                                     $valArr = [];
-                                    foreach ($config['newValueFiles'] as $fileInfo) {
+                                    foreach ($relation['newValueFiles'] as $fileInfo) {
                                         $valArr[] = $this->importAddFileNameToBeCopied($fileInfo);
                                     }
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArr);
@@ -1291,13 +1291,13 @@ class Import extends ImportExport
             }
             $thisNewUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
             // Traverse relation fields of each record
-            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $config) {
-                switch ((string)$config['type']) {
+            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => $relation) {
+                switch ((string)$relation['type']) {
                     case 'flex':
                         // Get XML content and set as default value (string, non-processed):
                         $updateData[$table][$thisNewUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
                         // If there has been registered relations inside the flex form field, run processing on the content:
-                        if (!empty($config['flexFormRels']['db']) || !empty($config['flexFormRels']['file'])) {
+                        if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
                             $origRecordRow = BackendUtility::getRecord($table, $thisNewUid, '*');
                             // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
                             $fieldTca = $GLOBALS['TCA'][$table]['columns'][$field];
@@ -1320,7 +1320,7 @@ class Import extends ImportExport
                                     [],
                                     [],
                                     $dataStructureArray,
-                                    [$table, $thisNewUid, $field, $config],
+                                    [$table, $thisNewUid, $field, $relation],
                                     'remapListedDbRecordsFlexFormCallBack'
                                 );
                                 // The return value is set as an array which means it will be processed by DataHandler for file and DB references!

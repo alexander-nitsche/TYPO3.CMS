@@ -468,8 +468,8 @@ class Export extends ImportExport
             );
 
         foreach (QueryHelper::parseOrderBy((string)$orderBy) as $orderPair) {
-            [$fieldName, $order] = $orderPair;
-            $queryBuilder->addOrderBy($fieldName, $order);
+            [$field, $order] = $orderPair;
+            $queryBuilder->addOrderBy($field, $order);
         }
 
         return $queryBuilder->execute();
@@ -880,11 +880,11 @@ class Export extends ImportExport
             if (!is_array($record)) {
                 continue;
             }
-            foreach ($record['rels'] as $fieldName => &$relation) {
+            foreach ($record['rels'] as $field => &$relation) {
                 // For all file type relations:
                 if (isset($relation['type']) && $relation['type'] === 'file') {
                     foreach ($relation['newValueFiles'] as $key => &$fileRelationData) {
-                        $this->exportAddFile($fileRelationData, $recordRef, $fieldName);
+                        $this->exportAddFile($fileRelationData, $recordRef, $field);
                         // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
                         unset($fileRelationData['ID_absFile']);
                     }
@@ -895,7 +895,7 @@ class Export extends ImportExport
                     if (isset($relation['flexFormRels']['file'])) {
                         foreach ($relation['flexFormRels']['file'] as $key => &$subList) {
                             foreach ($subList as $subKey => &$fileRelationData) {
-                                $this->exportAddFile($fileRelationData, $recordRef, $fieldName);
+                                $this->exportAddFile($fileRelationData, $recordRef, $field);
                                 // Remove the absolute reference to the file so it doesn't expose absolute paths from source server:
                                 unset($fileRelationData['ID_absFile']);
                             }
@@ -964,9 +964,9 @@ class Export extends ImportExport
      *
      * @param array $fileData File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile". "relFileName" is optional for files attached to records, but mandatory for soft referenced files (since the relFileName determines where such a file should be stored!)
      * @param string $recordRef If the file is related to a record, this is the id of the form [table]:[id]. Information purposes only.
-     * @param string $fieldName If the file is related to a record, this is the field name it was related to. Information purposes only.
+     * @param string $field If the file is related to a record, this is the field name it was related to. Information purposes only.
      */
-    protected function exportAddFile(array $fileData, string $recordRef = '', string $fieldName = ''): void
+    protected function exportAddFile(array $fileData, string $recordRef = '', string $field = ''): void
     {
         if (!@is_file($fileData['ID_absFile'])) {
             $this->addError($fileData['ID_absFile'] . ' was not a file! Skipping.');
@@ -982,7 +982,7 @@ class Export extends ImportExport
         $fileInfo['filemtime'] = $fileStat['mtime'];
         $fileInfo['relFileRef'] = PathUtility::stripPathSitePrefix($fileData['ID_absFile']);
         if ($recordRef) {
-            $fileInfo['record_ref'] = $recordRef . '/' . $fieldName;
+            $fileInfo['record_ref'] = $recordRef . '/' . $field;
         }
         if ($fileData['relFileName']) {
             $fileInfo['relFileName'] = $fileData['relFileName'];
