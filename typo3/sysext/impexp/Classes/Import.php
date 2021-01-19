@@ -1151,8 +1151,8 @@ class Import extends ImportExport
                         switch ((string)$relation['type']) {
                             case 'db':
                                 if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
-                                    $itemConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'];
-                                    $valArray = $this->setRelationsDb($relation['itemArray'], $itemConfig);
+                                    $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
+                                    $valArray = $this->setRelationsDb($relation['itemArray'], $fieldTca['config']);
                                     $updateData[$table][$thisNewUid][$field] = implode(',', $valArray);
                                 }
                                 break;
@@ -1300,7 +1300,7 @@ class Import extends ImportExport
                         if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
                             $origRecordRow = BackendUtility::getRecord($table, $thisNewUid, '*');
                             // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
-                            $fieldTca = $GLOBALS['TCA'][$table]['columns'][$field];
+                            $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
                             if (is_array($origRecordRow) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
                                 // Get current data structure and value array:
                                 $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
@@ -1413,14 +1413,15 @@ class Import extends ImportExport
                         // Now, if there are any fields that require substitution to be done, lets go for that:
                         foreach ($fieldsIndex as $field => $softRefCfgs) {
                             if (is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
-                                if ($GLOBALS['TCA'][$table]['columns'][$field]['config']['type'] === 'flex') {
+                                $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
+                                if ($fieldTca['config']['type'] === 'flex') {
                                     // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
                                     $origRecordRow = BackendUtility::getRecord($table, $thisNewUid, '*');
                                     if (is_array($origRecordRow)) {
                                         // Get current data structure and value array:
                                         $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
                                         $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
-                                            $GLOBALS['TCA'][$table]['columns'][$field],
+                                            $fieldTca,
                                             $table,
                                             $field,
                                             $origRecordRow
