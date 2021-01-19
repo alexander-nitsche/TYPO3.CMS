@@ -1002,36 +1002,38 @@ class Import extends ImportExport
 
         // Record relations
         foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
-            switch ((string)$relation['type']) {
-                case 'db':
-                case 'file':
-                    // Set blank now, fix later in setRelations(),
-                    // because we need to know ALL newly created IDs before we can map relations!
-                    // In the meantime we set NO values for relations.
-                    //
-                    // BUT for field uid_local of table sys_file_reference the relation MUST not be cleared here,
-                    // because the value is already the uid of the right imported sys_file record.
-                    // @see fixUidLocalInSysFileReferenceRecords()
-                    // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
-                    // delete the reference record if the file extension of the related record doesn't match.
-                    if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
-                        $importData[$table][$ID][$field] = '';
-                    }
-                    break;
-                case 'flex':
-                    // Set blank now, fix later in setFlexFormRelations().
-                    // In the meantime we set NO values for flexforms - this is mainly because file references
-                    // inside will not be processed properly. In fact references will point to no file
-                    // or existing files (in which case there will be double-references which is a big problem of
-                    // course!).
-                    //
-                    // BUT for the field "configuration" of the table "sys_file_storage" the relation MUST NOT be
-                    // cleared, because the configuration array contains only string values, which are furthermore
-                    // important for the further import, e.g. the base path.
-                    if (!($table === 'sys_file_storage' && $field === 'configuration')) {
-                        $importData[$table][$ID][$field] = '';
-                    }
-                    break;
+            if (isset($relation['type'])) {
+                switch ($relation['type']) {
+                    case 'db':
+                    case 'file':
+                        // Set blank now, fix later in setRelations(),
+                        // because we need to know ALL newly created IDs before we can map relations!
+                        // In the meantime we set NO values for relations.
+                        //
+                        // BUT for field uid_local of table sys_file_reference the relation MUST not be cleared here,
+                        // because the value is already the uid of the right imported sys_file record.
+                        // @see fixUidLocalInSysFileReferenceRecords()
+                        // If it's empty or a uid to another record the FileExtensionFilter will throw an exception or
+                        // delete the reference record if the file extension of the related record doesn't match.
+                        if (!($table === 'sys_file_reference' && $field === 'uid_local')) {
+                            $importData[$table][$ID][$field] = '';
+                        }
+                        break;
+                    case 'flex':
+                        // Set blank now, fix later in setFlexFormRelations().
+                        // In the meantime we set NO values for flexforms - this is mainly because file references
+                        // inside will not be processed properly. In fact references will point to no file
+                        // or existing files (in which case there will be double-references which is a big problem of
+                        // course!).
+                        //
+                        // BUT for the field "configuration" of the table "sys_file_storage" the relation MUST NOT be
+                        // cleared, because the configuration array contains only string values, which are furthermore
+                        // important for the further import, e.g. the base path.
+                        if (!($table === 'sys_file_storage' && $field === 'configuration')) {
+                            $importData[$table][$ID][$field] = '';
+                        }
+                        break;
+                }
             }
         }
     }
@@ -1145,26 +1147,25 @@ class Import extends ImportExport
                     foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
                         // uid_local of sys_file_reference needs no update because the correct reference uid was already written
                         // @see ImportExport::fixUidLocalInSysFileReferenceRecords()
-                        if ($table === 'sys_file_reference' && $field === 'uid_local') {
-                            continue;
-                        }
-                        switch ((string)$relation['type']) {
-                            case 'db':
-                                if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
-                                    $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
-                                    $valArray = $this->setRelationsDb($relation['itemArray'], $fieldTca['config']);
-                                    $updateData[$table][$actualUid][$field] = implode(',', $valArray);
-                                }
-                                break;
-                            case 'file':
-                                if (is_array($relation['newValueFiles']) && !empty($relation['newValueFiles'])) {
-                                    $valArray = [];
-                                    foreach ($relation['newValueFiles'] as $fileInfo) {
-                                        $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
+                        if (isset($relation['type']) && !($table === 'sys_file_reference' && $field === 'uid_local')) {
+                            switch ($relation['type']) {
+                                case 'db':
+                                    if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
+                                        $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
+                                        $valArray = $this->setRelationsDb($relation['itemArray'], $fieldTca['config']);
+                                        $updateData[$table][$actualUid][$field] = implode(',', $valArray);
                                     }
-                                    $updateData[$table][$actualUid][$field] = implode(',', $valArray);
-                                }
-                                break;
+                                    break;
+                                case 'file':
+                                    if (is_array($relation['newValueFiles']) && !empty($relation['newValueFiles'])) {
+                                        $valArray = [];
+                                        foreach ($relation['newValueFiles'] as $fileInfo) {
+                                            $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
+                                        }
+                                        $updateData[$table][$actualUid][$field] = implode(',', $valArray);
+                                    }
+                                    break;
+                            }
                         }
                     }
                 } else {
@@ -1292,44 +1293,46 @@ class Import extends ImportExport
             $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
             // Traverse relation fields of each record
             foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
-                switch ((string)$relation['type']) {
-                    case 'flex':
-                        // Get XML content and set as default value (string, non-processed):
-                        $updateData[$table][$actualUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
-                        // If there has been registered relations inside the flex form field, run processing on the content:
-                        if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
-                            $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
-                            // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
-                            $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
-                            if (is_array($origRecordRow) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
-                                // Get current data structure and value array:
-                                $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
-                                $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
-                                    $fieldTca,
-                                    $table,
-                                    $field,
-                                    $origRecordRow
-                                );
-                                $dataStructureArray = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
-                                $currentValueArray = GeneralUtility::xml2array($updateData[$table][$actualUid][$field]);
-                                // Do recursive processing of the XML data:
-                                $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
-                                $iteratorObj->callBackObj = $this;
-                                $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData(
-                                    $currentValueArray['data'],
-                                    [],
-                                    [],
-                                    $dataStructureArray,
-                                    [$table, $actualUid, $field, $relation],
-                                    'remapListedDbRecordsFlexFormCallBack'
-                                );
-                                // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
-                                if (is_array($currentValueArray['data'])) {
-                                    $updateData[$table][$actualUid][$field] = $currentValueArray;
+                if (isset($relation['type'])) {
+                    switch ($relation['type']) {
+                        case 'flex':
+                            // Get XML content and set as default value (string, non-processed):
+                            $updateData[$table][$actualUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
+                            // If there has been registered relations inside the flex form field, run processing on the content:
+                            if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
+                                $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
+                                // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
+                                $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
+                                if (is_array($origRecordRow) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
+                                    // Get current data structure and value array:
+                                    $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
+                                    $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
+                                        $fieldTca,
+                                        $table,
+                                        $field,
+                                        $origRecordRow
+                                    );
+                                    $dataStructureArray = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
+                                    $currentValueArray = GeneralUtility::xml2array($updateData[$table][$actualUid][$field]);
+                                    // Do recursive processing of the XML data:
+                                    $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
+                                    $iteratorObj->callBackObj = $this;
+                                    $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData(
+                                        $currentValueArray['data'],
+                                        [],
+                                        [],
+                                        $dataStructureArray,
+                                        [$table, $actualUid, $field, $relation],
+                                        'remapListedDbRecordsFlexFormCallBack'
+                                    );
+                                    // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
+                                    if (is_array($currentValueArray['data'])) {
+                                        $updateData[$table][$actualUid][$field] = $currentValueArray;
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            break;
+                    }
                 }
             }
         }
