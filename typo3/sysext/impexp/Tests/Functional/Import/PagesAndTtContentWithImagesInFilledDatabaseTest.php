@@ -278,4 +278,55 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
         $subject->checkImportPrerequisites();
         self::assertTrue(true);
     }
+
+    /**
+     * @test
+     */
+    public function importPagesAndRelatedTtContentKeepsRelationBetweenImportedFlexFormsAndPages(): void
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+
+        $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['default'] = '
+<T3DataStructure>
+    <ROOT>
+        <type>array</type>
+        <el>
+            <flexFormRelation>
+                <TCEforms>
+                    <label>FlexForm relation</label>
+                    <config>
+                        <type>group</type>
+                        <internal_type>db</internal_type>
+                        <allowed>pages</allowed>
+                        <size>1</size>
+                        <maxitems>1</maxitems>
+                        <minitems>0</minitems>
+                    </config>
+                </TCEforms>
+            </flexFormRelation>
+        </el>
+    </ROOT>
+</T3DataStructure>';
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(1);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-flexform-relation.xml',
+            true
+        );
+        $subject->importData();
+
+        $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('tt_content');
+        $originalUidIsNotActualUid = $queryBuilder
+                ->count('uid')
+                ->from('tt_content')
+                ->where($queryBuilder->expr()->like(
+                    'pi_flexform',
+                    $queryBuilder->createNamedParameter('%<value index="vDEF">4</value>%', \PDO::PARAM_STR)
+                ))
+                ->execute()
+                ->fetchColumn(0) === 1;
+
+        self::assertTrue($originalUidIsNotActualUid);
+    }
 }

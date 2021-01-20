@@ -25,7 +25,7 @@ use TYPO3\TestingFramework\Core\AccessibleObjectInterface;
 /**
  * Test case
  */
-class PagesAndTtContentWithSoftrefsTest extends AbstractImportExportTestCase
+class PagesAndTtContentWithRelationsAndSoftrefsTest extends AbstractImportExportTestCase
 {
     /**
      * @var array
@@ -73,13 +73,51 @@ class PagesAndTtContentWithSoftrefsTest extends AbstractImportExportTestCase
         ]
     ;
 
-    protected function setUp(): void
+    /**
+     * @test
+     */
+    public function exportPagesAndRelatedTtContentWithFlexFormRelation(): void
     {
-        parent::setUp();
-
         $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-softrefs.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-flexform-relation.xml');
+
+        $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['default'] = '
+<T3DataStructure>
+    <ROOT>
+        <type>array</type>
+        <el>
+            <flexFormRelation>
+                <TCEforms>
+                    <label>FlexForm relation</label>
+                    <config>
+                        <type>group</type>
+                        <internal_type>db</internal_type>
+                        <allowed>pages</allowed>
+                        <size>1</size>
+                        <maxitems>1</maxitems>
+                        <minitems>0</minitems>
+                    </config>
+                </TCEforms>
+            </flexFormRelation>
+        </el>
+    </ROOT>
+</T3DataStructure>';
+
+        /** @var Export|MockObject|AccessibleObjectInterface $subject */
+        $subject = $this->getAccessibleMock(Export::class, ['setMetaData']);
+        $subject->setPid(1);
+        $subject->setLevels(1);
+        $subject->setTables(['tt_content']);
+        $subject->setRelOnlyTables(['pages']);
+        $subject->setRecordTypesIncludeFields($this->recordTypesIncludeFields);
+        $subject->process();
+
+        $out = $subject->render();
+
+        self::assertXmlStringEqualsXmlFile(
+            __DIR__ . '/../Fixtures/XmlExports/pages-and-ttcontent-with-flexform-relation.xml',
+            $out
+        );
     }
 
     /**
@@ -87,6 +125,10 @@ class PagesAndTtContentWithSoftrefsTest extends AbstractImportExportTestCase
      */
     public function exportPagesAndRelatedTtContentWithSoftrefs(): void
     {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/tt_content-with-softrefs.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/sys_file.xml');
+
         $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['default'] = '
 <T3DataStructure>
     <ROOT>
