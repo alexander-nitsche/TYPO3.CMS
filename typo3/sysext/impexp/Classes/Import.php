@@ -1153,8 +1153,8 @@ class Import extends ImportExport
                                 case 'db':
                                     if (is_array($relation['itemArray']) && !empty($relation['itemArray'])) {
                                         $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
-                                        $valArray = $this->setRelationsDb($relation['itemArray'], $fieldTca['config']);
-                                        $updateData[$table][$actualUid][$field] = implode(',', $valArray);
+                                        $actualRelations = $this->remapRelationsOfField($relation['itemArray'], $fieldTca['config']);
+                                        $updateData[$table][$actualUid][$field] = implode(',', $actualRelations);
                                     }
                                     break;
                                 case 'file':
@@ -1193,44 +1193,45 @@ class Import extends ImportExport
     }
 
     /**
-     * Maps relations for database
+     * Maps the original record UIDs of the relations to the actual UIDs of the imported records and returns relations
+     * as strings of type [table]_[uid] - or file:[uid] or [public url] for field of type "group" and internal_type
+     * "file_reference". These strings have the regular DataHandler input group/select type format which means
+     * they will automatically be processed into a list of UIDs or MM relations.
      *
-     * @param array $itemArray Array of item sets (table/uid) from a dbAnalysis object
-     * @param array $itemConfig Array of TCA config of the field the relation to be set on
-     * @return array Array with values [table]_[uid] or [uid] for field of type group / internal_type file_reference. These values have the regular DataHandler-input group/select type which means they will automatically be processed into a uid-list or MM relations.
+     * @param array $fieldRelations Relations with original record UIDs
+     * @param array $fieldConfig TCA configuration of the record field the relations belong to
+     * @return array Array of relation strings with actual record UIDs
      */
-    protected function setRelationsDb(array $itemArray, array $itemConfig): array
+    protected function remapRelationsOfField(array &$fieldRelations, array &$fieldConfig): array
     {
-        $valArray = [];
-        foreach ($itemArray as $relDat) {
-            if (is_array($this->importMapId[$relDat['table']]) && isset($this->importMapId[$relDat['table']][$relDat['id']])) {
-                if ($itemConfig['type'] === 'input' && isset($itemConfig['wizards']['link'])) {
+        $actualRelations = [];
+
+        foreach ($fieldRelations as &$relation) {
+            if (isset($this->importMapId[$relation['table']][$relation['id']])) {
+                $actualUid = $this->importMapId[$relation['table']][$relation['id']];
+                if ($fieldConfig['type'] === 'input' && isset($fieldConfig['wizards']['link'])) {
                     // If an input field has a relation to a sys_file record this need to be converted back to
-                    // the public path. But use getPublicUrl here, because could normally only be a local file path.
-                    $fileUid = $this->importMapId[$relDat['table']][$relDat['id']];
-                    // Fallback value
-                    $value = 'file:' . $fileUid;
+                    // the public path. But use getPublicUrl() here, because could normally only be a local file path.
                     try {
-                        $file = GeneralUtility::makeInstance(ResourceFactory::class)->retrieveFileOrFolderObject($fileUid);
+                        $file = GeneralUtility::makeInstance(ResourceFactory::class)->retrieveFileOrFolderObject($actualUid);
+                        $actualRelations[] = $file->getPublicUrl();
                     } catch (\Exception $e) {
-                        $file = null;
-                    }
-                    if ($file instanceof FileInterface) {
-                        $value = $file->getPublicUrl();
+                        $actualRelations[] = 'file:' . $actualUid;
                     }
                 } else {
-                    $value = $relDat['table'] . '_' . $this->importMapId[$relDat['table']][$relDat['id']];
+                    $actualRelations[] = $relation['table'] . '_' . $actualUid;
                 }
-                $valArray[] = $value;
-            } elseif ($this->isTableStatic($relDat['table']) || $this->isRecordExcluded($relDat['table'], (int)$relDat['id']) || $relDat['id'] < 0) {
-                // Checking for less than zero because some select types could contain negative values,
-                // eg. fe_groups (-1, -2) and sys_language (-1 = ALL languages). This must be handled on both export and import.
-                $valArray[] = $relDat['table'] . '_' . $relDat['id'];
+            } elseif ($this->isTableStatic($relation['table']) || $this->isRecordExcluded($relation['table'], (int)$relation['id']) || $relation['id'] < 0) {
+                // Some select types could contain negative values,
+                // e.g. fe_groups (-1, -2) and sys_language (-1 = ALL languages).
+                // This must be handled on both export and import.
+                $actualRelations[] = $relation['table'] . '_' . $relation['id'];
             } else {
-                $this->addError('Lost relation: ' . $relDat['table'] . ':' . $relDat['id']);
+                $this->addError('Lost relation: ' . $relation['table'] . ':' . $relation['id']);
             }
         }
-        return $valArray;
+
+        return $actualRelations;
     }
 
     /**
@@ -1375,8 +1376,8 @@ class Import extends ImportExport
             $path = rtrim($path, '/');
         }
         if (is_array($config['flexFormRels']['db'][$path])) {
-            $valArray = $this->setRelationsDb($config['flexFormRels']['db'][$path], $dsConf);
-            $dataValue = implode(',', $valArray);
+            $actualRelations = $this->remapRelationsOfField($config['flexFormRels']['db'][$path], $dsConf);
+            $dataValue = implode(',', $actualRelations);
         }
         if (is_array($config['flexFormRels']['file'][$path])) {
             $valArray = [];

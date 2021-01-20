@@ -301,9 +301,10 @@ class ImportTest extends AbstractImportExportTestCase
         $fileInfo = [
             'ID' => '123456789',
         ];
+        $files = [$fileInfo];
         $importMock->_call('createTemporaryFolderName');
         $importMock->_set('dat', $dat);
-        $importMock->importAddFileNameToBeCopied($fileInfo);
+        $importMock->writeFilesToTemporaryFolder($files);
         // End of simulation
         $importMock->loadFile(
             'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent.xml',
