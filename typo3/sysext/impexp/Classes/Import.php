@@ -1362,10 +1362,11 @@ class Import extends ImportExport
      * @param string $dataValue_ext1 Not used
      * @param string $dataValue_ext2 Not used
      * @param string $path Path of where the data structure of the element is found
+     * @param array $workspaceOptions Not used
      * @return array Array where the "value" key carries the value.
      * @see setFlexFormRelations()
      */
-    public function remapListedDbRecordsFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, string $dataValue_ext1, string $dataValue_ext2, string $path): array
+    public function remapListedDbRecordsFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, $dataValue_ext1, $dataValue_ext2, string $path, array $workspaceOptions): array
     {
         // Extract parameters:
         [, , , $config] = $pParams;
