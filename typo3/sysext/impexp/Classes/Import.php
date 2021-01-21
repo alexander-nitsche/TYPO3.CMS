@@ -1272,75 +1272,74 @@ class Import extends ImportExport
     }
 
     /**
-     * After all DB relations has been set in the end of the import (see setRelations()) then it is time to correct all relations inside of FlexForm fields.
-     * The reason for doing this after is that the setting of relations may affect (quite often!) which data structure is used for the flexforms field!
+     * After all database relations have been set in the end of the import (see setRelations()) then it is time to
+     * correct all relations inside of FlexForm fields. The reason for doing this after is that the setting of relations
+     * may affect (quite often!) which data structure is used for the FlexForm field!
      *
      * @see setRelations()
      */
     protected function setFlexFormRelations(): void
     {
         $updateData = [];
-        // importNewId contains a register of all records that were in the import memory's "records" key
-        foreach ($this->importNewId as $nId => $dat) {
-            $table = $dat['table'];
-            $uid = $dat['uid'];
-            // original UID - NOT the new one!
-            // If the record has been written and received a new id, then proceed:
-            if (!isset($this->importMapId[$table][$uid])) {
-                $this->addError('Error: this records is NOT created it seems! (' . $table . ':' . $uid . ')');
-                continue;
-            }
 
-            if (!is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
-                $this->addError('Error: no record was found in data array!');
-                continue;
-            }
-            $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
-            // Traverse relation fields of each record
-            foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
-                if (isset($relation['type'])) {
-                    switch ($relation['type']) {
-                        case 'flex':
-                            // Get XML content and set as default value (string, non-processed):
-                            $updateData[$table][$actualUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
-                            // If there has been registered relations inside the flex form field, run processing on the content:
-                            if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
-                                $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
-                                // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
-                                $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
-                                if (is_array($origRecordRow) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
-                                    // Get current data structure and value array:
-                                    $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
-                                    $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
-                                        $fieldTca,
-                                        $table,
-                                        $field,
-                                        $origRecordRow
-                                    );
-                                    $dataStructureArray = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
-                                    $currentValueArray = GeneralUtility::xml2array($updateData[$table][$actualUid][$field]);
-                                    // Do recursive processing of the XML data:
-                                    $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
-                                    $iteratorObj->callBackObj = $this;
-                                    $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData(
-                                        $currentValueArray['data'],
-                                        [],
-                                        [],
-                                        $dataStructureArray,
-                                        [$table, $actualUid, $field, $relation],
-                                        'remapListedDbRecordsFlexFormCallBack'
-                                    );
-                                    // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
-                                    if (is_array($currentValueArray['data'])) {
-                                        $updateData[$table][$actualUid][$field] = $currentValueArray;
+        foreach ($this->importNewId as &$original) {
+            $table = $original['table'];
+            $uid = $original['uid'];
+
+            if (isset($this->importMapId[$table][$uid])) {
+                if (is_array($this->dat['records'][$table . ':' . $uid]['rels'])) {
+                    $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
+                    foreach ($this->dat['records'][$table . ':' . $uid]['rels'] as $field => &$relation) {
+                        // Field "configuration" of sys_file_storage needs no update because it has not been removed
+                        // and has no relations.
+                        // @see Import::addSingle()
+                        if (isset($relation['type']) && !($table === 'sys_file_storage' && $field === 'configuration')) {
+                            switch ($relation['type']) {
+                                case 'flex':
+                                    // Re-insert temporarily removed original FlexForm data as fallback
+                                    // @see Import::addSingle()
+                                    $updateData[$table][$actualUid][$field] = $this->dat['records'][$table . ':' . $uid]['data'][$field];
+
+                                    if (!empty($relation['flexFormRels']['db']) || !empty($relation['flexFormRels']['file'])) {
+                                        $actualRecord = BackendUtility::getRecord($table, $actualUid, '*');
+                                        $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
+                                        if (is_array($actualRecord) && is_array($fieldTca['config']) && $fieldTca['config']['type'] === 'flex') {
+                                            $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
+                                            $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
+                                                $fieldTca,
+                                                $table,
+                                                $field,
+                                                $actualRecord
+                                            );
+                                            $dataStructure = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
+                                            $flexFormData = GeneralUtility::xml2array($this->dat['records'][$table . ':' . $uid]['data'][$field]);
+                                            $flexFormIterator = GeneralUtility::makeInstance(DataHandler::class);
+                                            $flexFormIterator->callBackObj = $this;
+                                            $flexFormData['data'] = $flexFormIterator->checkValue_flex_procInData(
+                                                $flexFormData['data'],
+                                                [],
+                                                [],
+                                                $dataStructure,
+                                                [$table, $actualUid, $field, $relation],
+                                                'remapListedDbRecordsFlexFormCallBack'
+                                            );
+                                            if (is_array($flexFormData['data'])) {
+                                                $updateData[$table][$actualUid][$field] = $flexFormData;
+                                            }
+                                        }
                                     }
-                                }
+                                    break;
                             }
-                            break;
+                        }
                     }
+                } else {
+                    $this->addError(sprintf('Error: This record does not appear to have a relation array! (%s:%s)', $table, $uid));
                 }
+            } else {
+                $this->addError(sprintf('Error: This record does not appear to have been created! (%s:%s)', $table, $uid));
             }
         }
+
         if (!empty($updateData)) {
             $dataHandler = $this->createDataHandler();
             $dataHandler->isImporting = true;
