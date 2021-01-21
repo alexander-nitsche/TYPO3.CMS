@@ -1159,11 +1159,8 @@ class Import extends ImportExport
                                     break;
                                 case 'file':
                                     if (is_array($relation['newValueFiles']) && !empty($relation['newValueFiles'])) {
-                                        $valArray = [];
-                                        foreach ($relation['newValueFiles'] as $fileInfo) {
-                                            $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
-                                        }
-                                        $updateData[$table][$actualUid][$field] = implode(',', $valArray);
+                                        $temporaryFiles = $this->writeFilesToTemporaryFolder($relation['newValueFiles']);
+                                        $updateData[$table][$actualUid][$field] = implode(',', $temporaryFiles);
                                     }
                                     break;
                             }
@@ -1235,38 +1232,43 @@ class Import extends ImportExport
     }
 
     /**
-     * Writes the file from the import array to the temporary folder and returns the filename of it.
+     * Writes the files from the import array to the temporary folder and returns the actual filenames.
      *
-     * @param array $fileInfo File information with three keys: "filename" = filename without path, "ID_absFile" = absolute filepath to the file (including the filename), "ID" = md5 hash of "ID_absFile
-     * @return string|null Absolute filename of the temporary filename of the file.
+     * @param array $files Files of file information with three keys:
+     *                          "filename" = filename without path,
+     *                          "ID_absFile" = absolute filepath to the file (including the filename),
+     *                          "ID" = md5 hash of "ID_absFile
+     * @return array Absolute file paths of the temporary files.
      */
-    public function importAddFileNameToBeCopied(array $fileInfo): ?string
+    public function writeFilesToTemporaryFolder(array &$files): array
     {
-        $temporaryFile = null;
+        $temporaryFiles = [];
 
-        if (is_array($this->dat['files'][$fileInfo['ID']])) {
-            $fileRecord = &$this->dat['files'][$fileInfo['ID']];
+        foreach ($files as &$fileInfo) {
+            if (is_array($this->dat['files'][$fileInfo['ID']])) {
+                $fileRecord = &$this->dat['files'][$fileInfo['ID']];
 
-            $temporaryFolder = $this->getOrCreateTemporaryFolderName();
-            $temporaryFilePath = $temporaryFolder . '/' . $fileRecord['content_md5'];
+                $temporaryFolder = $this->getOrCreateTemporaryFolderName();
+                $temporaryFilePath = $temporaryFolder . '/' . $fileRecord['content_md5'];
 
-            if (is_file($temporaryFilePath) && md5_file($temporaryFilePath) === $fileRecord['content_md5']) {
-                $temporaryFile = $temporaryFilePath;
-            } else {
-                if (GeneralUtility::writeFile($temporaryFilePath, $fileRecord['content'])) {
-                    clearstatcache();
-                    $temporaryFile = $temporaryFilePath;
+                if (is_file($temporaryFilePath) && md5_file($temporaryFilePath) === $fileRecord['content_md5']) {
+                    $temporaryFiles[] = $temporaryFilePath;
                 } else {
-                    $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
-                        $temporaryFilePath
-                    ));
+                    if (GeneralUtility::writeFile($temporaryFilePath, $fileRecord['content'])) {
+                        clearstatcache();
+                        $temporaryFiles[] = $temporaryFilePath;
+                    } else {
+                        $this->addError(sprintf('Error: Temporary file %s was not written as it should have been!',
+                            $temporaryFilePath
+                        ));
+                    }
                 }
+            } else {
+                $this->addError(sprintf('Error: No file found for ID %s' , $fileInfo['ID']));
             }
-        } else {
-            $this->addError(sprintf('Error: No file found for ID %s' , $fileInfo['ID']));
         }
 
-        return $temporaryFile;
+        return $temporaryFiles;
     }
 
     /**
@@ -1380,11 +1382,8 @@ class Import extends ImportExport
             $dataValue = implode(',', $actualRelations);
         }
         if (is_array($config['flexFormRels']['file'][$path])) {
-            $valArray = [];
-            foreach ($config['flexFormRels']['file'][$path] as $fileInfo) {
-                $valArray[] = $this->importAddFileNameToBeCopied($fileInfo);
-            }
-            $dataValue = implode(',', $valArray);
+            $temporaryFiles = $this->writeFilesToTemporaryFolder($config['flexFormRels']['file'][$path]);
+            $dataValue = implode(',', $temporaryFiles);
         }
         return ['value' => $dataValue];
     }
