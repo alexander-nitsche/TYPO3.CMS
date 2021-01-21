@@ -1320,8 +1320,8 @@ class Import extends ImportExport
                                                 [],
                                                 [],
                                                 $dataStructure,
-                                                [$table, $actualUid, $field, $relation],
-                                                'remapListedDbRecordsFlexFormCallBack'
+                                                [$relation],
+                                                'remapRelationsOfFlexFormCallBack'
                                             );
                                             if (is_array($flexFormData['data'])) {
                                                 $updateData[$table][$actualUid][$field] = $flexFormData;
@@ -1356,32 +1356,32 @@ class Import extends ImportExport
     }
 
     /**
-     * Callback function for traversing the FlexForm structure in relation to remapping database relations
+     * Callback function to remap relations in FlexForm data
      *
-     * @param array $pParams Set of parameters in numeric array: table, uid, field
+     * @param array $pParams Set of parameters passed through by calling method setFlexFormRelations()
      * @param array $dsConf TCA config for field (from Data Structure of course)
      * @param string $dataValue Field value (from FlexForm XML)
      * @param string $dataValue_ext1 Not used
      * @param string $dataValue_ext2 Not used
      * @param string $path Path of where the data structure of the element is found
      * @param array $workspaceOptions Not used
-     * @return array Array where the "value" key carries the value.
+     * @return array Array where the "value" key carries the mapped relation string.
+     *
      * @see setFlexFormRelations()
      */
-    public function remapListedDbRecordsFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, $dataValue_ext1, $dataValue_ext2, string $path, array $workspaceOptions): array
+    public function remapRelationsOfFlexFormCallBack(array $pParams, array $dsConf, string $dataValue, $dataValue_ext1, $dataValue_ext2, string $path, array $workspaceOptions): array
     {
-        // Extract parameters:
-        [, , , $config] = $pParams;
+        [$relation] = $pParams;
         // In case the $path is used as index without a trailing slash we will remove that
-        if (!is_array($config['flexFormRels']['db'][$path]) && is_array($config['flexFormRels']['db'][rtrim($path, '/')])) {
+        if (!is_array($relation['flexFormRels']['db'][$path]) && is_array($relation['flexFormRels']['db'][rtrim($path, '/')])) {
             $path = rtrim($path, '/');
         }
-        if (is_array($config['flexFormRels']['db'][$path])) {
-            $actualRelations = $this->remapRelationsOfField($config['flexFormRels']['db'][$path], $dsConf);
+        if (is_array($relation['flexFormRels']['db'][$path])) {
+            $actualRelations = $this->remapRelationsOfField($relation['flexFormRels']['db'][$path], $dsConf);
             $dataValue = implode(',', $actualRelations);
         }
-        if (is_array($config['flexFormRels']['file'][$path])) {
-            $temporaryFiles = $this->writeFilesToTemporaryFolder($config['flexFormRels']['file'][$path]);
+        if (is_array($relation['flexFormRels']['file'][$path])) {
+            $temporaryFiles = $this->writeFilesToTemporaryFolder($relation['flexFormRels']['file'][$path]);
             $dataValue = implode(',', $temporaryFiles);
         }
         return ['value' => $dataValue];
