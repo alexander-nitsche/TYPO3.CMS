@@ -329,4 +329,56 @@ class PagesAndTtContentWithImagesInFilledDatabaseTest extends AbstractImportExpo
 
         self::assertTrue($originalUidIsNotActualUid);
     }
+
+    /**
+     * @test
+     */
+    public function importPagesAndRelatedTtContentKeepsSoftReferenceBetweenImportedFlexFormsAndPages(): void
+    {
+        $this->importDataSet(__DIR__ . '/../Fixtures/DatabaseImports/pages.xml');
+
+        $GLOBALS['TCA']['tt_content']['columns']['pi_flexform']['config']['ds']['default'] = '
+<T3DataStructure>
+    <ROOT>
+        <type>array</type>
+        <el>
+            <flexFormSoftReference>
+                <TCEforms>
+                    <label>FlexForm Soft Reference</label>
+                    <config>
+                        <type>text</type>
+                        <softref>typolink_tag</softref>
+                    </config>
+                </TCEforms>
+            </flexFormSoftReference>
+        </el>
+    </ROOT>
+</T3DataStructure>';
+
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(1);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-flexform-softref.xml',
+            true
+        );
+        $subject->importData();
+
+        $originalSoftReference = '<a href="t3://page?uid=1">internal link</a>';
+        $actualSoftReference = str_replace('1', '4', $originalSoftReference);
+
+        $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('tt_content');
+        $originalUidIsNotActualUid = $queryBuilder
+                ->count('uid')
+                ->from('tt_content')
+                ->where($queryBuilder->expr()->like(
+                    'pi_flexform',
+                    $queryBuilder->createNamedParameter(sprintf(
+                        '%%%s%%', htmlentities($actualSoftReference)
+                    ), \PDO::PARAM_STR)
+                ))
+                ->execute()
+                ->fetchColumn(0) === 1;
+
+        self::assertTrue($originalUidIsNotActualUid);
+    }
 }

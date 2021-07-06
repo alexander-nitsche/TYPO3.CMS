@@ -21,8 +21,11 @@ use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Configuration\FlexForm\FlexFormTools;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\ReferenceIndex;
+use TYPO3\CMS\Core\Database\SoftReferenceIndex;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Exception;
+use TYPO3\CMS\Core\LinkHandling\LinkService;
 use TYPO3\CMS\Core\Resource\Exception\InsufficientFolderAccessPermissionsException;
 use TYPO3\CMS\Core\Resource\File;
 use TYPO3\CMS\Core\Resource\FileInterface;
@@ -384,7 +387,7 @@ class Import extends ImportExport
         // 1) that a record WAS written to db and
         // 2) that it has got a new id-number.
         $this->setRelations();
-        // And when all DB relations are in place, we can fix file and DB relations in flexform fields
+        // And when all database relations are in place, we can fix file and database relations in flexform fields
         // - since data structures often depend on relations to a DS record:
         $this->setFlexFormRelations();
         // Finally, traverse all records and process soft references with substitution attributes.
@@ -1388,7 +1391,7 @@ class Import extends ImportExport
     }
 
     /**************************
-     * Import / Soft References
+     * Import soft references
      *************************/
 
     /**
@@ -1396,58 +1399,58 @@ class Import extends ImportExport
      */
     protected function processSoftReferences(): void
     {
-        // Initialize:
-        $inData = [];
-        // Traverse records:
+        $updateData = [];
+
         if (is_array($this->dat['header']['records'])) {
-            foreach ($this->dat['header']['records'] as $table => $recs) {
-                foreach ($recs as $uid => $thisRec) {
+            foreach ($this->dat['header']['records'] as $table => &$records) {
+                foreach ($records as $uid => &$record) {
                     // If there are soft references defined, traverse those:
-                    if (isset($GLOBALS['TCA'][$table]) && is_array($thisRec['softrefs'])) {
-                        // First traversal is to collect softref configuration and split them up based on fields.
+                    if (isset($GLOBALS['TCA'][$table]) && is_array($record['softrefs'])) {
+                        // First traversal is to collect the soft reference configuration and split them up based on fields.
                         // This could probably also have been done with the "records" key instead of the header.
                         $fieldsIndex = [];
-                        foreach ($thisRec['softrefs'] as $softrefDef) {
+                        foreach ($record['softrefs'] as $softrefDef) {
                             // If a substitution token is set:
                             if ($softrefDef['field'] && is_array($softrefDef['subst']) && $softrefDef['subst']['tokenID']) {
                                 $fieldsIndex[$softrefDef['field']][$softrefDef['subst']['tokenID']] = $softrefDef;
                             }
                         }
-                        // The new id:
                         $actualUid = BackendUtility::wsMapId($table, $this->importMapId[$table][$uid]);
                         // Now, if there are any fields that require substitution to be done, lets go for that:
                         foreach ($fieldsIndex as $field => $softRefCfgs) {
                             if (is_array($GLOBALS['TCA'][$table]['columns'][$field])) {
                                 $fieldTca = &$GLOBALS['TCA'][$table]['columns'][$field];
                                 if ($fieldTca['config']['type'] === 'flex') {
-                                    // This will fetch the new row for the element (which should be updated with any references to data structures etc.)
-                                    $origRecordRow = BackendUtility::getRecord($table, $actualUid, '*');
-                                    if (is_array($origRecordRow)) {
-                                        // Get current data structure and value array:
+                                    $actualRecord = BackendUtility::getRecord($table, $actualUid, '*');
+                                    if (is_array($actualRecord)) {
                                         $flexFormTools = GeneralUtility::makeInstance(FlexFormTools::class);
                                         $dataStructureIdentifier = $flexFormTools->getDataStructureIdentifier(
                                             $fieldTca,
                                             $table,
                                             $field,
-                                            $origRecordRow
+                                            $actualRecord
                                         );
-                                        $dataStructureArray = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
-                                        $currentValueArray = GeneralUtility::xml2array($origRecordRow[$field]);
-                                        // Do recursive processing of the XML data:
-                                        /** @var DataHandler $iteratorObj */
-                                        $iteratorObj = GeneralUtility::makeInstance(DataHandler::class);
-                                        $iteratorObj->callBackObj = $this;
-                                        $currentValueArray['data'] = $iteratorObj->checkValue_flex_procInData($currentValueArray['data'], [], [], $dataStructureArray, [$table, $uid, $field, $softRefCfgs], 'processSoftReferencesFlexFormCallBack');
-                                        // The return value is set as an array which means it will be processed by DataHandler for file and DB references!
-                                        if (is_array($currentValueArray['data'])) {
-                                            $inData[$table][$actualUid][$field] = $currentValueArray;
+                                        $dataStructure = $flexFormTools->parseDataStructureByIdentifier($dataStructureIdentifier);
+                                        $flexFormData = GeneralUtility::xml2array($actualRecord[$field]);
+                                        $flexFormIterator = GeneralUtility::makeInstance(DataHandler::class);
+                                        $flexFormIterator->callBackObj = $this;
+                                        $flexFormData['data'] = $flexFormIterator->checkValue_flex_procInData(
+                                            $flexFormData['data'],
+                                            [],
+                                            [],
+                                            $dataStructure,
+                                            [$table, $uid, $field, $softRefCfgs],
+                                            'processSoftReferencesFlexFormCallBack'
+                                        );
+                                        if (is_array($flexFormData['data'])) {
+                                            $updateData[$table][$actualUid][$field] = $flexFormData;
                                         }
                                     }
                                 } else {
                                     // Get tokenizedContent string and proceed only if that is not blank:
                                     $tokenizedContent = $this->dat['records'][$table . ':' . $uid]['rels'][$field]['softrefs']['tokenizedContent'];
                                     if (strlen($tokenizedContent) && is_array($softRefCfgs)) {
-                                        $inData[$table][$actualUid][$field] = $this->processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, (string)$uid);
+                                        $updateData[$table][$actualUid][$field] = $this->processSoftReferencesSubstTokens($tokenizedContent, $softRefCfgs, $table, (string)$uid);
                                     }
                                 }
                             }
@@ -1456,15 +1459,16 @@ class Import extends ImportExport
                 }
             }
         }
-        // Now write to database:
+
+        // Update soft references in the database
         $dataHandler = $this->createDataHandler();
         $dataHandler->isImporting = true;
         $this->callHook('before_processSoftReferences', [
             'tce' => $dataHandler,
-            'data' => &$inData
+            'data' => &$updateData
         ]);
         $dataHandler->enableLogging = true;
-        $dataHandler->start($inData, []);
+        $dataHandler->start($updateData, []);
         $dataHandler->process_datamap();
         $this->callHook('after_processSoftReferences', [
             'tce' => $dataHandler
@@ -1510,7 +1514,7 @@ class Import extends ImportExport
     }
 
     /**
-     * Substition of soft reference tokens
+     * Substitution of soft reference tokens
      *
      * @param string $tokenizedContent Content of field with soft reference tokens in.
      * @param array $softRefCfgs Soft reference configurations
@@ -1545,13 +1549,33 @@ class Import extends ImportExport
                         case 'db':
                         default:
                             // Trying to map database element if found in the mapID array:
-                            [$tempTable, $tempUid] = explode(':', (string)$cfg['subst']['recordRef']);
-                            if (isset($this->importMapId[$tempTable][$tempUid])) {
-                                $insertValue = BackendUtility::wsMapId($tempTable, $this->importMapId[$tempTable][$tempUid]);
-                                if (strpos($cfg['subst']['tokenValue'], ':') !== false) {
-                                    [$tokenKey] = explode(':', $cfg['subst']['tokenValue']);
-                                    $insertValue = $tokenKey . ':' . $insertValue;
-                                }
+                            [$referencedTable, $referencedUid] = explode(':', (string)$cfg['subst']['recordRef']);
+                            if (isset($this->importMapId[$referencedTable][$referencedUid])) {
+                                $actualUid = $this->importMapId[$referencedTable][$referencedUid];
+                                $insertValue = BackendUtility::wsMapId($referencedTable, $actualUid);
+
+//                                $refIndexObj = GeneralUtility::makeInstance(SoftReferenceIndex::class);
+//                                $refs = $refIndexObj->findRef($table, $cfg['field'], (int)$uid, $cfg['matchString'], $cfg['spKey'], $cfg);
+
+//                                $refIndexObj = GeneralUtility::makeInstance(SoftReferenceIndex::class);
+//                                $typoLink = $refIndexObj->getTypoLinkParts($cfg['matchString']);
+//                                => NO
+
+                                $indexObj = GeneralUtility::makeInstance(ReferenceIndex::class);
+                                $indexObj->setReferenceValue_softreferences();
+
+//                                $linkService = GeneralUtility::makeInstance(LinkService::class);
+//                                $linkInformation = $linkService->resolve('t3://page?uid=1');
+//                                $linkInformation['pageuid'] = 4;
+//                                $linkString = $linkService->asString($cfg['subst']);
+
+
+
+//                                if (strpos($cfg['subst']['tokenValue'], ':') !== false) {
+//                                    [$tokenKey] = explode(':', $cfg['subst']['tokenValue']);
+//                                    $insertValue = $tokenKey . ':' . $insertValue;
+//                                }
+                                $grummel = "hoho";
                             }
                     }
             }

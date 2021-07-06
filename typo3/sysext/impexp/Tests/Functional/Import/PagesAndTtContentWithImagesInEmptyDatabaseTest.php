@@ -246,4 +246,25 @@ class PagesAndTtContentWithImagesInEmptyDatabaseTest extends AbstractImportExpor
         $errors = $subject->getErrorLog();
         self::assertSame($expectedErrors, $errors);
     }
+
+    /**
+     * This test imports content elements with soft references of <type>file</type>,
+     * which has been used in ancient TYPO3 versions.
+     *
+     * @test
+     */
+    public function importPagesAndRelatedTtContentWithImageRelationOfTypeFile(): void
+    {
+        $subject = GeneralUtility::makeInstance(Import::class);
+        $subject->setPid(0);
+        $subject->loadFile(
+            'EXT:impexp/Tests/Functional/Fixtures/XmlImports/pages-and-ttcontent-with-image-relation-of-type-file.xml',
+            true
+        );
+        $subject->importData();
+
+        $expectedErrors = [];
+        $errors = $subject->getErrorLog();
+        self::assertSame($expectedErrors, $errors);
+    }
 }

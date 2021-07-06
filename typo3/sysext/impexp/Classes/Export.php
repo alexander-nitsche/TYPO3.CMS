@@ -752,7 +752,7 @@ class Export extends ImportExport
                     unset($dbRelationData);
                 }
                 if ($relation['type'] === 'flex') {
-                    // DB relations in flex form fields:
+                    // database relations in flex form fields:
                     if (is_array($relation['flexFormRels']['db'])) {
                         foreach ($relation['flexFormRels']['db'] as &$subList) {
                             foreach ($subList as &$dbRelationData) {
